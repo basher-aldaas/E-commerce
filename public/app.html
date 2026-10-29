@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-commerce Store</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1d2433; --muted:#6b7385; --line:#e1e5ec; --brand:#2f5bea; --ok:#16a34a; --err:#dc2626; --warn:#d97706; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--ink); }
+  nav { background:#fff; border-bottom:1px solid var(--line); padding:0 20px; display:flex; align-items:center; gap:4px; flex-wrap:wrap; position:sticky; top:0; z-index:5; }
+  nav .brand { font-weight:700; font-size:17px; margin-right:16px; padding:14px 0; }
+  nav a { padding:15px 12px; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; }
+  nav a.on { color:var(--brand); border-color:var(--brand); }
+  nav .sp { flex:1; }
+  nav .who { font-size:13px; color:var(--muted); margin-right:8px; }
+  main { max-width:1000px; margin:0 auto; padding:20px; }
+  h1 { font-size:20px; margin:0 0 14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px; }
+  .grid .card { margin:0; display:flex; flex-direction:column; gap:6px; }
+  .price { font-size:18px; font-weight:700; }
+  .muted { color:var(--muted); font-size:13px; }
+  input, select, textarea { font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:6px; width:100%; background:#fff; color:var(--ink); }
+  label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
+  button { font:inherit; padding:8px 16px; border:0; border-radius:6px; background:var(--brand); color:#fff; cursor:pointer; }
+  button.sec { background:#e8ebf2; color:var(--ink); }
+  button.sm { padding:5px 10px; font-size:13px; }
+  button:disabled { opacity:.5; cursor:default; }
+  .form { max-width:400px; margin:30px auto; }
+  .tabs { display:flex; gap:8px; margin-bottom:6px; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:9px 8px; border-bottom:1px solid var(--line); font-size:14px; }
+  th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; }
+  .pill { font-size:12px; font-weight:600; padding:2px 9px; border-radius:99px; background:#e8ebf2; }
+  .pill.pending { background:#fef3c7; color:#92400e; } .pill.confirmed,.pill.processing { background:#dbeafe; color:#1e40af; }
+  .pill.completed { background:#dcfce7; color:#166534; } .pill.cancelled { background:#fee2e2; color:#991b1b; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .row > * { flex:0 0 auto; } .row .grow { flex:1; }
+  .pager { display:flex; gap:10px; align-items:center; justify-content:center; margin-top:14px; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 18px; border-radius:8px; display:none; max-width:90vw; z-index:20; white-space:pre-line; }
+  #toast.err { background:var(--err); } #toast.ok { background:var(--ok); }
+  .empty { text-align:center; color:var(--muted); padding:30px; }
+  .badge { background:var(--brand); color:#fff; border-radius:99px; padding:0 7px; font-size:12px; margin-left:4px; }
+</style>
+</head>
+<body>
+<nav id="nav"></nav>
+<main id="view"></main>
+<div id="toast"></div>
+
+<script>
+const API = '/api/v1';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => '$' + Number(n || 0).toFixed(2);
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch(e) { return d; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+
+const S = { token: load('token', null), user: load('user', null), cart: load('cart', []), view: 'shop', cats: [] };
+const isAdmin = () => S.user && S.user.roles.includes('admin');
+
+function toast(msg, type) {
+  const t = $('toast'); t.textContent = msg; t.className = type || ''; t.style.display = 'block';
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = 'none', 3500);
+}
+
+async function api(method, path, body) {
+  const headers = { 'Accept': 'application/json' };
+  if (body) headers['Content-Type'] = 'application/json';
+  if (S.token) headers['Authorization'] = 'Bearer ' + S.token;
+  let res;
+  try { res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined }); }
+  catch (e) { throw new Error('Cannot reach the server. Is it running?'); }
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && S.token) { logout(true); throw new Error('Session expired, please log in again.'); }
+  if (!res.ok) {
+    let msg = data.message || ('Error ' + res.status);
+    if (res.status === 422 && data.data && typeof data.data === 'object') msg += '\n' + Object.values(data.data).flat().join('\n');
+    throw new Error(msg);
+  }
+  return data;
+}
+const run = async (fn) => { try { await fn(); } catch (e) { toast(e.message, 'err'); } };
+
+function setSession(d) {
+  S.token = d.access_token; S.user = d.user; save('token', S.token); save('user', S.user);
+}
+function logout(silent) {
+  if (!silent && S.token) api('POST', '/auth/logout').catch(() => {});
+  S.token = null; S.user = null; S.cart = []; save('token', null); save('user', null); save('cart', []);
+  go('login');
+}
+
+const LINKS = () => !S.user ? [] :
+  isAdmin() ? [['shop','Products'], ['adm-cats','Categories'], ['adm-prods','Manage products'], ['orders','All orders']]
+            : [['shop','Shop'], ['cart','Cart'], ['orders','My orders']];
+
+function renderNav() {
+  const n = S.cart.reduce((a, c) => a + c.qty, 0);
+  $('nav').innerHTML = `<span class="brand">🛒 E-commerce</span>` +
+    LINKS().map(([k, l]) => `<a class="${S.view === k ? 'on' : ''}" onclick="go('${k}')">${l}${k === 'cart' && n ? `<span class="badge">${n}</span>` : ''}</a>`).join('') +
+    `<span class="sp"></span>` +
+    (S.user ? `<span class="who">${esc(S.user.name)} · ${esc(S.user.roles.join(', '))}</span><button class="sec sm" onclick="logout()">Log out</button>` : '');
+}
+
+function go(view) {
+  if (!S.user && view !== 'login') view = 'login';
+  S.view = view; renderNav();
+  const r = { login: vLogin, shop: vShop, cart: vCart, orders: vOrders, 'adm-cats': vCats, 'adm-prods': vProds }[view];
+  r();
+}
+
+/* ---------- Auth ---------- */
+function vLogin() {
+  $('view').innerHTML = `<div class="card form">
+    <div class="tabs"><button id="tL" onclick="authTab('login')">Log in</button><button id="tR" class="sec" onclick="authTab('register')">Register</button></div>
+    <div id="authBox"></div></div>`;
+  authTab('login');
+}
+function authTab(t) {
+  $('tL').className = t === 'login' ? '' : 'sec'; $('tR').className = t === 'register' ? '' : 'sec';
+  $('authBox').innerHTML = t === 'login' ? `
+    <label>Email</label><input id="a_email" type="email" value="user@system.com">
+    <label>Password</label><input id="a_pass" type="password" value="password123">
+    <p class="row" style="margin:14px 0 0"><button onclick="doLogin()">Log in</button>
+    <button class="sec sm" onclick="a_email.value='admin@system.com'">Fill admin</button>
+    <button class="sec sm" onclick="a_email.value='user@system.com'">Fill user</button></p>` : `
+    <label>Name</label><input id="a_name">
+    <label>Email</label><input id="a_email" type="email">
+    <label>Password (min 8)</label><input id="a_pass" type="password">
+    <label>Confirm password</label><input id="a_pass2" type="password">
+    <p style="margin:14px 0 0"><button onclick="doRegister()">Create account</button></p>`;
+}
+const afterAuth = d => { setSession(d.data); toast('Welcome, ' + S.user.name, 'ok'); go('shop'); };
+const doLogin = () => run(async () => afterAuth(await api('POST', '/auth/login', { email: a_email.value, password: a_pass.value })));
+const doRegister = () => run(async () => afterAuth(await api('POST', '/auth/register',
+  { name: a_name.value, email: a_email.value, password: a_pass.value, password_confirmation: a_pass2.value })));
+
+/* ---------- Shop ---------- */
+async function loadCats() { if (!S.cats.length) S.cats = (await api('GET', '/categories')).data.data; }
+const catName = id => (S.cats.find(c => c.id === id) || {}).name || '—';
+
+function vShop(page = 1) {
+  run(async () => {
+    await loadCats();
+    const p = (await api('GET', '/products?page=' + page)).data;
+    $('view').innerHTML = `<h1>${isAdmin() ? 'Products' : 'Shop'}</h1>` + (p.data.length ? `<div class="grid">` + p.data.map(x => `
+      <div class="card"><b>${esc(x.name)}</b><span class="muted">${esc(catName(x.category_id))}</span>
+      <span class="muted">${esc(x.description || '')}</span><span class="price">${money(x.price)}</span>
+      <span class="muted">${x.stock > 0 ? x.stock + ' in stock' : 'Out of stock'}</span>
+      ${isAdmin() ? '' : `<button ${x.stock < 1 ? 'disabled' : ''} onclick='addCart(${JSON.stringify({ id: x.id, name: x.name, price: x.price, stock: x.stock })})'>Add to cart</button>`}
+      </div>`).join('') + `</div>` : `<div class="empty">No products yet.</div>`) + pager(p, 'vShop');
+  });
+}
+function pager(p, fn) {
+  if (!p || p.last_page <= 1) return '';
+  return `<div class="pager"><button class="sec sm" ${p.current_page <= 1 ? 'disabled' : ''} onclick="${fn}(${p.current_page - 1})">‹ Prev</button>
+    <span class="muted">Page ${p.current_page} of ${p.last_page}</span>
+    <button class="sec sm" ${p.current_page >= p.last_page ? 'disabled' : ''} onclick="${fn}(${p.current_page + 1})">Next ›</button></div>`;
+}
+function addCart(p) {
+  const it = S.cart.find(c => c.id === p.id);
+  if (it) it.qty = Math.min(it.qty + 1, p.stock); else S.cart.push({ ...p, qty: 1 });
+  save('cart', S.cart); renderNav(); toast(p.name + ' added to cart', 'ok');
+}
+
+/* ---------- Cart ---------- */
+function vCart() {
+  const total = S.cart.reduce((a, c) => a + c.price * c.qty, 0);
+  $('view').innerHTML = `<h1>Cart</h1>` + (S.cart.length ? `<div class="card"><table>
+    <tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th><th></th></tr>` + S.cart.map((c, i) => `
+    <tr><td>${esc(c.name)}</td><td>${money(c.price)}</td>
+    <td><input type="number" min="1" max="${c.stock}" value="${c.qty}" style="width:70px" onchange="setQty(${i}, this.value)"></td>
+    <td>${money(c.price * c.qty)}</td><td><button class="sec sm" onclick="rmCart(${i})">Remove</button></td></tr>`).join('') + `</table>
+    <p class="row" style="margin:14px 0 0"><span class="grow price">Total: ${money(total)}</span><button onclick="checkout()">Place order</button></p></div>`
+    : `<div class="empty">Your cart is empty.</div>`);
+}
+function setQty(i, v) { S.cart[i].qty = Math.max(1, Math.min(parseInt(v) || 1, S.cart[i].stock)); save('cart', S.cart); vCart(); renderNav(); }
+function rmCart(i) { S.cart.splice(i, 1); save('cart', S.cart); vCart(); renderNav(); }
+const checkout = () => run(async () => {
+  const items = S.cart.map(c => ({ product_id: c.id, quantity: c.qty }));
+  const d = (await api('POST', '/orders', { items })).data;
+  S.cart = []; save('cart', []); toast('Order #' + d.id + ' placed! Total ' + money(d.total_amount), 'ok'); go('orders');
+});
+
+/* ---------- Orders ---------- */
+const STATUSES = ['pending', 'confirmed', 'processing', 'completed', 'cancelled'];
+function vOrders(page = 1) {
+  run(async () => {
+    const p = (await api('GET', '/orders?page=' + page)).data;
+    $('view').innerHTML = `<h1>${isAdmin() ? 'All orders' : 'My orders'}</h1>` + (p.data.length ? `<div class="card"><table>
+      <tr><th>#</th>${isAdmin() ? '<th>User</th>' : ''}<th>Status</th><th>Total</th><th>Date</th><th></th></tr>` + p.data.map(o => `
+      <tr><td>${o.id}</td>${isAdmin() ? `<td>${o.user_id}</td>` : ''}<td><span class="pill ${esc(o.status)}" id="st${o.id}">${esc(o.status)}</span></td>
+      <td>${money(o.total_amount)}</td><td class="muted">${new Date(o.created_at).toLocaleString()}</td>
+      <td>${isAdmin()
+        ? `<select id="ns${o.id}" style="width:130px;display:inline-block">${STATUSES.map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}</select>
+           <button class="sm" onclick="setStatus(${o.id})">Update</button>`
+        : `<button class="sec sm" onclick="track(${o.id})">Track</button>`}</td></tr>`).join('') + `</table></div>` + pager(p, 'vOrders')
+      : `<div class="empty">No orders yet.</div>`);
+  });
+}
+const track = id => run(async () => {
+  const d = (await api('GET', `/orders/${id}/track`)).data;
+  $('st' + id).textContent = d.status; $('st' + id).className = 'pill ' + d.status; toast(`Order #${d.order_id} is ${d.status}`, 'ok');
+});
+const setStatus = id => run(async () => {
+  const d = (await api('POST', `/orders/${id}/status`, { status: $('ns' + id).value })).data;
+  $('st' + id).textContent = d.status; $('st' + id).className = 'pill ' + d.status; toast(`Order #${id} → ${d.status}`, 'ok');
+});
+
+/* ---------- Admin: categories ---------- */
+function vCats(page = 1) {
+  run(async () => {
+    const p = (await api('GET', '/categories?page=' + page)).data;
+    $('view').innerHTML = `<h1>Categories</h1>
+      <div class="card"><div class="two"><div><label>Name</label><input id="c_name"></div><div><label>Description</label><input id="c_desc"></div></div>
+      <p style="margin:12px 0 0"><button onclick="addCat()">Add category</button></p></div>` +
+      (p.data.length ? `<div class="card"><table><tr><th>ID</th><th>Name</th><th>Description</th></tr>` +
+        p.data.map(c => `<tr><td>${c.id}</td><td>${esc(c.name)}</td><td class="muted">${esc(c.description || '')}</td></tr>`).join('') + `</table></div>` + pager(p, 'vCats')
+        : `<div class="empty">No categories yet.</div>`);
+  });
+}
+const addCat = () => run(async () => {
+  await api('POST', '/categories', { name: c_name.value, description: c_desc.value || null });
+  S.cats = []; toast('Category created', 'ok'); vCats();
+});
+
+/* ---------- Admin: products ---------- */
+function vProds(page = 1) {
+  run(async () => {
+    await loadCats();
+    const p = (await api('GET', '/products?page=' + page)).data;
+    $('view').innerHTML = `<h1>Manage products</h1>
+      <div class="card"><div class="two">
+        <div><label>Name</label><input id="p_name"></div>
+        <div><label>Category</label><select id="p_cat">${S.cats.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div>
+        <div><label>Price</label><input id="p_price" type="number" step="0.01" min="0"></div>
+        <div><label>Stock</label><input id="p_stock" type="number" min="0" value="10"></div>
+      </div><label>Description</label><input id="p_desc">
+      <p style="margin:12px 0 0"><button onclick="addProd()" ${S.cats.length ? '' : 'disabled'}>Add product</button>
+      ${S.cats.length ? '' : '<span class="muted"> Create a category first.</span>'}</p></div>` +
+      (p.data.length ? `<div class="card"><table><tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th></th></tr>` +
+        p.data.map(x => `<tr><td>${x.id}</td><td>${esc(x.name)}</td><td>${esc(catName(x.category_id))}</td><td>${money(x.price)}</td>
+        <td><input id="s${x.id}" type="number" min="0" value="${x.stock}" style="width:80px"></td>
+        <td><button class="sm" onclick="setStock(${x.id})">Save stock</button></td></tr>`).join('') + `</table></div>` + pager(p, 'vProds')
+        : `<div class="empty">No products yet.</div>`);
+  });
+}
+const addProd = () => run(async () => {
+  await api('POST', '/products', { name: p_name.value, description: p_desc.value || null, price: Number(p_price.value),
+    category_id: Number(p_cat.value), stock: Number(p_stock.value) });
+  toast('Product created', 'ok'); vProds();
+});
+const setStock = id => run(async () => {
+  await api('PATCH', '/inventory/' + id, { stock: Number($('s' + id).value) }); toast('Stock updated', 'ok');
+});
+
+go(S.user ? 'shop' : 'login');
+</script>
+</body>
+</html>

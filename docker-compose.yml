@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM php:8.3-cli
+        RUN docker-php-ext-install pdo_mysql
+        WORKDIR /var/www
+        EXPOSE 8000
+    container_name: ecommerce-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www
+    environment:
+      # Override .env so Laravel talks to the mysql container instead of 127.0.0.1
+      DB_HOST: mysql
+      DB_PORT: 3306
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: ["sh", "-c", "php artisan config:clear && php artisan migrate --force && php artisan db:seed --force && php artisan permission:cache-reset && php artisan serve --host=0.0.0.0 --port=8000"]
+
+  mysql:
+    image: mysql:8.0
+    container_name: ecommerce-mysql
+    environment:
+      MYSQL_DATABASE: E-commerce
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql-data:

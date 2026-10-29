@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-commerce API Tester</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --ink:#1c2230; --muted:#667085; --line:#dfe3ea; --brand:#2f5bea;
+          --get:#16a34a; --post:#2f5bea; --patch:#d97706; --ok:#16a34a; --err:#dc2626; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 system-ui,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--ink); }
+  header { background:#fff; border-bottom:1px solid var(--line); padding:12px 20px; position:sticky; top:0; z-index:5;
+           display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  header h1 { font-size:17px; margin:0 12px 0 0; }
+  header label { font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:2px; }
+  input, select, textarea { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; color:var(--ink); }
+  textarea { font-family:ui-monospace,Consolas,monospace; font-size:12.5px; }
+  button { font:inherit; padding:7px 14px; border:0; border-radius:6px; background:var(--brand); color:#fff; cursor:pointer; }
+  button.sec { background:#e8ebf2; color:var(--ink); }
+  button:hover { filter:brightness(.93); }
+  #tokenBox { flex:1; min-width:220px; }
+  #tokenBox input { width:100%; font-family:ui-monospace,Consolas,monospace; font-size:12px; }
+  #who { font-size:12px; color:var(--muted); align-self:flex-end; padding-bottom:8px; }
+  main { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:16px; padding:16px 20px; align-items:start; }
+  @media (max-width:900px) { main { grid-template-columns:1fr; } #resp { position:static !important; } }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:18px 0 8px; }
+  h2:first-child { margin-top:0; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; margin-bottom:10px; }
+  .card summary { cursor:pointer; padding:10px 14px; display:flex; gap:10px; align-items:center; list-style:none; }
+  .card summary::-webkit-details-marker { display:none; }
+  .badge { font-size:11px; font-weight:700; color:#fff; padding:2px 8px; border-radius:4px; min-width:52px; text-align:center; }
+  .GET { background:var(--get); } .POST { background:var(--post); } .PATCH { background:var(--patch); }
+  .path { font-family:ui-monospace,Consolas,monospace; font-size:12.5px; color:var(--muted); margin-left:auto; }
+  .body { padding:4px 14px 14px; border-top:1px solid var(--line); }
+  .row { display:flex; flex-direction:column; gap:3px; margin:10px 0; }
+  .row label { font-size:12px; color:var(--muted); }
+  .row input, .row textarea, .row select { width:100%; }
+  .note { font-size:12px; color:var(--muted); margin:8px 0 0; }
+  .quick { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  #resp { position:sticky; top:84px; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  #respHead { padding:10px 14px; border-bottom:1px solid var(--line); display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  #status { font-weight:700; padding:2px 10px; border-radius:4px; color:#fff; background:var(--muted); }
+  #reqLine { font-family:ui-monospace,Consolas,monospace; font-size:12px; color:var(--muted); word-break:break-all; }
+  pre { margin:0; padding:14px; max-height:70vh; overflow:auto; font:12.5px/1.5 ui-monospace,Consolas,monospace; white-space:pre-wrap; word-break:break-word; }
+</style>
+</head>
+<body>
+<header>
+  <h1>E-commerce API Tester</h1>
+  <label>API base URL <input id="base" value="/api/v1" size="22"></label>
+  <label id="tokenBox">JWT token (filled automatically after login)
+    <input id="token" placeholder="no token">
+  </label>
+  <button class="sec" onclick="clearToken()">Clear token</button>
+  <span id="who"></span>
+</header>
+
+<main>
+  <section id="forms"></section>
+  <aside id="resp">
+    <div id="respHead"><span id="status">—</span><span id="time"></span><span id="reqLine">Send a request to see the response here.</span></div>
+    <pre id="out"></pre>
+  </aside>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const f = (name, label, type='text', value='', where='body') => ({name, label, type, value, where});
+
+const ENDPOINTS = [
+  { group:'Auth', items:[
+    { title:'Register', method:'POST', path:'/auth/register', auth:false, fields:[
+      f('name','Name','text','Test Student'), f('email','Email','email','student'+Math.floor(Math.random()*9999)+'@test.com'),
+      f('password','Password (min 8)','password','password123'), f('password_confirmation','Confirm password','password','password123') ]},
+    { title:'Login', method:'POST', path:'/auth/login', auth:false, quick:true, fields:[
+      f('email','Email','email','admin@system.com'), f('password','Password','password','password123') ]},
+    { title:'Logout', method:'POST', path:'/auth/logout', fields:[] },
+  ]},
+  { group:'Categories', items:[
+    { title:'List categories', method:'GET', path:'/categories', fields:[ f('page','Page (optional)','number','','query') ]},
+    { title:'Create category (admin)', method:'POST', path:'/categories', fields:[
+      f('name','Name','text','Electronics'), f('description','Description','text','Phones and laptops') ]},
+  ]},
+  { group:'Products', items:[
+    { title:'List products', method:'GET', path:'/products', fields:[ f('page','Page (optional)','number','','query') ]},
+    { title:'Create product (admin)', method:'POST', path:'/products', fields:[
+      f('name','Name','text','iPhone 15'), f('description','Description','text','Smart phone'),
+      f('price','Price','number','999.99'), f('category_id','Category ID','number','1'),
+      f('stock','Stock','number','50'), f('image','Image (optional)','text','') ]},
+    { title:'Update inventory (admin)', method:'PATCH', path:'/inventory/{product}', fields:[
+      f('product','Product ID','number','1','path'), f('stock','New stock','number','100') ]},
+  ]},
+  { group:'Orders', items:[
+    { title:'List orders', method:'GET', path:'/orders', fields:[ f('page','Page (optional)','number','','query') ]},
+    { title:'Create order', method:'POST', path:'/orders', fields:[
+      { name:'items', label:'Items (JSON array)', type:'json', where:'body', value:'[\n  {"product_id": 1, "quantity": 2}\n]' } ]},
+    { title:'Show order', method:'GET', path:'/orders/{orderId}', fields:[ f('orderId','Order ID','number','1','path') ]},
+    { title:'Update order status (admin)', method:'POST', path:'/orders/{orderId}/status', fields:[
+      f('orderId','Order ID','number','1','path'),
+      { name:'status', label:'Status', type:'select', where:'body', value:'confirmed',
+        options:['pending','confirmed','processing','completed','cancelled'] } ]},
+    { title:'Track order status', method:'GET', path:'/orders/{orderId}/track', fields:[ f('orderId','Order ID','number','1','path') ]},
+  ]},
+  { group:'Notifications', items:[
+    { title:'List notifications', method:'GET', path:'/notifications', auth:false, note:'Uses auth:sanctum, not JWT, and returns a view (known issue).', fields:[] },
+  ]},
+];
+
+const QUICK = [
+  { label:'Login as admin', email:'admin@system.com' },
+  { label:'Login as user',  email:'user@system.com' },
+];
+
+function getToken(){ return $('token').value.trim(); }
+function setToken(t){ $('token').value = t || ''; try { localStorage.setItem('jwt', t || ''); } catch(e){} }
+function clearToken(){ setToken(''); $('who').textContent = ''; }
+
+function buildForms(){
+  const root = $('forms');
+  ENDPOINTS.forEach(g => {
+    const h = document.createElement('h2'); h.textContent = g.group; root.appendChild(h);
+    g.items.forEach(ep => {
+      const d = document.createElement('details'); d.className = 'card';
+      d.innerHTML = `<summary><span class="badge ${ep.method}">${ep.method}</span><b>${ep.title}</b><span class="path">${ep.path}</span></summary>`;
+      const b = document.createElement('div'); b.className = 'body';
+      if (ep.quick) {
+        const q = document.createElement('div'); q.className = 'quick';
+        QUICK.forEach(x => {
+          const btn = document.createElement('button'); btn.className = 'sec'; btn.type = 'button'; btn.textContent = x.label;
+          btn.onclick = () => { b.querySelector('[name=email]').value = x.email; b.querySelector('[name=password]').value = 'password123'; send(ep, b); };
+          q.appendChild(btn);
+        });
+        b.appendChild(q);
+      }
+      ep.fields.forEach(fl => {
+        const r = document.createElement('div'); r.className = 'row';
+        const id = `${ep.method}${ep.path}${fl.name}`.replace(/\W/g,'_');
+        let input;
+        if (fl.type === 'json') { input = document.createElement('textarea'); input.rows = 5; }
+        else if (fl.type === 'select') { input = document.createElement('select'); fl.options.forEach(o => input.add(new Option(o, o))); }
+        else { input = document.createElement('input'); input.type = fl.type; }
+        input.id = id; input.name = fl.name; input.value = fl.value;
+        r.innerHTML = `<label for="${id}">${fl.label}</label>`; r.appendChild(input); b.appendChild(r);
+      });
+      if (ep.note) { const n = document.createElement('p'); n.className = 'note'; n.textContent = ep.note; b.appendChild(n); }
+      const go = document.createElement('button'); go.type = 'button'; go.textContent = 'Send request'; go.onclick = () => send(ep, b);
+      b.appendChild(go); d.appendChild(b); root.appendChild(d);
+    });
+  });
+}
+
+async function send(ep, box){
+  let path = ep.path; const query = new URLSearchParams(); const body = {};
+  for (const fl of ep.fields) {
+    const el = box.querySelector(`[name="${fl.name}"]`); let v = el.value;
+    if (fl.where === 'path') { path = path.replace(`{${fl.name}}`, encodeURIComponent(v)); continue; }
+    if (v === '') continue;
+    if (fl.type === 'json') { try { v = JSON.parse(v); } catch(e) { return show(0, 0, `${ep.method} ${path}`, {error:'Invalid JSON in "'+fl.label+'": '+e.message}); } }
+    else if (fl.type === 'number') v = Number(v);
+    if (fl.where === 'query') query.set(fl.name, v); else body[fl.name] = v;
+  }
+  const url = $('base').value.replace(/\/$/, '') + path + (query.toString() ? '?' + query : '');
+  const headers = { 'Accept':'application/json' };
+  const opts = { method:ep.method, headers };
+  if (ep.method !== 'GET') { headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  if (ep.auth !== false && getToken()) headers['Authorization'] = 'Bearer ' + getToken();
+  else if (ep.auth === false && getToken() && ep.path === '/notifications') headers['Authorization'] = 'Bearer ' + getToken();
+
+  const t0 = performance.now();
+  try {
+    const res = await fetch(url, opts);
+    const text = await res.text(); let data; try { data = JSON.parse(text); } catch(e) { data = text; }
+    show(res.status, Math.round(performance.now()-t0), `${ep.method} ${url}`, data);
+    const tok = data && data.data && data.data.access_token;
+    if (tok) { setToken(tok); const u = data.data.user; $('who').textContent = `Logged in: ${u.email} [${(u.roles||[]).join(', ')}]`; }
+    if (ep.path === '/auth/logout' && res.ok) clearToken();
+  } catch (e) {
+    show(0, Math.round(performance.now()-t0), `${ep.method} ${url}`, {error:'Network error: '+e.message+' — is the server running?'});
+  }
+}
+
+function show(status, ms, line, data){
+  const s = $('status'); s.textContent = status || 'ERR';
+  s.style.background = status >= 200 && status < 300 ? 'var(--ok)' : 'var(--err)';
+  $('time').textContent = ms + ' ms'; $('reqLine').textContent = line;
+  $('out').textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+}
+
+try { $('token').value = localStorage.getItem('jwt') || ''; } catch(e){}
+buildForms();
+</script>
+</body>
+</html>

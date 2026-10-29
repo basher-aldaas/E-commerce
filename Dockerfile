@@ -1,0 +1,7 @@
+FROM php:8.3-cli
+
+RUN docker-php-ext-install pdo_mysql
+
+WORKDIR /var/www
+
+EXPOSE 8000
