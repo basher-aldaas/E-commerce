@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: http://localhost:8000/api/v1/categories
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: name
+        value: elec
+      - type: text
+        key: descreiption
+        value: ""
+        disabled: true
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 28 Oct 2026 21:29:36 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "name": "elec",
+              "updated_at": "2026-10-28T21:29:36.000000Z",
+              "created_at": "2026-10-28T21:29:36.000000Z",
+              "id": 2
+          },
+          "message": "Category created successfully",
+          "status_code": 201,
+          "timestamp": "2026-10-28T21:29:36+00:00"
+      }
+order: 2000

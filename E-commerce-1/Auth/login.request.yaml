@@ -1,0 +1,17 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/auth/login
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: email
+      value: user@system.com
+    - type: text
+      key: password
+      value: password123
+examples: ./.resources/login.resources/examples
+order: 3000

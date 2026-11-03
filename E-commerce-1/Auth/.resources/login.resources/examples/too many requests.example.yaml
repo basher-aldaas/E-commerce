@@ -1,0 +1,38 @@
+$kind: http-example
+request:
+  url: http://localhost:8000/api/v1/auth/login
+  method: POST
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: email
+        value: user@system.com
+      - type: text
+        key: password
+        value: password12
+response:
+  statusCode: 429
+  statusText: Too Many Requests
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 28 Oct 2026 20:28:34 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": "Too many login attempts. Please try again later.",
+          "status_code": 429,
+          "timestamp": "2026-10-28T20:28:34+00:00"
+      }
+order: 3000

@@ -1,0 +1,7 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/categories
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+order: 2000

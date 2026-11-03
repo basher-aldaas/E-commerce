@@ -1,0 +1,15 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/auth/logout
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: formdata
+  content: []
+auth:
+  type: bearer
+  credentials:
+    token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL3YxL2F1dGgvcmVnaXN0ZXIiLCJpYXQiOjE3OTMyMTk1NDEsImV4cCI6MTc5MzIyMzE0MSwibmJmIjoxNzkzMjE5NTQxLCJqdGkiOiJuN1dUOW10a29waHJ0SzVjIiwic3ViIjoiMjQiLCJwcnYiOiIzNGNlYzdlYzI5NjU2ZjU0ZDIzODgwMzcwMGNiM2ZhNjFhNjMyOThhIn0.Y9rft0q-FaysxyNo22aQV4fTgffVhDSpqKHyjKG-eq8
+examples: ./.resources/logout.resources/examples
+order: 2000

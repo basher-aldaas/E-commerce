@@ -22,7 +22,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_products',
             'view_categories',
             'create_order',
-            'view_order',
             'view_orders',
             'track_order_status',
         ];
@@ -33,9 +32,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_products',
             'create_category',
             'view_categories',
-            'view_order',
             'view_orders',
             'update_order_status',
+            'track_order_status',
             'manage_inventory',
         ];
 

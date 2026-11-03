@@ -1,0 +1,56 @@
+$kind: http-example
+request:
+  url: http://localhost:8000/api/v1/auth/register
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: name
+        value: bashir
+      - type: text
+        key: email
+        value: bashir@system.com
+      - type: text
+        key: password
+        value: pasword123
+      - type: text
+        key: password_confirmation
+        value: pasword123
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 28 Oct 2026 19:44:03 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL3YxL2F1dGgvcmVnaXN0ZXIiLCJpYXQiOjE3OTMyMTY2NDMsImV4cCI6MTc5MzIyMDI0MywibmJmIjoxNzkzMjE2NjQzLCJqdGkiOiJ1WFU2QlFYOVV4WHZuZUtSIiwic3ViIjoiMjMiLCJwcnYiOiIzNGNlYzdlYzI5NjU2ZjU0ZDIzODgwMzcwMGNiM2ZhNjFhNjMyOThhIn0.Oul-gwhRaOAHbmwfAtY3wdiiwABdEkvC1K3CHWSmPug",
+              "token_type": "bearer",
+              "expires_in": 3600,
+              "user": {
+                  "id": 23,
+                  "name": "bashir",
+                  "email": "bashir@system.com",
+                  "roles": [
+                      "user"
+                  ]
+              }
+          },
+          "message": "Registration successful",
+          "status_code": 201,
+          "timestamp": "2026-10-28T19:44:03+00:00"
+      }
+order: 1000

@@ -24,7 +24,7 @@ class StoreProductRequest extends ApiFormRequest
                 Rule::exists('categories', 'id'),
             ],
             'stock' => ['required', 'integer', 'min:0'],
-            'image' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
         ];
     }
 }

@@ -1,0 +1,27 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/auth/register
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: name
+      value: bashir
+      disabled: true
+    - type: text
+      key: email
+      value: bashira@system.com
+      disabled: true
+    - type: text
+      key: password
+      value: pasword123
+      disabled: true
+    - type: text
+      key: password_confirmation
+      value: pasword123
+      disabled: true
+examples: ./.resources/Register.resources/examples
+order: 1000

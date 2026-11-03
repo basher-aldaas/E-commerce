@@ -1,0 +1,50 @@
+$kind: http-example
+request:
+  url: http://localhost:8000/api/v1/auth/login
+  method: POST
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: email
+        value: user@system.com
+      - type: text
+        key: password
+        value: password123
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 28 Oct 2026 20:28:01 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL3YxL2F1dGgvbG9naW4iLCJpYXQiOjE3OTMyMTkyODAsImV4cCI6MTc5MzIyMjg4MCwibmJmIjoxNzkzMjE5MjgwLCJqdGkiOiJtU1FIU1IzUERiaU5OTlk4Iiwic3ViIjoiMiIsInBydiI6IjM0Y2VjN2VjMjk2NTZmNTRkMjM4ODAzNzAwY2IzZmE2MWE2MzI5OGEifQ.AhtyrGCQHmwOg_KVWTYsxyrmRcufJBsyHrJdyE74gHQ",
+              "token_type": "Bearer",
+              "expires_in": 3600,
+              "user": {
+                  "id": 2,
+                  "name": "Test User",
+                  "email": "user@system.com",
+                  "roles": [
+                      "user"
+                  ]
+              }
+          },
+          "message": "Login successful",
+          "status_code": 200,
+          "timestamp": "2026-10-28T20:28:01+00:00"
+      }
+order: 1000

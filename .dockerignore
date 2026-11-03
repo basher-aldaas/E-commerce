@@ -1,0 +1,8 @@
+# Keep the build context small. The app code is bind-mounted at runtime
+# (see docker-compose.yml), so the image build itself needs none of it.
+.git
+.github
+node_modules
+vendor
+storage/logs/*
+.env

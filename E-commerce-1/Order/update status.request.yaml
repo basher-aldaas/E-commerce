@@ -1,0 +1,4 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/orders/1/status
+method: POST
+order: 3000
