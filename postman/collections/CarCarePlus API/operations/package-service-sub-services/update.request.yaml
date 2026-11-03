@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/api/package-service-sub-services/2"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: package_service_id
+      value: "1"
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/update.resources/examples
+order: 4000

@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/newCart"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: formdata
+    content: []
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Host
+      value: 127.0.0.1:8000
+    - key: Date
+      value: Fri, 15 Dec 2023 13:55:15 GMT
+    - key: Date
+      value: Fri, 15 Dec 2023 13:55:15 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "message": "add successfully"
+      }
+order: 2000

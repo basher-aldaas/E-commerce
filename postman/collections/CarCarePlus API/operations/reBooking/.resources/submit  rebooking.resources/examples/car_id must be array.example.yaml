@@ -1,0 +1,48 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/bookings/quote"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: car_ids
+        value: "1"
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Tue, 11 Aug 2026 19:37:12 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": {
+              "car_ids": [
+                  "The car ids field must be an array."
+              ],
+              "service_id": [
+                  "The service id field is required."
+              ],
+              "booking_type": [
+                  "The booking type field is required."
+              ],
+              "payment_method": [
+                  "The payment method field is required."
+              ]
+          },
+          "message": "The car ids field must be an array. (and 3 more errors)",
+          "status_code": 422,
+          "timestamp": "2026-08-11T22:37:12+03:00"
+      }
+order: 4000

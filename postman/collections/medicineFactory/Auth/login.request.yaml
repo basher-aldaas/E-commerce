@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{url}}/api/auth/login"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: email
+      value: basher1@gmail.com
+    - type: text
+      key: phoneNumber
+      value: "0968538721"
+      disabled: true
+    - type: text
+      key: password
+      value: 5748489k
+auth:
+  type: bearer
+  credentials:
+    token: "{{auth_secret_16kn}}"
+examples: ./.resources/login.resources/examples
+order: 2000

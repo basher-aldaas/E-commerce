@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{url}}/delete_question/30"
+  method: GET
+  headers:
+    Accept: application/json
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Wed, 29 May 2024 15:48:43 GMT
+    - key: Date
+      value: Wed, 29 May 2024 15:48:43 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "58"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [],
+          "message": "This question does not belongs to you"
+      }
+order: 4000

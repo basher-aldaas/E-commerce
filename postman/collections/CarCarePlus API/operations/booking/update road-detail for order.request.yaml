@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/api/bookings/60/road-detail"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content: []
+auth:
+  type: bearer
+  credentials:
+    token: "{{workshop}}"
+examples: ./.resources/update road-detail for order.resources/examples
+order: 18000

@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/admins/27"
+method: DELETE
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/delete.resources/examples
+order: 4000

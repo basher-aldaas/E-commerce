@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{url}}/update_profile"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: name
+      value: user
+    - type: text
+      key: email
+      value: user@gmil.com
+    - type: text
+      key: password
+      value: "11111111"
+examples: ./.resources/update_profile.resources/examples
+order: 2000

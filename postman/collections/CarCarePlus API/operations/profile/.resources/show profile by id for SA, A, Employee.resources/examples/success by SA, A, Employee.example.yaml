@@ -1,0 +1,37 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/users/1"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 31 Jul 2026 19:21:41 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 1,
+              "name": "المدير العام",
+              "email": "superadmin@system.com",
+              "phone": "0500000001",
+              "image_url": "https://via.placeholder.com/200x200.png/00bbbb?text=people+error",
+              "is_active": true,
+              "role": "super_admin"
+          },
+          "message": "User profile retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-31T19:21:41+00:00"
+      }
+order: 1000

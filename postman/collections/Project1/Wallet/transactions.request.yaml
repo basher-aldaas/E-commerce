@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{url}}/wallet/transactions"
+method: GET
+headers:
+  Accept: application/json
+examples: ./.resources/transactions.resources/examples
+order: 5000

@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{url}}/user_reset_password"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: code
+        value: "732536"
+      - type: text
+        key: password
+        value: "22222222"
+      - type: text
+        key: password_confirmation
+        value: "22222222"
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 16 Jul 2025 09:52:27 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "58"
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": {
+              "code": [
+                  "The selected code is invalid."
+              ]
+          }
+      }
+order: 1000

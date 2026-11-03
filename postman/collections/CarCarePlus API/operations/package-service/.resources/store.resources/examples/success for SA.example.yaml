@@ -1,0 +1,48 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/package-services"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: package_id
+        value: "1"
+      - type: text
+        key: service_id
+        value: "3"
+      - type: text
+        key: allowed_count
+        value: "2"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 22 Jul 2026 03:01:59 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 3,
+              "package_id": 1,
+              "service_id": 3,
+              "allowed_count": 2,
+              "created_at": null,
+              "updated_at": null
+          },
+          "message": "Package service created successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-22T03:01:59+00:00"
+      }
+order: 1000

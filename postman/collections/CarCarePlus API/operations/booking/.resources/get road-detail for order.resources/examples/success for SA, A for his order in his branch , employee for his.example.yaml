@@ -1,0 +1,30 @@
+$kind: http-example
+name: success for SA, A for his order in his branch , employee for his ordera, customer for his order , workshop for his order
+request:
+  url: "{{base_url}}/api/bookings/58/road-detail"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 12 Aug 2026 17:29:12 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": null,
+          "message": "Road assistance detail retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-12T20:29:12+03:00"
+      }
+order: 1000

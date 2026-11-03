@@ -1,0 +1,79 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/purchase-requests/3"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 14 Aug 2026 12:21:08 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 3,
+              "branch_id": 3,
+              "branch": {
+                  "id": 3,
+                  "admin_id": 2,
+                  "name": "Dammam Branch",
+                  "name_ar": "فرع الدمام",
+                  "city": "Dammam",
+                  "address": "طريق الملك سعود، الشاطئ",
+                  "latitude": "26.4207000",
+                  "longitude": "50.0888000",
+                  "phone": "0513333333",
+                  "is_active": true,
+                  "working_hours": {
+                      "end": "23:00",
+                      "start": "08:00"
+                  },
+                  "is_24h": false
+              },
+              "from_branch_id": null,
+              "from_branch": null,
+              "status": "rejected",
+              "total_amount": "1500.00",
+              "notes": "طلب شراء مرفوض",
+              "request_type": false,
+              "rejection_reason": "تجاوز الميزانية المخصصة",
+              "approved_at": null,
+              "items": [
+                  {
+                      "id": 4,
+                      "purchase_req_id": 3,
+                      "material_id": 2,
+                      "material": {
+                          "id": 2,
+                          "material_unit_id": 2,
+                          "name": "Premium Car Shampoo",
+                          "name_ar": "شامبو غسيل سيارات ممتاز",
+                          "description": "شامبو واكس عالي الرغوة لحماية الطلاء",
+                          "unit_price": "15.00",
+                          "is_visible_to_customer": true,
+                          "is_active": true
+                      },
+                      "quantity": "100.00",
+                      "unit_price": "15.00",
+                      "total_price": "1500.00"
+                  }
+              ],
+              "created_at": "2026-08-14T00:01:50.000000Z",
+              "updated_at": "2026-08-14T00:01:50.000000Z"
+          },
+          "message": "purchase request fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-14T15:21:08+03:00"
+      }
+order: 1000

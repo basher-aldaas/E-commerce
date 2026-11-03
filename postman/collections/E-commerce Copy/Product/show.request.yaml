@@ -1,0 +1,16 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/products/1
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content: []
+auth:
+  type: bearer
+  credentials:
+    token: "{{bashir}}"
+settings: {}
+examples: ./.resources/show.resources/examples
+order: 3000

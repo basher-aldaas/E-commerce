@@ -1,0 +1,52 @@
+$kind: http-example
+name: if you want to transfer to another branch you must add type =transfer_out
+request:
+  url: "{{base_url}}/api/inventory-transactions"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: branch_id
+        value: "2"
+      - type: text
+        key: material_id
+        value: "1"
+      - type: text
+        key: type
+        value: out
+      - type: text
+        key: quantity
+        value: "1"
+      - type: text
+        key: destination_branch_id
+        value: "1"
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 31 Jul 2026 14:39:25 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": {
+              "destination_branch_id": [
+                  "The destination branch id field is prohibited unless type is in transfer_out."
+              ]
+          },
+          "message": "The destination branch id field is prohibited unless type is in transfer_out.",
+          "status_code": 422,
+          "timestamp": "2026-07-31T14:39:25+00:00"
+      }
+order: 6000

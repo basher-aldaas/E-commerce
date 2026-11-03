@@ -1,0 +1,33 @@
+$kind: http-request
+url: "{{url}}/course/create_course"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: subject_id
+      value: "10"
+    - type: text
+      key: name
+      value: c++
+    - type: text
+      key: content
+      value: learning c++ in toe days
+    - type: text
+      key: poster
+      value: ufgviusdhgeruihguiervbd;jgdb
+    - type: text
+      key: hour
+      value: "20"
+    - type: text
+      key: requirements
+      value: mntdjktdyjktjk
+    - type: text
+      key: price
+      value: "20"
+    - type: text
+      key: valuation
+      value: ""
+order: 2000

@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/getFactory?factory_id=6"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    factory_id: "6"
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    - key: Host
+      value: 127.0.0.1:8000
+    - key: Date
+      value: Wed, 13 Dec 2023 15:21:50 GMT
+    - key: Date
+      value: Wed, 13 Dec 2023 15:21:50 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "56"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": "This factory not found in data"
+      }
+order: 3000

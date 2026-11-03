@@ -1,0 +1,45 @@
+$kind: http-request
+url: "{{base_url}}/api/cars/1"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: user_id
+      value: "4"
+    - type: text
+      key: brand_id
+      value: "13"
+    - type: text
+      key: car_type_id
+      value: "1"
+    - type: text
+      key: plate_number
+      value: utt-3945
+    - type: text
+      key: model
+      value: cvAccent
+    - type: text
+      key: year
+      value: "2018"
+    - type: text
+      key: color
+      value: red
+    - type: text
+      key: fuel_type
+      value: hybrid
+    - type: text
+      key: cylinders
+      value: "6"
+    - type: text
+      key: mileage
+      value: "207002"
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+examples: ./.resources/store.resources/examples
+order: 4000

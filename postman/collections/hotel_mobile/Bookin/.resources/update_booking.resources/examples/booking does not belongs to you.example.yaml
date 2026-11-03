@@ -1,0 +1,32 @@
+$kind: http-example
+request:
+  url: "{{url}}/update_booking/6"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content: []
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 17 Jul 2025 15:34:02 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "59"
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [],
+          "message": "This booking does not belongs to you to update it"
+      }
+order: 5000

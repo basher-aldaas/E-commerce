@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/registration-requests/companies"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+order: 6000

@@ -1,0 +1,14 @@
+$kind: http-request
+url: http://localhost:8000/api/wallet/deposit?amount=999&user_id=12
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  - key: amount
+    value: "999"
+  - key: user_id
+    value: "12"
+  - key: signature
+    value: 150107dc0e8f7ea1bfe62617ce541f47b047bf45857031a1c7ab392dba879859
+    disabled: true
+order: 1000

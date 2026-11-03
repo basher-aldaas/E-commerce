@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/admin/searchCat?name=Antibioticsf"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    name: Antibioticsf
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    - key: Host
+      value: 127.0.0.1:8000
+    - key: Date
+      value: Mon, 04 Dec 2023 18:03:29 GMT
+    - key: Date
+      value: Mon, 04 Dec 2023 18:03:29 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": "not found"
+      }
+order: 2000

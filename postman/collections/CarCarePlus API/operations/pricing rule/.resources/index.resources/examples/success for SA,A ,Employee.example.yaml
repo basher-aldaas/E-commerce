@@ -1,0 +1,264 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/pricing-rules"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 06 Aug 2026 08:59:09 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 1,
+                  "pricing_rule_type_id": 1,
+                  "rule_type": {
+                      "id": 1,
+                      "name": "vehicle_type",
+                      "name_ar": "نوع السيارة"
+                  },
+                  "name": "SUV Extra Charge",
+                  "name_ar": "زيادة سعر سيارات SUV",
+                  "value": 20,
+                  "conditions": {
+                      "vehicle_type": "SUV"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 2,
+                  "pricing_rule_type_id": 1,
+                  "rule_type": {
+                      "id": 1,
+                      "name": "vehicle_type",
+                      "name_ar": "نوع السيارة"
+                  },
+                  "name": "Luxury Vehicle Extra Charge",
+                  "name_ar": "زيادة سعر السيارات الفاخرة",
+                  "value": 30,
+                  "conditions": {
+                      "vehicle_type": "Luxury"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 3,
+                  "pricing_rule_type_id": 2,
+                  "rule_type": {
+                      "id": 2,
+                      "name": "service",
+                      "name_ar": "نوع الخدمة"
+                  },
+                  "name": "Washing Service Extra Charge",
+                  "name_ar": "زيادة سعر خدمة الغسيل",
+                  "value": 10,
+                  "conditions": {
+                      "service_type": "washing"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 4,
+                  "pricing_rule_type_id": 2,
+                  "rule_type": {
+                      "id": 2,
+                      "name": "service",
+                      "name_ar": "نوع الخدمة"
+                  },
+                  "name": "Maintenance Service Extra Charge",
+                  "name_ar": "زيادة سعر خدمة الصيانة",
+                  "value": 25,
+                  "conditions": {
+                      "service_type": "maintenance"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 5,
+                  "pricing_rule_type_id": 3,
+                  "rule_type": {
+                      "id": 3,
+                      "name": "sub_service",
+                      "name_ar": "الخدمة الفرعية"
+                  },
+                  "name": "Interior Cleaning Extra",
+                  "name_ar": "زيادة سعر تنظيف المقصورة",
+                  "value": 15,
+                  "conditions": {
+                      "sub_service": "interior_cleaning"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 6,
+                  "pricing_rule_type_id": 4,
+                  "rule_type": {
+                      "id": 4,
+                      "name": "customer_type",
+                      "name_ar": "نوع العميل"
+                  },
+                  "name": "Company Customer Discount",
+                  "name_ar": "خصم عملاء الشركات",
+                  "value": -10,
+                  "conditions": {
+                      "customer_type": "company"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 7,
+                  "pricing_rule_type_id": 4,
+                  "rule_type": {
+                      "id": 4,
+                      "name": "customer_type",
+                      "name_ar": "نوع العميل"
+                  },
+                  "name": "Personal Customer Price",
+                  "name_ar": "السعر الأساسي للعميل الشخصي",
+                  "value": 0,
+                  "conditions": {
+                      "customer_type": "personal"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 8,
+                  "pricing_rule_type_id": 5,
+                  "rule_type": {
+                      "id": 5,
+                      "name": "package",
+                      "name_ar": "الباقة"
+                  },
+                  "name": "Gold Package Discount",
+                  "name_ar": "خصم الباقة الذهبية",
+                  "value": -15,
+                  "conditions": {
+                      "package": "gold"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 9,
+                  "pricing_rule_type_id": 5,
+                  "rule_type": {
+                      "id": 5,
+                      "name": "package",
+                      "name_ar": "الباقة"
+                  },
+                  "name": "Silver Package Discount",
+                  "name_ar": "خصم الباقة الفضية",
+                  "value": -5,
+                  "conditions": {
+                      "package": "silver"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 10,
+                  "pricing_rule_type_id": 6,
+                  "rule_type": {
+                      "id": 6,
+                      "name": "branch",
+                      "name_ar": "الفرع"
+                  },
+                  "name": "Premium Branch Extra Charge",
+                  "name_ar": "زيادة سعر الفرع المميز",
+                  "value": 10,
+                  "conditions": {
+                      "branch_type": "premium"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 11,
+                  "pricing_rule_type_id": 7,
+                  "rule_type": {
+                      "id": 7,
+                      "name": "day_of_week",
+                      "name_ar": "يوم الأسبوع"
+                  },
+                  "name": "Weekend Extra Charge",
+                  "name_ar": "زيادة سعر عطلة نهاية الأسبوع",
+                  "value": 10,
+                  "conditions": {
+                      "days": [
+                          "saturday",
+                          "sunday"
+                      ]
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 12,
+                  "pricing_rule_type_id": 8,
+                  "rule_type": {
+                      "id": 8,
+                      "name": "time_period",
+                      "name_ar": "الفترة الزمنية"
+                  },
+                  "name": "Peak Hours Extra Charge",
+                  "name_ar": "زيادة سعر ساعات الذروة",
+                  "value": 15,
+                  "conditions": {
+                      "end_time": "21:00",
+                      "start_time": "17:00"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 13,
+                  "pricing_rule_type_id": 9,
+                  "rule_type": {
+                      "id": 9,
+                      "name": "season",
+                      "name_ar": "الموسم"
+                  },
+                  "name": "Summer Extra Charge",
+                  "name_ar": "زيادة سعر موسم الصيف",
+                  "value": 10,
+                  "conditions": {
+                      "season": "summer"
+                  },
+                  "is_active": true
+              },
+              {
+                  "id": 14,
+                  "pricing_rule_type_id": 10,
+                  "rule_type": {
+                      "id": 10,
+                      "name": "booking_type",
+                      "name_ar": "نوع الحجز"
+                  },
+                  "name": "Emergency Booking Extra",
+                  "name_ar": "زيادة سعر الحجز الطارئ",
+                  "value": 20,
+                  "conditions": {
+                      "booking_type": "emergency"
+                  },
+                  "is_active": true
+              }
+          ],
+          "message": "pricing rules fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-06T08:59:09+00:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 15,
+              "total": 14,
+              "last_page": 1
+          }
+      }
+order: 2000

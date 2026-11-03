@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/registration-requests/companies/:company/reject"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+pathVariables:
+  - key: company
+    value: "1"
+    description: Company ID
+body:
+  type: text
+  content: |-
+    {
+        "reason": "Incomplete commercial registration documents"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+order: 3000

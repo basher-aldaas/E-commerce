@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{url}}/search_course/21"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: course_name
+      value: kkk
+examples: ./.resources/search_course.resources/examples
+order: 1000

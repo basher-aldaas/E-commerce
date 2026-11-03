@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{base_url}}/api/suggested-problems/4"
+method: DELETE
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+order: 5000

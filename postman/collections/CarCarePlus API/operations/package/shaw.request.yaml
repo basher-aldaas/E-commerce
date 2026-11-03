@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{base_url}}/api/packages/1"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content: []
+auth:
+  type: bearer
+  credentials:
+    token: "{{customer1-token}}"
+settings: {}
+examples: ./.resources/shaw.resources/examples
+order: 2000

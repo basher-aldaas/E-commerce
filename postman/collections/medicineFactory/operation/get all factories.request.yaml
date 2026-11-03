@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{url}}/api/getFactories"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 15000

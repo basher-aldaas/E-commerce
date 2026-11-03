@@ -1,0 +1,51 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/inventories"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: branch_id
+        value: "7"
+      - type: text
+        key: material_id
+        value: "2"
+      - type: text
+        key: quantity
+        value: "34"
+      - type: text
+        key: min_quantity
+        value: "2"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 31 Jul 2026 12:26:30 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 32,
+              "branch_id": 7,
+              "material_id": 2,
+              "quantity": "34.00",
+              "min_quantity": "2.00",
+              "updated_at": null
+          },
+          "message": "inventory created successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-31T12:26:30+00:00"
+      }
+order: 5000

@@ -1,0 +1,90 @@
+$kind: http-example
+request:
+  url: "{{url}}/get_all_room_not_booking"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 18 Jul 2025 09:00:09 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "57"
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 2,
+                  "title": "Bed Room",
+                  "image": "storage/rooms/20250718_085046_j07ZCa.jpg",
+                  "description": "In the third floor , It has  a bath room and 2 TV",
+                  "price": 50,
+                  "wifi": 0,
+                  "room_type": "regular",
+                  "status": null,
+                  "bed_number": 1,
+                  "valuation": null,
+                  "created_at": "2025-07-18T08:50:46.000000Z",
+                  "updated_at": "2025-07-18T08:50:46.000000Z",
+                  "bookings": []
+              },
+              {
+                  "id": 3,
+                  "title": "Bed Room",
+                  "image": "storage/rooms/20250718_085754_RsF2t8.jpg",
+                  "description": "In the third floor , It has  a bath room and 2 TV",
+                  "price": 50,
+                  "wifi": 0,
+                  "room_type": "regular",
+                  "status": null,
+                  "bed_number": 1,
+                  "valuation": null,
+                  "created_at": "2025-07-18T08:57:54.000000Z",
+                  "updated_at": "2025-07-18T08:57:54.000000Z",
+                  "bookings": []
+              },
+              {
+                  "id": 5,
+                  "title": "Bed Room",
+                  "image": "storage/rooms/20250718_085809_396Q5s.jpg",
+                  "description": "In the third floor , It has  a bath room and 2 TV",
+                  "price": 50,
+                  "wifi": 0,
+                  "room_type": "regular",
+                  "status": null,
+                  "bed_number": 1,
+                  "valuation": null,
+                  "created_at": "2025-07-18T08:58:09.000000Z",
+                  "updated_at": "2025-07-18T08:58:09.000000Z",
+                  "bookings": []
+              },
+              {
+                  "id": 6,
+                  "title": "Bed Room",
+                  "image": "storage/rooms/20250718_085814_yMhCLn.jpg",
+                  "description": "In the third floor , It has  a bath room and 2 TV",
+                  "price": 50,
+                  "wifi": 0,
+                  "room_type": "regular",
+                  "status": null,
+                  "bed_number": 1,
+                  "valuation": null,
+                  "created_at": "2025-07-18T08:58:14.000000Z",
+                  "updated_at": "2025-07-18T08:58:14.000000Z",
+                  "bookings": []
+              }
+          ],
+          "message": "Rooms that are currently not booked."
+      }
+order: 1000

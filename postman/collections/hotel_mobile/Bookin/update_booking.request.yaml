@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{url}}/update_booking/6"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content: []
+examples: ./.resources/update_booking.resources/examples
+order: 2000

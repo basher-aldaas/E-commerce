@@ -1,0 +1,273 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/wallets"
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 12 Aug 2026 19:15:55 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 21,
+                  "user_id": 20,
+                  "user": {
+                      "id": 20,
+                      "name": "Maryjane Schumm",
+                      "email": "marcelino46@example.org",
+                      "phone": "0991251676",
+                      "image_url": "https://via.placeholder.com/200x200.png/0077dd?text=people+molestias",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T22:13:24+03:00",
+                  "updated_at": "2026-08-12T22:13:24+03:00"
+              },
+              {
+                  "id": 17,
+                  "user_id": 45,
+                  "user": {
+                      "id": 45,
+                      "name": "مركز الواحة للسيارات",
+                      "email": "workshop16@system.com",
+                      "phone": "0510000016",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:45+03:00",
+                  "updated_at": "2026-08-12T15:20:45+03:00"
+              },
+              {
+                  "id": 18,
+                  "user_id": 46,
+                  "user": {
+                      "id": 46,
+                      "name": "كراج اللؤلؤة",
+                      "email": "workshop17@system.com",
+                      "phone": "0510000017",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:45+03:00",
+                  "updated_at": "2026-08-12T15:20:45+03:00"
+              },
+              {
+                  "id": 19,
+                  "user_id": 47,
+                  "user": {
+                      "id": 47,
+                      "name": "نجمة الجنوب للسيارات",
+                      "email": "workshop18@system.com",
+                      "phone": "0510000018",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:45+03:00",
+                  "updated_at": "2026-08-12T15:20:45+03:00"
+              },
+              {
+                  "id": 20,
+                  "user_id": 48,
+                  "user": {
+                      "id": 48,
+                      "name": "مركز القصيم للسيارات",
+                      "email": "workshop19@system.com",
+                      "phone": "0510000019",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:45+03:00",
+                  "updated_at": "2026-08-12T15:20:45+03:00"
+              },
+              {
+                  "id": 13,
+                  "user_id": 41,
+                  "user": {
+                      "id": 41,
+                      "name": "الرواد للعناية بالسيارات",
+                      "email": "workshop12@system.com",
+                      "phone": "0510000012",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:44+03:00",
+                  "updated_at": "2026-08-12T15:20:44+03:00"
+              },
+              {
+                  "id": 14,
+                  "user_id": 42,
+                  "user": {
+                      "id": 42,
+                      "name": "ورشة النخبة للسيارات",
+                      "email": "workshop13@system.com",
+                      "phone": "0510000013",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:44+03:00",
+                  "updated_at": "2026-08-12T15:20:44+03:00"
+              },
+              {
+                  "id": 15,
+                  "user_id": 43,
+                  "user": {
+                      "id": 43,
+                      "name": "مركز البحر للسيارات",
+                      "email": "workshop14@system.com",
+                      "phone": "0510000014",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:44+03:00",
+                  "updated_at": "2026-08-12T15:20:44+03:00"
+              },
+              {
+                  "id": 16,
+                  "user_id": 44,
+                  "user": {
+                      "id": 44,
+                      "name": "مركز الساحل للصيانة",
+                      "email": "workshop15@system.com",
+                      "phone": "0510000015",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:44+03:00",
+                  "updated_at": "2026-08-12T15:20:44+03:00"
+              },
+              {
+                  "id": 9,
+                  "user_id": 37,
+                  "user": {
+                      "id": 37,
+                      "name": "الوطنية لإصلاح السيارات",
+                      "email": "workshop8@system.com",
+                      "phone": "0510000008",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:43+03:00",
+                  "updated_at": "2026-08-12T15:20:43+03:00"
+              },
+              {
+                  "id": 10,
+                  "user_id": 38,
+                  "user": {
+                      "id": 38,
+                      "name": "مركز قيادة الصحراء",
+                      "email": "workshop9@system.com",
+                      "phone": "0510000009",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:43+03:00",
+                  "updated_at": "2026-08-12T15:20:43+03:00"
+              },
+              {
+                  "id": 11,
+                  "user_id": 39,
+                  "user": {
+                      "id": 39,
+                      "name": "مركز الجبل للسيارات",
+                      "email": "workshop10@system.com",
+                      "phone": "0510000010",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:43+03:00",
+                  "updated_at": "2026-08-12T15:20:43+03:00"
+              },
+              {
+                  "id": 12,
+                  "user_id": 40,
+                  "user": {
+                      "id": 40,
+                      "name": "كراج خط السرعة",
+                      "email": "workshop11@system.com",
+                      "phone": "0510000011",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:43+03:00",
+                  "updated_at": "2026-08-12T15:20:43+03:00"
+              },
+              {
+                  "id": 5,
+                  "user_id": 33,
+                  "user": {
+                      "id": 33,
+                      "name": "مركز الخليج للسيارات",
+                      "email": "workshop4@system.com",
+                      "phone": "0510000004",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:42+03:00",
+                  "updated_at": "2026-08-12T15:20:42+03:00"
+              },
+              {
+                  "id": 6,
+                  "user_id": 34,
+                  "user": {
+                      "id": 34,
+                      "name": "ورشة الدقة للسيارات",
+                      "email": "workshop5@system.com",
+                      "phone": "0510000005",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "balance": "0.00",
+                  "created_at": "2026-08-12T15:20:42+03:00",
+                  "updated_at": "2026-08-12T15:20:42+03:00"
+              }
+          ],
+          "message": "Wallets retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-12T22:15:55+03:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 15,
+              "total": 21,
+              "last_page": 2
+          }
+      }
+order: 1000

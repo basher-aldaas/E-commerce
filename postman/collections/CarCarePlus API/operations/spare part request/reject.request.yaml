@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base_url}}/api/spare-part-requests/23/reject"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: notes
+      value: rejectin reason
+      disabled: true
+auth:
+  type: bearer
+  credentials:
+    token: "{{customer1-token}}"
+examples: ./.resources/reject.resources/examples
+order: 5000

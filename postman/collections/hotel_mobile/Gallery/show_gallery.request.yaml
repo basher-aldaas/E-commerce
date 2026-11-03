@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{url}}/show_gallery/7"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: file
+      key: image
+      src:
+        - /C:/Users/Lenovo/Desktop/hotel image/gallery3.jpg
+settings: {}
+examples: ./.resources/show_gallery.resources/examples
+order: 3000

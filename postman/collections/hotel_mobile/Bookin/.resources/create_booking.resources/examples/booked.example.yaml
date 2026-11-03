@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: "{{url}}/create_booking/2"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: start_date
+        value: 2025-07-20
+      - type: text
+        key: end_date
+        value: 2025-10-22
+      - type: text
+        key: payment_status
+        value: "1"
+      - type: text
+        key: guests_count
+        value: "4"
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Sat, 19 Jul 2025 15:11:47 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "59"
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [],
+          "message": "This room is already booked until: 2025-10-23"
+      }
+order: 5000

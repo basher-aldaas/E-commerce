@@ -1,0 +1,55 @@
+$kind: http-example
+request:
+  url: "{{url}}/create_answer/35"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: choice
+        value: bb
+      - type: text
+        key: role
+        value: "1"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Wed, 29 May 2024 17:01:16 GMT
+    - key: Date
+      value: Wed, 29 May 2024 17:01:16 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "56"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "question_id": "35",
+              "choice": "bb",
+              "role": "1",
+              "updated_at": "2024-05-29T17:01:16.000000Z",
+              "created_at": "2024-05-29T17:01:16.000000Z",
+              "id": 44
+          },
+          "message": "Adding answer successfully"
+      }
+order: 6000

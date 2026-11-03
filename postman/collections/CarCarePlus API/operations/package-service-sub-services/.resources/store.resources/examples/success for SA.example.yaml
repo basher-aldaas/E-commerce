@@ -1,0 +1,46 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/package-service-sub-services"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: package_service_id
+        value: "1"
+      - type: text
+        key: sub_service_id
+        value: "1"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 31 Jul 2026 22:55:08 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 3,
+              "package_service_id": 1,
+              "sub_service_id": 1,
+              "price_override": null,
+              "is_active": false,
+              "created_at": "2026-07-31 22:55:08",
+              "updated_at": "2026-07-31 22:55:08"
+          },
+          "message": "Package service sub service created successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-31T22:55:08+00:00"
+      }
+order: 1000

@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{url}}/api/order_status"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: order_id
+      value: "3"
+    - type: text
+      key: order_status
+      value: sendeing
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 8000

@@ -1,0 +1,5 @@
+$kind: http-request
+url: "{{base_url}}/api/customers/personal/11"
+method: GET
+examples: ./.resources/show customer personal {}.resources/examples
+order: 2000

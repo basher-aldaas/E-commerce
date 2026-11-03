@@ -1,0 +1,12 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/products
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL3YxL2F1dGgvbG9naW4iLCJpYXQiOjE3OTMyMjE1MjAsImV4cCI6MTc5MzIyNTEyMCwibmJmIjoxNzkzMjIxNTIwLCJqdGkiOiJtM1RkbVNabnV1cHhJSk5zIiwic3ViIjoiMSIsInBydiI6IjM0Y2VjN2VjMjk2NTZmNTRkMjM4ODAzNzAwY2IzZmE2MWE2MzI5OGEifQ.23Vtkha2aBsFAyhqUD76tF4UF1nHq8ax7FbDeHke5RY
+examples: ./.resources/index.resources/examples
+order: 1000

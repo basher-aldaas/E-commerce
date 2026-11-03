@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/bookings/42/rebook"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{customer1-token}}"
+examples: ./.resources/rebook to get all information for old booking.resources/examples
+order: 1000

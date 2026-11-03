@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{url}}/delete_room/4"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+examples: ./.resources/delete_room.resources/examples
+order: 3000

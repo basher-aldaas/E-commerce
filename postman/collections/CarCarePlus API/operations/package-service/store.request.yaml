@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{base_url}}/api/package-services"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: package_id
+      value: "1"
+    - type: text
+      key: service_id
+      value: "3"
+    - type: text
+      key: allowed_count
+      value: "2"
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/store.resources/examples
+order: 3000

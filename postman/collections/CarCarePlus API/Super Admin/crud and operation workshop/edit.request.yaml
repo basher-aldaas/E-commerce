@@ -1,0 +1,8 @@
+$kind: http-request
+url: ""
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+examples: ./.resources/edit.resources/examples
+order: 2000

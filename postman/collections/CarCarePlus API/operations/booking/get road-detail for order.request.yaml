@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/bookings/58/road-detail"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{workshop}}"
+examples: ./.resources/get road-detail for order.resources/examples
+order: 16000

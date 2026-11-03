@@ -1,0 +1,52 @@
+$kind: http-example
+request:
+  url: "{{url}}/user_reset_password"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: code
+        value: "732539"
+      - type: text
+        key: password
+        value: "22222222"
+      - type: text
+        key: password_confirmation
+        value: "22222222"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 16 Jul 2025 09:52:51 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "57"
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 2,
+              "name": "bashir aldaas",
+              "email": "basher11aldaas@gmail.com",
+              "phone": "0994875925",
+              "role": 1,
+              "wallet": 0,
+              "image": null,
+              "email_verified_at": null,
+              "created_at": "2025-07-15T15:09:43.000000Z",
+              "updated_at": "2025-07-16T09:52:51.000000Z"
+          },
+          "message": "Password has been successfully reset"
+      }
+order: 2000

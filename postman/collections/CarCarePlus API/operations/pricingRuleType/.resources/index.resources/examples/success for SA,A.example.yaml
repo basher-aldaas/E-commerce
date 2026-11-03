@@ -1,0 +1,86 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/pricing-rule-types"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 06 Aug 2026 08:59:42 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 1,
+                  "name": "vehicle_type",
+                  "name_ar": "نوع السيارة"
+              },
+              {
+                  "id": 2,
+                  "name": "service",
+                  "name_ar": "نوع الخدمة"
+              },
+              {
+                  "id": 3,
+                  "name": "sub_service",
+                  "name_ar": "الخدمة الفرعية"
+              },
+              {
+                  "id": 4,
+                  "name": "customer_type",
+                  "name_ar": "نوع العميل"
+              },
+              {
+                  "id": 5,
+                  "name": "package",
+                  "name_ar": "الباقة"
+              },
+              {
+                  "id": 6,
+                  "name": "branch",
+                  "name_ar": "الفرع"
+              },
+              {
+                  "id": 7,
+                  "name": "day_of_week",
+                  "name_ar": "يوم الأسبوع"
+              },
+              {
+                  "id": 8,
+                  "name": "time_period",
+                  "name_ar": "الفترة الزمنية"
+              },
+              {
+                  "id": 9,
+                  "name": "season",
+                  "name_ar": "الموسم"
+              },
+              {
+                  "id": 10,
+                  "name": "booking_type",
+                  "name_ar": "نوع الحجز"
+              }
+          ],
+          "message": "pricing rule types fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-06T08:59:42+00:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 15,
+              "total": 10,
+              "last_page": 1
+          }
+      }
+order: 1000

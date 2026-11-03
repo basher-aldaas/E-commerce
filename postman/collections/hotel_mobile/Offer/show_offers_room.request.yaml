@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{url}}/show_offers_room/1"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+examples: ./.resources/show_offers_room.resources/examples
+order: 3000

@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{url}}/show_answer/2"
+  method: GET
+  headers:
+    Accept: application/json
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Sat, 01 Jun 2024 10:16:43 GMT
+    - key: Date
+      value: Sat, 01 Jun 2024 10:16:43 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [],
+          "message": "You do not have any permission to show answers for this question"
+      }
+order: 3000

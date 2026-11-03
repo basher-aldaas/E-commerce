@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{url}}/delete_quiz/8"
+method: GET
+headers:
+  Accept: application/json
+examples: ./.resources/delete_quiz.resources/examples
+order: 2000

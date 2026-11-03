@@ -1,0 +1,153 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/workshops"
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.30
+    Cache-Control: no-cache, private
+    Date: Sun, 02 Aug 2026 21:39:21 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: text
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 6,
+                  "name": "New work",
+                  "name_ar": "اسم جديد",
+                  "address": "New Address",
+                  "city": "Jeddah",
+                  "latitude": "21.5500000",
+                  "longitude": "39.1700000",
+                  "status": "approved",
+                  "rating_avg": "0.00",
+                  "owner": {
+                      "id": 32,
+                      "name": "Workshop shms",
+                      "email": "shmswork@example.com",
+                      "phone": "0500083303",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "created_at": "2026-08-02"
+              },
+              {
+                  "id": 5,
+                  "name": "Speedy Garage",
+                  "name_ar": "الكراج السريع",
+                  "address": "45 Olaya St, Riyadh",
+                  "city": "Riyadh",
+                  "latitude": "24.7136000",
+                  "longitude": "46.6753000",
+                  "status": "pending",
+                  "rating_avg": "0.00",
+                  "owner": {
+                      "id": 31,
+                      "name": "Workshop Owner",
+                      "email": "workshop3@example.com",
+                      "phone": "0500003033",
+                      "image_url": null,
+                      "is_active": false,
+                      "role": "workshop"
+                  },
+                  "created_at": "2026-08-02"
+              },
+              {
+                  "id": 4,
+                  "name": "Fast Garage",
+                  "name_ar": "الكراج السريع",
+                  "address": "Olaya Street",
+                  "city": "Riyadh",
+                  "latitude": "24.7100000",
+                  "longitude": "46.6700000",
+                  "status": "approved",
+                  "rating_avg": "0.00",
+                  "owner": {
+                      "id": 30,
+                      "name": "Workshop Owner",
+                      "email": "owner@test.com",
+                      "phone": "0500002222",
+                      "image_url": null,
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "created_at": "2026-08-02"
+              },
+              {
+                  "id": 3,
+                  "name": "after edit workshop",
+                  "name_ar": "الكراج السريع",
+                  "address": "45 Olaya St, Riyadh",
+                  "city": "Riyadh",
+                  "latitude": "24.7136000",
+                  "longitude": "46.6753000",
+                  "status": "rejected",
+                  "rating_avg": "0.00",
+                  "owner": {
+                      "id": 29,
+                      "name": "Workshop Owner",
+                      "email": "workshop2@example.com",
+                      "phone": "0500003303",
+                      "image_url": null,
+                      "is_active": false,
+                      "role": "workshop"
+                  },
+                  "created_at": "2026-08-02"
+              },
+              {
+                  "id": 2,
+                  "name": "after edit2 workshop",
+                  "name_ar": "الكراج السريع",
+                  "address": "45 Olaya St, Riyadh",
+                  "city": "Riyadh",
+                  "latitude": "24.7136000",
+                  "longitude": "46.6753000",
+                  "status": "pending",
+                  "rating_avg": "0.00",
+                  "owner": {
+                      "id": 28,
+                      "name": "Workshop Owner",
+                      "email": "workshop@example.com",
+                      "phone": "0500003003",
+                      "image_url": null,
+                      "is_active": false,
+                      "role": "workshop"
+                  },
+                  "created_at": "2026-08-02"
+              },
+              {
+                  "id": 1,
+                  "name": "Al-Tamyoz Workshop",
+                  "name_ar": "مركز صيانة التميز",
+                  "address": "المنطقة الصناعية، مخرج 18",
+                  "city": "Riyadh",
+                  "latitude": "24.6333000",
+                  "longitude": "46.7167000",
+                  "status": "approved",
+                  "rating_avg": "4.80",
+                  "owner": {
+                      "id": 3,
+                      "name": "مركز صيانة التميز",
+                      "email": "workshop@system.com",
+                      "phone": "0500000003",
+                      "image_url": "https://via.placeholder.com/200x200.png/0099dd?text=people+beatae",
+                      "is_active": true,
+                      "role": "workshop"
+                  },
+                  "created_at": "2026-08-02"
+              }
+          ],
+          "message": "Workshops retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-02T21:39:21+00:00"
+      }
+order: 1000

@@ -1,0 +1,49 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/spare-part-requests"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: order_id
+        value: "25"
+      - type: text
+        key: material_id
+        value: "3"
+      - type: text
+        key: quantity
+        value: "5"
+      - type: text
+        key: specifications
+        value: ""
+        disabled: true
+      - type: text
+        key: notes
+        value: ""
+        disabled: true
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Sat, 15 Aug 2026 10:06:11 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": "You cannot request a spare part for a completed or cancelled order.",
+          "status_code": 422,
+          "timestamp": "2026-08-15T13:06:11+03:00"
+      }
+order: 2000

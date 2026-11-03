@@ -1,0 +1,61 @@
+$kind: http-example
+request:
+  url: "{{url}}/create_booking/2"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: start_date
+        value: 2025-07-20
+        disabled: true
+      - type: text
+        key: end_date
+        value: 2025-10-22
+        disabled: true
+      - type: text
+        key: payment_status
+        value: "1"
+        disabled: true
+      - type: text
+        key: guests_count
+        value: "4"
+        disabled: true
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Sat, 19 Jul 2025 15:10:58 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "58"
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": {
+              "start_date": [
+                  "The start date field is required."
+              ],
+              "end_date": [
+                  "The end date field is required."
+              ],
+              "payment_status": [
+                  "The payment status field is required."
+              ],
+              "guests_count": [
+                  "The guests count field is required."
+              ]
+          }
+      }
+order: 3000

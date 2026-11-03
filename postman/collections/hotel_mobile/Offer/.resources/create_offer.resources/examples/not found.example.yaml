@@ -1,0 +1,47 @@
+$kind: http-example
+request:
+  url: "{{url}}/create_offer/9"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: title
+        value: for night year
+      - type: text
+        key: description
+        value: this happen has been taked for three dayes
+      - type: text
+        key: discount
+        value: "50"
+      - type: text
+        key: start_date
+        value: 2025-07-20
+      - type: text
+        key: end_date
+        value: 2025-07-23
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Sat, 19 Jul 2025 12:14:05 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "59"
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": null,
+          "message": "Room not found"
+      }
+order: 1000

@@ -1,0 +1,14 @@
+$kind: http-request
+description: Return the currently authenticated user. Requires auth:sanctum.
+url: "{{base_url}}/api/user"
+method: GET
+headers:
+  Accept: application/json
+body:
+  type: urlencoded
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+settings: {}
+order: 6000

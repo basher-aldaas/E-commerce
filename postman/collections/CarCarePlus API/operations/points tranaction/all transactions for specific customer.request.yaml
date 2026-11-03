@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/points/transactions"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+examples: ./.resources/all transactions for specific customer.resources/examples
+order: 3000

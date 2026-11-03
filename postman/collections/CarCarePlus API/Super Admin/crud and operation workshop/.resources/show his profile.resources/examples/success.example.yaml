@@ -1,0 +1,40 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/workshops/my"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.30
+    Cache-Control: no-cache, private
+    Date: Sun, 02 Aug 2026 21:24:47 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: text
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 6,
+              "name": "Speedy Garage",
+              "name_ar": "الكراج السريع",
+              "address": "45 Olaya St, Riyadh",
+              "city": "Riyadh",
+              "latitude": "24.7136000",
+              "longitude": "46.6753000",
+              "status": "approved",
+              "rating_avg": "0.00",
+              "created_at": "2026-08-02"
+          },
+          "message": "Workshop retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-02T21:24:47+00:00"
+      }
+order: 1000

@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{url}}/api/getAllOrders"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+examples: ./.resources/get all orders.resources/examples
+order: 5000

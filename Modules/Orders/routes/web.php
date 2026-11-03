@@ -1,8 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Orders\Http\Controllers\OrdersController;
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('orders', OrdersController::class)->names('orders');
-});
+/*
+|--------------------------------------------------------------------------
+| Orders Web Routes
+|--------------------------------------------------------------------------
+|
+| This module is API-only; all endpoints live in routes/api.php.
+| The default `Route::resource('orders', OrdersController::class)` scaffolding
+| was removed because that controller does not exist (the module uses the
+| JSON API `OrderController`), which broke route registration.
+|
+*/

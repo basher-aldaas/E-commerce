@@ -1,0 +1,28 @@
+$kind: http-request
+url: "{{base_url}}/api/bookings/46"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: scheduled_at
+      value: 2026-8-20
+    - type: text
+      key: booking_type
+      value: "0"
+    - type: text
+      key: is_vip
+      value: "0"
+      disabled: true
+    - type: text
+      key: sub_service_ids
+      value: ""
+      disabled: true
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+order: 5000

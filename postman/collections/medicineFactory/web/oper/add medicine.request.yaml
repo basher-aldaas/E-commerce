@@ -1,0 +1,44 @@
+$kind: http-request
+url: "{{url}}/api/factory-medicines"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: factory_id
+      value: "4"
+    - type: text
+      key: catigorie_id
+      value: "1"
+    - type: text
+      key: medicine_id
+      value: "2"
+    - type: text
+      key: scientific_name
+      value: Ibuprofen
+    - type: text
+      key: commercial_name
+      value: Ibuprofen
+    - type: text
+      key: catigorie
+      value: Analgesics
+    - type: text
+      key: man_company
+      value: tameco
+    - type: text
+      key: amount
+      value: "30"
+    - type: text
+      key: exp_day
+      value: 2020-8-5
+    - type: text
+      key: price
+      value: "3000"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+examples: ./.resources/add medicine.resources/examples
+order: 6000

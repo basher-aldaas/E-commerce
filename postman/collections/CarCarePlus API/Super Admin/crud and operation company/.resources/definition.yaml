@@ -1,0 +1,8 @@
+$kind: collection
+auth:
+  - id: 9bf7c614-9175-4611-93b6-be39107afe6d
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{auth_secret_1dpj}}"
+order: 3000

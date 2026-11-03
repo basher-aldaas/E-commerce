@@ -1,0 +1,70 @@
+$kind: http-example
+request:
+  url: "{{url}}/admin_adding_new_teacher"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: full_name
+        value: basheraldaa
+      - type: text
+        key: email
+        value: 844@gmail.com
+      - type: text
+        key: phone
+        value: "4756825448"
+      - type: text
+        key: password
+        value: "57484899"
+      - type: text
+        key: password_confirmation
+        value: "57484899"
+      - type: text
+        key: birthday
+        value: 2001-01-12
+      - type: text
+        key: address
+        value: doma/adfd
+      - type: text
+        key: type
+        value: teacher
+      - type: file
+        key: image
+        src:
+          - /F:/family/هاتف/gh/63364.jpg
+response:
+  statusCode: 500
+  statusText: Internal Server Error
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Mon, 27 May 2024 11:03:01 GMT
+    - key: Date
+      value: Mon, 27 May 2024 11:03:01 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": "Call to a member function store() on null"
+      }
+order: 1000

@@ -1,0 +1,54 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/searchM?commercial_name=Aspirin"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    commercial_name: Aspirin
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Host
+      value: 127.0.0.1:8000
+    - key: Date
+      value: Mon, 04 Dec 2023 20:58:36 GMT
+    - key: Date
+      value: Mon, 04 Dec 2023 20:58:36 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "58"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 1,
+              "catigorie_id": 1,
+              "factory_id": 1,
+              "scientific_name": "Aspirin",
+              "commercial_name": "Aspirin",
+              "catigorie": "Analgesics",
+              "man_company": "Tameco",
+              "exp_day": "2023-12-10",
+              "price": 2350,
+              "amount": 5,
+              "created_at": null,
+              "updated_at": null
+          },
+          "message": "success"
+      }
+order: 2000

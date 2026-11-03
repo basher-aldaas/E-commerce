@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{url}}/api/getFactory?factory_id=6"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  factory_id: "6"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+examples: ./.resources/get special factory.resources/examples
+order: 5000

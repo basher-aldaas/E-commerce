@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{url}}/add_reply/4"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: comment
+      value: heeeeeelp
+examples: ./.resources/add_reply.resources/examples
+order: 4000

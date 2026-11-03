@@ -1,0 +1,272 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/bookings"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 07 Aug 2026 21:50:44 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 11,
+                  "booking_group_id": null,
+                  "customer_id": 14,
+                  "customer": {
+                      "id": 14,
+                      "name": "Clare Skiles",
+                      "email": "mcclure.domenica@example.org",
+                      "phone": "0904359058",
+                      "image_url": "https://via.placeholder.com/200x200.png/0000bb?text=people+est",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 5,
+                  "car": {
+                      "id": 5,
+                      "user_id": 5,
+                      "brand_id": 6,
+                      "car_type_id": 2,
+                      "plate_number": "myl-2346",
+                      "model": "Land Cruiser",
+                      "year": "2023",
+                      "color": "purple",
+                      "fuel_type": "electric",
+                      "cylinders": 4,
+                      "mileage": 113436,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/004444?text=transport+aut",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 1,
+                  "branch": {
+                      "id": 1,
+                      "admin_id": 1,
+                      "name": "Main Riyadh Branch",
+                      "name_ar": "فرع الرياض الرئيسي",
+                      "city": "Riyadh",
+                      "address": "طريق الملك فهد، العليا",
+                      "latitude": "24.7136000",
+                      "longitude": "46.6753000",
+                      "phone": "0511111111",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "employee_id": 1,
+                  "employee": {
+                      "id": 1,
+                      "branch_id": 1,
+                      "type": "washer",
+                      "is_active": true,
+                      "rating_avg": "5.00",
+                      "user": {
+                          "id": 6,
+                          "name": "فني غسيل 1",
+                          "email": "washer@system.com",
+                          "phone": "0500000006",
+                          "image_url": "https://via.placeholder.com/200x200.png/0077dd?text=people+sed",
+                          "is_active": true,
+                          "role": "employee_washer"
+                      }
+                  },
+                  "service_id": 6,
+                  "service": {
+                      "id": 6,
+                      "category_id": 3,
+                      "name": "Flat Tire Change",
+                      "name_ar": "تغيير إطار",
+                      "description": "تغيير الإطار المثقوب على الطريق",
+                      "base_price": "60.00",
+                      "is_vip_available": false,
+                      "vip_extra_price": null,
+                      "duration_minutes": 25,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 3,
+                  "category": {
+                      "id": 3,
+                      "name": "Roadside Assistance",
+                      "name_ar": "المساعدة على الطريق",
+                      "description": "خدمات الطوارئ والإنقاذ أثناء السير",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": false,
+                  "is_vip": false,
+                  "status": "pending",
+                  "scheduled_at": "2026-08-12T13:22:23+00:00",
+                  "started_at": null,
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": null,
+                  "location_lat": "24.8148110",
+                  "location_lng": "46.0288750",
+                  "location_address": "675 Robel Neck\nThomasside, NY 51698",
+                  "distance_km": "6.43",
+                  "discount_amount": "0.00",
+                  "total_price": "60.00",
+                  "price_items": [
+                      {
+                          "id": 13,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "60.00"
+                      }
+                  ],
+                  "notes": "Ea itaque reprehenderit quos voluptatem maxime et.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 36,
+                  "booking_group_id": null,
+                  "customer_id": 17,
+                  "customer": {
+                      "id": 17,
+                      "name": "Lillie Gleichner",
+                      "email": "jennifer.fay@example.org",
+                      "phone": "0993149095",
+                      "image_url": "https://via.placeholder.com/200x200.png/00aa66?text=people+molestiae",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 2,
+                  "car": {
+                      "id": 2,
+                      "user_id": 5,
+                      "brand_id": 8,
+                      "car_type_id": 2,
+                      "plate_number": "qft-9716",
+                      "model": "Accent",
+                      "year": "1985",
+                      "color": "white",
+                      "fuel_type": "diesel",
+                      "cylinders": 6,
+                      "mileage": 100775,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/0044bb?text=transport+ipsam",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 1,
+                  "branch": {
+                      "id": 1,
+                      "admin_id": 1,
+                      "name": "Main Riyadh Branch",
+                      "name_ar": "فرع الرياض الرئيسي",
+                      "city": "Riyadh",
+                      "address": "طريق الملك فهد، العليا",
+                      "latitude": "24.7136000",
+                      "longitude": "46.6753000",
+                      "phone": "0511111111",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "employee_id": 1,
+                  "employee": {
+                      "id": 1,
+                      "branch_id": 1,
+                      "type": "washer",
+                      "is_active": true,
+                      "rating_avg": "5.00",
+                      "user": {
+                          "id": 6,
+                          "name": "فني غسيل 1",
+                          "email": "washer@system.com",
+                          "phone": "0500000006",
+                          "image_url": "https://via.placeholder.com/200x200.png/0077dd?text=people+sed",
+                          "is_active": true,
+                          "role": "employee_washer"
+                      }
+                  },
+                  "service_id": 3,
+                  "service": {
+                      "id": 3,
+                      "category_id": 2,
+                      "name": "Oil Change",
+                      "name_ar": "تغيير زيت",
+                      "description": "تغيير زيت المحرك والفلتر",
+                      "base_price": "120.00",
+                      "is_vip_available": false,
+                      "vip_extra_price": null,
+                      "duration_minutes": 45,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 2,
+                  "category": {
+                      "id": 2,
+                      "name": "Maintenance",
+                      "name_ar": "صيانة ميكانيكية",
+                      "description": "خدمات الصيانة السريعة والميكانيكا العامة",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": false,
+                  "is_vip": false,
+                  "status": "in_progress",
+                  "scheduled_at": "2026-08-04T17:22:55+00:00",
+                  "started_at": "2026-08-07T03:35:35+00:00",
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-08-06T08:55:45+00:00",
+                  "location_lat": "24.1497960",
+                  "location_lng": "46.5525470",
+                  "location_address": "3274 Elsa Skyway\nSelmerport, AL 59792-8669",
+                  "distance_km": "17.26",
+                  "discount_amount": "0.00",
+                  "total_price": "120.00",
+                  "price_items": [
+                      {
+                          "id": 42,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "120.00"
+                      }
+                  ],
+                  "notes": "Qui pariatur in ut autem et nihil.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              }
+          ],
+          "message": "Bookings retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-07T21:50:44+00:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 10,
+              "total": 2,
+              "last_page": 1
+          }
+      }
+order: 3000

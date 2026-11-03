@@ -3,6 +3,8 @@
 namespace Modules\Users\Services;
 
     use Illuminate\Support\Facades\Hash;
+    use Illuminate\Support\Facades\Mail;
+    use Modules\Users\Mail\WelcomeMail;
     use Modules\Users\Models\User;
 
 class AuthService
@@ -17,6 +19,10 @@ class AuthService
         ]);
 
         $user->assignRole('user');
+
+        // Queue a welcome email (non-blocking; sent by a queue worker).
+        Mail::to($user->email)->send(new WelcomeMail($user));
+
         $token = auth('api')->login($user);
 
         return [

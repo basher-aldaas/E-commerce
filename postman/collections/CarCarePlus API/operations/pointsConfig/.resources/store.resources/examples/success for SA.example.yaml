@@ -1,0 +1,59 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/points-configs"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: earn_per_amount
+        value: "8"
+      - type: text
+        key: redeem_value
+        value: "0.2"
+      - type: text
+        key: min_redeem
+        value: "90"
+      - type: text
+        key: expiry_days
+        value: "300"
+      - type: text
+        key: max_earn_per_order
+        value: "50"
+      - type: text
+        key: is_active
+        value: "1"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 22 Jul 2026 01:40:37 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 5,
+              "earn_per_amount": "8.00",
+              "redeem_value": "0.20",
+              "min_redeem": 90,
+              "expiry_days": 300,
+              "max_earn_per_order": 50,
+              "is_active": true,
+              "updated_at": null
+          },
+          "message": "Points config created successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-22T01:40:37+00:00"
+      }
+order: 1000

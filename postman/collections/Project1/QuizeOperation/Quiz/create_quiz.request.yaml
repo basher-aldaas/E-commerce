@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{url}}/create_quiz/10"
+method: GET
+headers:
+  Accept: application/json
+examples: ./.resources/create_quiz.resources/examples
+order: 1000

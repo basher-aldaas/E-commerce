@@ -1,0 +1,25 @@
+$kind: http-example
+request:
+  url: http://localhost:8000/api/v1/products
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 28 Oct 2026 21:00:47 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "Unauthenticated."
+      }
+order: 1000

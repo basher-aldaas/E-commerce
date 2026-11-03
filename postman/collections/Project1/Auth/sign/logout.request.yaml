@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{url}}/logout"
+method: GET
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content: []
+settings: {}
+examples: ./.resources/logout.resources/examples
+order: 3000

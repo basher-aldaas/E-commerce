@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{url}}/show_room_bookings/1"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content: []
+settings: {}
+examples: ./.resources/show_room_bookings.resources/examples
+order: 4000

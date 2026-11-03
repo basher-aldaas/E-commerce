@@ -1,0 +1,55 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/ratings"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: order_id
+        value: "62"
+      - type: text
+        key: service_rating
+        value: "3"
+      - type: text
+        key: employee_rating
+        value: "0"
+      - type: text
+        key: workshop_rating
+        value: "1"
+      - type: text
+        key: comment
+        value: ""
+      - type: text
+        key: image_urls[0]
+        value: ""
+        disabled: true
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 12 Aug 2026 18:58:13 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": {
+              "employee_rating": [
+                  "The employee rating field must be between 1 and 5."
+              ]
+          },
+          "message": "The employee rating field must be between 1 and 5.",
+          "status_code": 422,
+          "timestamp": "2026-08-12T21:58:13+03:00"
+      }
+order: 2000

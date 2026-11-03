@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{url}}/add_rating/2"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: rating
+      value: "4"
+examples: ./.resources/add_rating.resources/examples
+order: 6000

@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/cars/delete/12"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/delete.resources/examples
+order: 6000

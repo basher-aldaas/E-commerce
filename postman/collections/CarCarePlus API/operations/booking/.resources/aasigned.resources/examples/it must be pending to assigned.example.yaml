@@ -1,0 +1,35 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/bookings/24/assign"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: employee_id
+        value: "1"
+response:
+  statusCode: 409
+  statusText: Conflict
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 13 Aug 2026 19:37:52 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": "Only a pending booking can be assigned.",
+          "status_code": 409,
+          "timestamp": "2026-08-13T22:37:52+03:00"
+      }
+order: 4000

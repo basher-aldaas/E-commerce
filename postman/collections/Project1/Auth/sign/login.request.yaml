@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{url}}/login"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: email
+      value: s@example.com
+    - type: text
+      key: password
+      value: "88888888"
+    - type: text
+      key: password_confirmation
+      value: "88888888"
+examples: ./.resources/login.resources/examples
+order: 2000

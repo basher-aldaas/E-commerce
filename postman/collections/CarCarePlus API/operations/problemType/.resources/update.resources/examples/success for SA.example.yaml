@@ -1,0 +1,40 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/problem-types/6"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: name
+        value: tire update
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 30 Jul 2026 17:46:14 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 6,
+              "name": "tire update",
+              "name_ar": "اطار",
+              "is_active": true
+          },
+          "message": "problem type updated successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-30T17:46:14+00:00"
+      }
+order: 1000

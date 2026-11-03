@@ -1,0 +1,82 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/indexClient/22"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 07 Aug 2026 16:37:43 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 7,
+                  "user_id": 22,
+                  "brand_id": 14,
+                  "car_type_id": 1,
+                  "plate_number": "ltg-1825",
+                  "model": "Elantra",
+                  "year": "1988",
+                  "color": "blue",
+                  "fuel_type": "petrol",
+                  "cylinders": 8,
+                  "mileage": 96951,
+                  "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/005566?text=transport+qui",
+                  "is_active": true,
+                  "car_type": {
+                      "id": 1,
+                      "name": "Sedan",
+                      "name_ar": "سيدان",
+                      "price_multiplier": "1.00",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "created_at": "2026-08-07",
+                  "updated_at": "2026-08-07"
+              },
+              {
+                  "id": 9,
+                  "user_id": 22,
+                  "brand_id": 11,
+                  "car_type_id": 2,
+                  "plate_number": "bsp-2524",
+                  "model": "Land Cruiser",
+                  "year": "2002",
+                  "color": "yellow",
+                  "fuel_type": "hybrid",
+                  "cylinders": 6,
+                  "mileage": 148978,
+                  "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/00ff44?text=transport+ut",
+                  "is_active": true,
+                  "car_type": {
+                      "id": 2,
+                      "name": "SUV",
+                      "name_ar": "سيارة عائلية / جيب",
+                      "price_multiplier": "1.20",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "created_at": "2026-08-07",
+                  "updated_at": "2026-08-07"
+              }
+          ],
+          "message": "User cars retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-07T16:37:43+00:00"
+      }
+order: 1000

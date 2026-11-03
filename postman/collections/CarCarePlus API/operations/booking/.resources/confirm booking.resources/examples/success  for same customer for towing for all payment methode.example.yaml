@@ -1,0 +1,203 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/bookings/confirm"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: quote_token
+        value: 17d91b42-5357-4a00-9b0e-345f8998bf0c
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Tue, 11 Aug 2026 23:37:22 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 56,
+                  "booking_group_id": null,
+                  "customer_id": 4,
+                  "customer": {
+                      "id": 4,
+                      "name": "أحمد العتيبي (عميل)",
+                      "email": "customer@system.com",
+                      "phone": "0500000004",
+                      "image_url": "https://via.placeholder.com/200x200.png/0055aa?text=people+vero",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 10,
+                  "car": {
+                      "id": 10,
+                      "user_id": 4,
+                      "brand_id": 2,
+                      "car_type_id": 3,
+                      "plate_number": "kxs-6503",
+                      "model": "Accent",
+                      "year": "2002",
+                      "color": "purple",
+                      "fuel_type": "electric",
+                      "cylinders": 4,
+                      "mileage": 138563,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/009977?text=transport+minus",
+                      "is_active": true,
+                      "car_type": {
+                          "id": 3,
+                          "name": "Truck / Pickup",
+                          "name_ar": "بيك أب / شاحنة",
+                          "price_multiplier": "1.40",
+                          "is_active": true,
+                          "created_at": "2026-08-11 22:24:07",
+                          "updated_at": null
+                      },
+                      "created_at": "2026-08-11",
+                      "updated_at": "2026-08-11"
+                  },
+                  "branch_id": 1,
+                  "branch": {
+                      "id": 1,
+                      "admin_id": 1,
+                      "name": "Main Riyadh Branch",
+                      "name_ar": "فرع الرياض الرئيسي",
+                      "city": "Riyadh",
+                      "address": "طريق الملك فهد، العليا",
+                      "latitude": "24.7136000",
+                      "longitude": "46.6753000",
+                      "phone": "0511111111",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "workshop_id": null,
+                  "workshop": null,
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 8,
+                  "service": {
+                      "id": 8,
+                      "category_id": 4,
+                      "name": "Flatbed Towing",
+                      "name_ar": "سحب بالسطحة",
+                      "description": "نقل السيارة بواسطة سطحة إلى الوجهة المطلوبة",
+                      "base_price": "150.00",
+                      "is_vip_available": false,
+                      "vip_extra_price": null,
+                      "duration_minutes": 60,
+                      "created_at": "2026-08-11 22:24:09",
+                      "updated_at": "2026-08-11 22:24:09"
+                  },
+                  "category_id": 4,
+                  "category": {
+                      "id": 4,
+                      "name": "Flatbed Towing",
+                      "name_ar": "سحب بالسطحة",
+                      "description": "نقل السيارة بواسطة سطحة من موقعها إلى الوجهة المطلوبة",
+                      "is_active": true,
+                      "created_at": "2026-08-11 22:24:07",
+                      "updated_at": null
+                  },
+                  "booking_type": true,
+                  "is_vip": true,
+                  "status": "pending",
+                  "scheduled_at": "2026-08-12T03:37:22+03:00",
+                  "started_at": null,
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": null,
+                  "location_lat": "24.0000000",
+                  "location_lng": "46.0000000",
+                  "location_address": null,
+                  "distance_km": "104.76",
+                  "discount_amount": "0.00",
+                  "service_price": "267.38",
+                  "sub_service_price": "0.00",
+                  "materials_price": "225.00",
+                  "total_price": "492.38",
+                  "user_package_id": null,
+                  "user_package": null,
+                  "package_covered_amount": "0.00",
+                  "cash_due_amount": "0.00",
+                  "price_items": [
+                      {
+                          "id": 97,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "210.00"
+                      },
+                      {
+                          "id": 98,
+                          "pricing_rule_id": 5,
+                          "label": "Extra Distance Charge",
+                          "amount": "42.38"
+                      },
+                      {
+                          "id": 99,
+                          "pricing_rule_id": 6,
+                          "label": "Immediate Booking Charge",
+                          "amount": "15.00"
+                      }
+                  ],
+                  "sub_services": [],
+                  "materials": [
+                      {
+                          "id": 86,
+                          "material_id": 1,
+                          "material": {
+                              "id": 1,
+                              "material_unit_id": 1,
+                              "name": "Synthetic Engine Oil 5W-30",
+                              "name_ar": "زيت محرك تخليقي 5W-30",
+                              "description": "زيت محرك عالي الجودة يخدم حتى 10,000 كم",
+                              "unit_price": "45.00",
+                              "is_visible_to_customer": true,
+                              "is_active": true
+                          },
+                          "requested_by": 4,
+                          "quantity": "5.00",
+                          "unit_price": "45.00",
+                          "total_price": "225.00",
+                          "status": "approved",
+                          "approved_at": "2026-08-12T02:37:22+03:00"
+                      }
+                  ],
+                  "payments": [
+                      {
+                          "id": 17,
+                          "payment_number": "2ff59f48-2079-43ea-9e1c-8a66e1afdb71",
+                          "type": "order",
+                          "method": "cash",
+                          "status": "pending",
+                          "amount": "492.38",
+                          "points_used": 0
+                      }
+                  ],
+                  "notes": "notes",
+                  "created_at": "2026-08-12T02:37:22+03:00",
+                  "updated_at": "2026-08-12T02:37:22+03:00"
+              }
+          ],
+          "message": "Booking confirmed successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-12T02:37:22+03:00"
+      }
+order: 7000

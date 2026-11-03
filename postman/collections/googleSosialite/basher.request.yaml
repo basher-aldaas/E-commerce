@@ -1,0 +1,12 @@
+$kind: http-request
+url: http://127.0.0.1:8000/api/auth/basher
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: platform_token
+      value: "{{GOOGLE_PLATFORM_TOKEN}}"
+order: 5000

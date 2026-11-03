@@ -1,0 +1,63 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/categories"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 06 Aug 2026 08:45:54 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 1,
+                  "name": "Car Wash",
+                  "name_ar": "غسيل سيارات",
+                  "description": "تنظيف وتلميع السيارات الداخلي والخارجي",
+                  "is_active": true,
+                  "created_at": "2026-08-05 12:45:35",
+                  "updated_at": null
+              },
+              {
+                  "id": 2,
+                  "name": "Maintenance",
+                  "name_ar": "صيانة ميكانيكية",
+                  "description": "خدمات الصيانة السريعة والميكانيكا العامة",
+                  "is_active": true,
+                  "created_at": "2026-08-05 12:45:35",
+                  "updated_at": null
+              },
+              {
+                  "id": 3,
+                  "name": "Roadside Assistance",
+                  "name_ar": "المساعدة على الطريق",
+                  "description": "خدمات الطوارئ والإنقاذ أثناء السير",
+                  "is_active": true,
+                  "created_at": "2026-08-05 12:45:35",
+                  "updated_at": null
+              }
+          ],
+          "message": "Categories fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-06T08:45:54+00:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 15,
+              "total": 3,
+              "last_page": 1
+          }
+      }
+order: 1000

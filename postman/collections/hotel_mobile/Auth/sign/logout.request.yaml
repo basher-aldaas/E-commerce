@@ -1,0 +1,5 @@
+$kind: http-request
+url: "{{url}}/logout"
+method: POST
+examples: ./.resources/logout.resources/examples
+order: 3000

@@ -1,0 +1,51 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/update/12"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: plate_number
+        value: utt-3997
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 07 Aug 2026 21:46:34 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 12,
+              "user_id": 4,
+              "brand_id": 13,
+              "car_type_id": 1,
+              "plate_number": "utt-3997",
+              "model": "cvAccent",
+              "year": "2018",
+              "color": "red",
+              "fuel_type": "hybrid",
+              "cylinders": 6,
+              "mileage": 207002,
+              "image_url": null,
+              "is_active": true,
+              "created_at": "2026-08-07",
+              "updated_at": "2026-08-07"
+          },
+          "message": "Car updated successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-07T21:46:34+00:00"
+      }
+order: 1000

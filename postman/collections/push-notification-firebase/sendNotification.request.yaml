@@ -1,0 +1,6 @@
+$kind: http-request
+url: localhost:8000/api/sendNotification
+method: GET
+headers:
+  Accept: application/json
+order: 2000

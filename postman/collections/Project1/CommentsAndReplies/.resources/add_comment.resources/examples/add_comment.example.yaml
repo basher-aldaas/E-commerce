@@ -1,0 +1,211 @@
+$kind: http-example
+request:
+  url: "{{url}}/add_comment/5"
+  method: POST
+  headers:
+    Accept: application/json
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Sat, 29 Jun 2024 20:39:33 GMT
+    - key: Date
+      value: Sat, 29 Jun 2024 20:39:33 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "The route api/add_comment could not be found.",
+          "exception": "Symfony\\Component\\HttpKernel\\Exception\\NotFoundHttpException",
+          "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\AbstractRouteCollection.php",
+          "line": 44,
+          "trace": [
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\RouteCollection.php",
+                  "line": 162,
+                  "function": "handleMatchedRoute",
+                  "class": "Illuminate\\Routing\\AbstractRouteCollection",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php",
+                  "line": 761,
+                  "function": "match",
+                  "class": "Illuminate\\Routing\\RouteCollection",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php",
+                  "line": 748,
+                  "function": "findRoute",
+                  "class": "Illuminate\\Routing\\Router",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php",
+                  "line": 737,
+                  "function": "dispatchToRoute",
+                  "class": "Illuminate\\Routing\\Router",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php",
+                  "line": 200,
+                  "function": "dispatch",
+                  "class": "Illuminate\\Routing\\Router",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+                  "line": 144,
+                  "function": "Illuminate\\Foundation\\Http\\{closure}",
+                  "class": "Illuminate\\Foundation\\Http\\Kernel",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php",
+                  "line": 21,
+                  "function": "Illuminate\\Pipeline\\{closure}",
+                  "class": "Illuminate\\Pipeline\\Pipeline",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull.php",
+                  "line": 31,
+                  "function": "handle",
+                  "class": "Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+                  "line": 183,
+                  "function": "handle",
+                  "class": "Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php",
+                  "line": 21,
+                  "function": "Illuminate\\Pipeline\\{closure}",
+                  "class": "Illuminate\\Pipeline\\Pipeline",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TrimStrings.php",
+                  "line": 40,
+                  "function": "handle",
+                  "class": "Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+                  "line": 183,
+                  "function": "handle",
+                  "class": "Illuminate\\Foundation\\Http\\Middleware\\TrimStrings",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ValidatePostSize.php",
+                  "line": 27,
+                  "function": "Illuminate\\Pipeline\\{closure}",
+                  "class": "Illuminate\\Pipeline\\Pipeline",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+                  "line": 183,
+                  "function": "handle",
+                  "class": "Illuminate\\Foundation\\Http\\Middleware\\ValidatePostSize",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance.php",
+                  "line": 99,
+                  "function": "Illuminate\\Pipeline\\{closure}",
+                  "class": "Illuminate\\Pipeline\\Pipeline",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+                  "line": 183,
+                  "function": "handle",
+                  "class": "Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\HandleCors.php",
+                  "line": 62,
+                  "function": "Illuminate\\Pipeline\\{closure}",
+                  "class": "Illuminate\\Pipeline\\Pipeline",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+                  "line": 183,
+                  "function": "handle",
+                  "class": "Illuminate\\Http\\Middleware\\HandleCors",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\TrustProxies.php",
+                  "line": 39,
+                  "function": "Illuminate\\Pipeline\\{closure}",
+                  "class": "Illuminate\\Pipeline\\Pipeline",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+                  "line": 183,
+                  "function": "handle",
+                  "class": "Illuminate\\Http\\Middleware\\TrustProxies",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+                  "line": 119,
+                  "function": "Illuminate\\Pipeline\\{closure}",
+                  "class": "Illuminate\\Pipeline\\Pipeline",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php",
+                  "line": 175,
+                  "function": "then",
+                  "class": "Illuminate\\Pipeline\\Pipeline",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php",
+                  "line": 144,
+                  "function": "sendRequestThroughRouter",
+                  "class": "Illuminate\\Foundation\\Http\\Kernel",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\public\\index.php",
+                  "line": 51,
+                  "function": "handle",
+                  "class": "Illuminate\\Foundation\\Http\\Kernel",
+                  "type": "->"
+              },
+              {
+                  "file": "C:\\Users\\Lenovo\\Desktop\\laravel_progects\\project_1\\ProjectFianl\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php",
+                  "line": 16,
+                  "function": "require_once"
+              }
+          ]
+      }
+order: 1000

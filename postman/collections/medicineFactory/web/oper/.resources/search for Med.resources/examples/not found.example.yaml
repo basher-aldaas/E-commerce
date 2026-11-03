@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/admin/searchMed?commercial_name=Cetirizinew&factory_id=2"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    commercial_name: Cetirizinew
+    factory_id: "2"
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    - key: Host
+      value: 127.0.0.1:8000
+    - key: Date
+      value: Mon, 04 Dec 2023 20:39:34 GMT
+    - key: Date
+      value: Mon, 04 Dec 2023 20:39:34 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "58"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": "not found"
+      }
+order: 3000

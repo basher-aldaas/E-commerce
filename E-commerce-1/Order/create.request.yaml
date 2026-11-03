@@ -1,0 +1,32 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/orders
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\r
+
+    \    \"items\": [\r
+
+    \        {\r
+
+    \            \"product_id\": 1,\r
+
+    \            \"quantity\": 2\r
+
+    \        },\r
+
+    \        {\r
+
+    \            \"product_id\": 3,\r
+
+    \            \"quantity\": 1\r
+
+    \        }\r
+
+    \    ]\r
+
+    }"
+order: 4000

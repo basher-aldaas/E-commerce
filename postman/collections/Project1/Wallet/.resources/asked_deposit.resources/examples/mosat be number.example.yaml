@@ -1,0 +1,48 @@
+$kind: http-example
+request:
+  url: "{{url}}/wallet/asked_deposit"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: amount
+        value: kk
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Sat, 29 Jun 2024 13:27:58 GMT
+    - key: Date
+      value: Sat, 29 Jun 2024 13:27:58 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "The amount field must be a number.",
+          "errors": {
+              "amount": [
+                  "The amount field must be a number."
+              ]
+          }
+      }
+order: 3000

@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{url}}/api/delete_from_cart"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+examples: ./.resources/delete_from_cart.resources/examples
+order: 9000

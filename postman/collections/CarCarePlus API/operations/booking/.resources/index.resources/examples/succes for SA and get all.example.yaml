@@ -1,0 +1,1093 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/bookings"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 07 Aug 2026 21:49:18 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 1,
+                  "booking_group_id": null,
+                  "customer_id": 17,
+                  "customer": {
+                      "id": 17,
+                      "name": "Lillie Gleichner",
+                      "email": "jennifer.fay@example.org",
+                      "phone": "0993149095",
+                      "image_url": "https://via.placeholder.com/200x200.png/00aa66?text=people+molestiae",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 9,
+                  "car": {
+                      "id": 9,
+                      "user_id": 22,
+                      "brand_id": 11,
+                      "car_type_id": 2,
+                      "plate_number": "bsp-2524",
+                      "model": "Land Cruiser",
+                      "year": "2002",
+                      "color": "yellow",
+                      "fuel_type": "hybrid",
+                      "cylinders": 6,
+                      "mileage": 148978,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/00ff44?text=transport+ut",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 3,
+                  "branch": {
+                      "id": 3,
+                      "admin_id": 1,
+                      "name": "Dammam Branch",
+                      "name_ar": "فرع الدمام",
+                      "city": "Dammam",
+                      "address": "طريق الملك سعود، الشاطئ",
+                      "latitude": "26.4207000",
+                      "longitude": "50.0888000",
+                      "phone": "0513333333",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 1,
+                  "service": {
+                      "id": 1,
+                      "category_id": 1,
+                      "name": "Exterior Wash",
+                      "name_ar": "غسيل خارجي",
+                      "description": "غسيل خارجي شامل للسيارة",
+                      "base_price": "50.00",
+                      "is_vip_available": true,
+                      "vip_extra_price": "20.00",
+                      "duration_minutes": 30,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 1,
+                  "category": {
+                      "id": 1,
+                      "name": "Car Wash",
+                      "name_ar": "غسيل سيارات",
+                      "description": "تنظيف وتلميع السيارات الداخلي والخارجي",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": true,
+                  "is_vip": false,
+                  "status": "in_progress",
+                  "scheduled_at": "2026-08-04T12:46:48+00:00",
+                  "started_at": "2026-08-07T11:16:46+00:00",
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-08-06T12:00:07+00:00",
+                  "location_lat": "24.5868450",
+                  "location_lng": "46.6316910",
+                  "location_address": "22904 Verla Crest Suite 774\nEast Guy, SC 98095",
+                  "distance_km": "13.55",
+                  "discount_amount": "0.00",
+                  "total_price": "50.00",
+                  "price_items": [
+                      {
+                          "id": 1,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "50.00"
+                      }
+                  ],
+                  "notes": "Nihil corporis sapiente eius quia quos sit doloremque.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 2,
+                  "booking_group_id": null,
+                  "customer_id": 19,
+                  "customer": {
+                      "id": 19,
+                      "name": "Ms. Shea Bauch",
+                      "email": "garry.wyman@example.org",
+                      "phone": "0908923132",
+                      "image_url": "https://via.placeholder.com/200x200.png/00cc44?text=people+vel",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 1,
+                  "car": {
+                      "id": 1,
+                      "user_id": 4,
+                      "brand_id": 1,
+                      "car_type_id": 3,
+                      "plate_number": "yew-4756",
+                      "model": "Camry",
+                      "year": "2016",
+                      "color": "white",
+                      "fuel_type": "diesel",
+                      "cylinders": 6,
+                      "mileage": 11954,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/002255?text=transport+unde",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 1,
+                  "branch": {
+                      "id": 1,
+                      "admin_id": 1,
+                      "name": "Main Riyadh Branch",
+                      "name_ar": "فرع الرياض الرئيسي",
+                      "city": "Riyadh",
+                      "address": "طريق الملك فهد، العليا",
+                      "latitude": "24.7136000",
+                      "longitude": "46.6753000",
+                      "phone": "0511111111",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "employee_id": 2,
+                  "employee": {
+                      "id": 2,
+                      "branch_id": 1,
+                      "type": "mechanic",
+                      "is_active": true,
+                      "rating_avg": "4.90",
+                      "user": {
+                          "id": 7,
+                          "name": "مهندس ميكانيكي 1",
+                          "email": "mechanic@system.com",
+                          "phone": "0500000007",
+                          "image_url": "https://via.placeholder.com/200x200.png/00aa22?text=people+voluptas",
+                          "is_active": true,
+                          "role": "employee_mechanic"
+                      }
+                  },
+                  "service_id": 3,
+                  "service": {
+                      "id": 3,
+                      "category_id": 2,
+                      "name": "Oil Change",
+                      "name_ar": "تغيير زيت",
+                      "description": "تغيير زيت المحرك والفلتر",
+                      "base_price": "120.00",
+                      "is_vip_available": false,
+                      "vip_extra_price": null,
+                      "duration_minutes": 45,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 2,
+                  "category": {
+                      "id": 2,
+                      "name": "Maintenance",
+                      "name_ar": "صيانة ميكانيكية",
+                      "description": "خدمات الصيانة السريعة والميكانيكا العامة",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": false,
+                  "is_vip": true,
+                  "status": "completed",
+                  "scheduled_at": "2026-07-28T22:32:21+00:00",
+                  "started_at": "2026-08-01T12:48:23+00:00",
+                  "completed_at": "2026-08-03T17:40:13+00:00",
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-07-29T00:34:45+00:00",
+                  "location_lat": "24.6206760",
+                  "location_lng": "46.5843010",
+                  "location_address": "57527 Chadd Motorway\nNorth Joel, SD 23359-1160",
+                  "distance_km": "3.53",
+                  "discount_amount": "0.00",
+                  "total_price": "170.00",
+                  "price_items": [
+                      {
+                          "id": 2,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "120.00"
+                      },
+                      {
+                          "id": 3,
+                          "pricing_rule_id": null,
+                          "label": "VIP Charge",
+                          "amount": "50.00"
+                      }
+                  ],
+                  "notes": "Reiciendis provident nobis quod odit molestias qui at.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 3,
+                  "booking_group_id": null,
+                  "customer_id": 13,
+                  "customer": {
+                      "id": 13,
+                      "name": "Urban Watsica",
+                      "email": "gledner@example.org",
+                      "phone": "0965858456",
+                      "image_url": "https://via.placeholder.com/200x200.png/005577?text=people+quibusdam",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 3,
+                  "car": {
+                      "id": 3,
+                      "user_id": 14,
+                      "brand_id": 12,
+                      "car_type_id": 1,
+                      "plate_number": "rag-5117",
+                      "model": "Model Y",
+                      "year": "2009",
+                      "color": "silver",
+                      "fuel_type": "electric",
+                      "cylinders": 4,
+                      "mileage": 142477,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/0077aa?text=transport+dicta",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 3,
+                  "branch": {
+                      "id": 3,
+                      "admin_id": 1,
+                      "name": "Dammam Branch",
+                      "name_ar": "فرع الدمام",
+                      "city": "Dammam",
+                      "address": "طريق الملك سعود، الشاطئ",
+                      "latitude": "26.4207000",
+                      "longitude": "50.0888000",
+                      "phone": "0513333333",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 3,
+                  "service": {
+                      "id": 3,
+                      "category_id": 2,
+                      "name": "Oil Change",
+                      "name_ar": "تغيير زيت",
+                      "description": "تغيير زيت المحرك والفلتر",
+                      "base_price": "120.00",
+                      "is_vip_available": false,
+                      "vip_extra_price": null,
+                      "duration_minutes": 45,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 2,
+                  "category": {
+                      "id": 2,
+                      "name": "Maintenance",
+                      "name_ar": "صيانة ميكانيكية",
+                      "description": "خدمات الصيانة السريعة والميكانيكا العامة",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": false,
+                  "is_vip": false,
+                  "status": "completed",
+                  "scheduled_at": "2026-08-02T23:32:06+00:00",
+                  "started_at": "2026-08-06T19:41:47+00:00",
+                  "completed_at": "2026-08-07T01:33:07+00:00",
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-08-06T18:43:43+00:00",
+                  "location_lat": "24.2637640",
+                  "location_lng": "46.1163490",
+                  "location_address": "11320 Schneider Shore\nEast Crystalchester, AK 17634",
+                  "distance_km": "28.94",
+                  "discount_amount": "0.00",
+                  "total_price": "120.00",
+                  "price_items": [
+                      {
+                          "id": 4,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "120.00"
+                      }
+                  ],
+                  "notes": "Dolore velit recusandae minima.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 4,
+                  "booking_group_id": null,
+                  "customer_id": 26,
+                  "customer": {
+                      "id": 26,
+                      "name": "Mr. Freddy Jenkins DDS",
+                      "email": "corbin10@example.com",
+                      "phone": "0916778303",
+                      "image_url": "https://via.placeholder.com/200x200.png/0033ff?text=people+qui",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 6,
+                  "car": {
+                      "id": 6,
+                      "user_id": 18,
+                      "brand_id": 6,
+                      "car_type_id": 4,
+                      "plate_number": "iyc-9400",
+                      "model": "Accent",
+                      "year": "1970",
+                      "color": "white",
+                      "fuel_type": "hybrid",
+                      "cylinders": 6,
+                      "mileage": 47657,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/0077aa?text=transport+consequuntur",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 4,
+                  "branch": {
+                      "id": 4,
+                      "admin_id": 1,
+                      "name": "Makkah Branch",
+                      "name_ar": "فرع مكة المكرمة",
+                      "city": "Makkah",
+                      "address": "طريق العزيزية، العزيزية",
+                      "latitude": "21.3891000",
+                      "longitude": "39.8579000",
+                      "phone": "0514444444",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 7,
+                  "service": {
+                      "id": 7,
+                      "category_id": 4,
+                      "name": "Flatbed Towing",
+                      "name_ar": "سحب بالسطحة",
+                      "description": "نقل السيارة بواسطة سطحة إلى الوجهة المطلوبة",
+                      "base_price": "150.00",
+                      "is_vip_available": false,
+                      "vip_extra_price": null,
+                      "duration_minutes": 60,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 4,
+                  "category": {
+                      "id": 4,
+                      "name": "Flatbed Towing",
+                      "name_ar": "سحب بالسطحة",
+                      "description": "نقل السيارة بواسطة سطحة من موقعها إلى الوجهة المطلوبة",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": false,
+                  "is_vip": false,
+                  "status": "completed",
+                  "scheduled_at": "2026-07-26T15:02:05+00:00",
+                  "started_at": "2026-08-07T02:33:58+00:00",
+                  "completed_at": "2026-08-07T04:03:06+00:00",
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-08-02T08:20:12+00:00",
+                  "location_lat": "24.0318260",
+                  "location_lng": "46.2208370",
+                  "location_address": "2905 Raynor Turnpike Apt. 638\nEast Davionmouth, AR 89535-6771",
+                  "distance_km": "2.97",
+                  "discount_amount": "0.00",
+                  "total_price": "150.00",
+                  "price_items": [
+                      {
+                          "id": 5,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "150.00"
+                      }
+                  ],
+                  "notes": "Placeat consequuntur rerum ipsam sed sint magni totam.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 5,
+                  "booking_group_id": null,
+                  "customer_id": 16,
+                  "customer": {
+                      "id": 16,
+                      "name": "Anthony Robel DDS",
+                      "email": "tkunde@example.com",
+                      "phone": "0971631537",
+                      "image_url": "https://via.placeholder.com/200x200.png/0000ff?text=people+sed",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 3,
+                  "car": {
+                      "id": 3,
+                      "user_id": 14,
+                      "brand_id": 12,
+                      "car_type_id": 1,
+                      "plate_number": "rag-5117",
+                      "model": "Model Y",
+                      "year": "2009",
+                      "color": "silver",
+                      "fuel_type": "electric",
+                      "cylinders": 4,
+                      "mileage": 142477,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/0077aa?text=transport+dicta",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 3,
+                  "branch": {
+                      "id": 3,
+                      "admin_id": 1,
+                      "name": "Dammam Branch",
+                      "name_ar": "فرع الدمام",
+                      "city": "Dammam",
+                      "address": "طريق الملك سعود، الشاطئ",
+                      "latitude": "26.4207000",
+                      "longitude": "50.0888000",
+                      "phone": "0513333333",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 7,
+                  "service": {
+                      "id": 7,
+                      "category_id": 4,
+                      "name": "Flatbed Towing",
+                      "name_ar": "سحب بالسطحة",
+                      "description": "نقل السيارة بواسطة سطحة إلى الوجهة المطلوبة",
+                      "base_price": "150.00",
+                      "is_vip_available": false,
+                      "vip_extra_price": null,
+                      "duration_minutes": 60,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 4,
+                  "category": {
+                      "id": 4,
+                      "name": "Flatbed Towing",
+                      "name_ar": "سحب بالسطحة",
+                      "description": "نقل السيارة بواسطة سطحة من موقعها إلى الوجهة المطلوبة",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": false,
+                  "is_vip": false,
+                  "status": "completed",
+                  "scheduled_at": "2026-08-04T14:31:53+00:00",
+                  "started_at": "2026-08-06T23:33:52+00:00",
+                  "completed_at": "2026-08-07T13:21:09+00:00",
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-08-06T15:00:38+00:00",
+                  "location_lat": "24.8795590",
+                  "location_lng": "46.8007710",
+                  "location_address": "2589 Mertz Oval\nOkunevaland, MO 61442-2427",
+                  "distance_km": "1.91",
+                  "discount_amount": "0.00",
+                  "total_price": "150.00",
+                  "price_items": [
+                      {
+                          "id": 6,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "150.00"
+                      }
+                  ],
+                  "notes": "Facere placeat quae inventore dolore recusandae aspernatur aliquam.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 6,
+                  "booking_group_id": null,
+                  "customer_id": 23,
+                  "customer": {
+                      "id": 23,
+                      "name": "Prof. Julia Homenick IV",
+                      "email": "magdalena62@example.com",
+                      "phone": "0944731186",
+                      "image_url": "https://via.placeholder.com/200x200.png/00ccee?text=people+officiis",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 2,
+                  "car": {
+                      "id": 2,
+                      "user_id": 5,
+                      "brand_id": 8,
+                      "car_type_id": 2,
+                      "plate_number": "qft-9716",
+                      "model": "Accent",
+                      "year": "1985",
+                      "color": "white",
+                      "fuel_type": "diesel",
+                      "cylinders": 6,
+                      "mileage": 100775,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/0044bb?text=transport+ipsam",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 2,
+                  "branch": {
+                      "id": 2,
+                      "admin_id": 1,
+                      "name": "Jeddah Branch",
+                      "name_ar": "فرع جدة",
+                      "city": "Jeddah",
+                      "address": "شارع التحلية، الأندلس",
+                      "latitude": "21.5433000",
+                      "longitude": "39.1728000",
+                      "phone": "0512222222",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": true
+                  },
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 5,
+                  "service": {
+                      "id": 5,
+                      "category_id": 3,
+                      "name": "Battery Jump Start",
+                      "name_ar": "تشغيل بطارية",
+                      "description": "تشغيل البطارية للسيارات العالقة",
+                      "base_price": "80.00",
+                      "is_vip_available": false,
+                      "vip_extra_price": null,
+                      "duration_minutes": 20,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 3,
+                  "category": {
+                      "id": 3,
+                      "name": "Roadside Assistance",
+                      "name_ar": "المساعدة على الطريق",
+                      "description": "خدمات الطوارئ والإنقاذ أثناء السير",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": true,
+                  "is_vip": false,
+                  "status": "in_progress",
+                  "scheduled_at": "2026-07-25T04:38:49+00:00",
+                  "started_at": "2026-07-30T10:16:40+00:00",
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-07-29T06:30:22+00:00",
+                  "location_lat": "24.4515400",
+                  "location_lng": "46.4555320",
+                  "location_address": "350 Kulas Park Suite 984\nStokeston, WA 95622-3765",
+                  "distance_km": "21.72",
+                  "discount_amount": "0.00",
+                  "total_price": "80.00",
+                  "price_items": [
+                      {
+                          "id": 7,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "80.00"
+                      }
+                  ],
+                  "notes": "Voluptas est dicta tempora.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 7,
+                  "booking_group_id": null,
+                  "customer_id": 13,
+                  "customer": {
+                      "id": 13,
+                      "name": "Urban Watsica",
+                      "email": "gledner@example.org",
+                      "phone": "0965858456",
+                      "image_url": "https://via.placeholder.com/200x200.png/005577?text=people+quibusdam",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 7,
+                  "car": {
+                      "id": 7,
+                      "user_id": 22,
+                      "brand_id": 14,
+                      "car_type_id": 1,
+                      "plate_number": "ltg-1825",
+                      "model": "Elantra",
+                      "year": "1988",
+                      "color": "blue",
+                      "fuel_type": "petrol",
+                      "cylinders": 8,
+                      "mileage": 96951,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/005566?text=transport+qui",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 5,
+                  "branch": {
+                      "id": 5,
+                      "admin_id": 1,
+                      "name": "Madinah Branch",
+                      "name_ar": "فرع المدينة المنورة",
+                      "city": "Madinah",
+                      "address": "طريق قباء، قباء",
+                      "latitude": "24.4709000",
+                      "longitude": "39.6112000",
+                      "phone": "0515555555",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": true
+                  },
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 2,
+                  "service": {
+                      "id": 2,
+                      "category_id": 1,
+                      "name": "Interior Cleaning",
+                      "name_ar": "تنظيف داخلي",
+                      "description": "تنظيف داخلي شامل للمقاعد والسجاد",
+                      "base_price": "70.00",
+                      "is_vip_available": true,
+                      "vip_extra_price": "25.00",
+                      "duration_minutes": 45,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 1,
+                  "category": {
+                      "id": 1,
+                      "name": "Car Wash",
+                      "name_ar": "غسيل سيارات",
+                      "description": "تنظيف وتلميع السيارات الداخلي والخارجي",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": true,
+                  "is_vip": false,
+                  "status": "in_progress",
+                  "scheduled_at": "2026-07-25T07:58:22+00:00",
+                  "started_at": "2026-08-06T08:22:00+00:00",
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-08-02T11:32:13+00:00",
+                  "location_lat": "24.0625900",
+                  "location_lng": "46.1262520",
+                  "location_address": "478 Jairo Alley Apt. 868\nEast Justyn, SC 80547",
+                  "distance_km": "16.70",
+                  "discount_amount": "0.00",
+                  "total_price": "70.00",
+                  "price_items": [
+                      {
+                          "id": 8,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "70.00"
+                      }
+                  ],
+                  "notes": "Et suscipit aspernatur consectetur est consequatur delectus voluptas vitae.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 8,
+                  "booking_group_id": null,
+                  "customer_id": 12,
+                  "customer": {
+                      "id": 12,
+                      "name": "Wilfred Feest MD",
+                      "email": "jackson85@example.org",
+                      "phone": "0948362517",
+                      "image_url": "https://via.placeholder.com/200x200.png/001122?text=people+quibusdam",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 5,
+                  "car": {
+                      "id": 5,
+                      "user_id": 5,
+                      "brand_id": 6,
+                      "car_type_id": 2,
+                      "plate_number": "myl-2346",
+                      "model": "Land Cruiser",
+                      "year": "2023",
+                      "color": "purple",
+                      "fuel_type": "electric",
+                      "cylinders": 4,
+                      "mileage": 113436,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/004444?text=transport+aut",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 3,
+                  "branch": {
+                      "id": 3,
+                      "admin_id": 1,
+                      "name": "Dammam Branch",
+                      "name_ar": "فرع الدمام",
+                      "city": "Dammam",
+                      "address": "طريق الملك سعود، الشاطئ",
+                      "latitude": "26.4207000",
+                      "longitude": "50.0888000",
+                      "phone": "0513333333",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 4,
+                  "service": {
+                      "id": 4,
+                      "category_id": 2,
+                      "name": "Brake Inspection",
+                      "name_ar": "فحص فرامل",
+                      "description": "فحص وصيانة نظام الفرامل",
+                      "base_price": "90.00",
+                      "is_vip_available": false,
+                      "vip_extra_price": null,
+                      "duration_minutes": 40,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 2,
+                  "category": {
+                      "id": 2,
+                      "name": "Maintenance",
+                      "name_ar": "صيانة ميكانيكية",
+                      "description": "خدمات الصيانة السريعة والميكانيكا العامة",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": false,
+                  "is_vip": false,
+                  "status": "assigned",
+                  "scheduled_at": "2026-07-27T12:10:45+00:00",
+                  "started_at": null,
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-08-02T00:23:41+00:00",
+                  "location_lat": "24.1997690",
+                  "location_lng": "46.3682190",
+                  "location_address": "67721 Armstrong Orchard Apt. 148\nNicolettehaven, AL 70268-9634",
+                  "distance_km": "4.57",
+                  "discount_amount": "0.00",
+                  "total_price": "90.00",
+                  "price_items": [
+                      {
+                          "id": 9,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "90.00"
+                      }
+                  ],
+                  "notes": "Numquam fugit occaecati et et.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 9,
+                  "booking_group_id": null,
+                  "customer_id": 8,
+                  "customer": {
+                      "id": 8,
+                      "name": "Leland Deckow",
+                      "email": "ole76@example.org",
+                      "phone": "0941662579",
+                      "image_url": "https://via.placeholder.com/200x200.png/002211?text=people+voluptatem",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 9,
+                  "car": {
+                      "id": 9,
+                      "user_id": 22,
+                      "brand_id": 11,
+                      "car_type_id": 2,
+                      "plate_number": "bsp-2524",
+                      "model": "Land Cruiser",
+                      "year": "2002",
+                      "color": "yellow",
+                      "fuel_type": "hybrid",
+                      "cylinders": 6,
+                      "mileage": 148978,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/00ff44?text=transport+ut",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 5,
+                  "branch": {
+                      "id": 5,
+                      "admin_id": 1,
+                      "name": "Madinah Branch",
+                      "name_ar": "فرع المدينة المنورة",
+                      "city": "Madinah",
+                      "address": "طريق قباء، قباء",
+                      "latitude": "24.4709000",
+                      "longitude": "39.6112000",
+                      "phone": "0515555555",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": true
+                  },
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 1,
+                  "service": {
+                      "id": 1,
+                      "category_id": 1,
+                      "name": "Exterior Wash",
+                      "name_ar": "غسيل خارجي",
+                      "description": "غسيل خارجي شامل للسيارة",
+                      "base_price": "50.00",
+                      "is_vip_available": true,
+                      "vip_extra_price": "20.00",
+                      "duration_minutes": 30,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 1,
+                  "category": {
+                      "id": 1,
+                      "name": "Car Wash",
+                      "name_ar": "غسيل سيارات",
+                      "description": "تنظيف وتلميع السيارات الداخلي والخارجي",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": true,
+                  "is_vip": true,
+                  "status": "assigned",
+                  "scheduled_at": "2026-08-02T10:59:20+00:00",
+                  "started_at": null,
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-08-02T21:38:39+00:00",
+                  "location_lat": "24.7058890",
+                  "location_lng": "46.6461000",
+                  "location_address": "5631 Gleason Views Apt. 837\nWest Dillan, TN 26107-1546",
+                  "distance_km": "15.35",
+                  "discount_amount": "0.00",
+                  "total_price": "70.00",
+                  "price_items": [
+                      {
+                          "id": 10,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "50.00"
+                      },
+                      {
+                          "id": 11,
+                          "pricing_rule_id": null,
+                          "label": "VIP Charge",
+                          "amount": "20.00"
+                      }
+                  ],
+                  "notes": "Magnam sed sunt odio impedit.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              },
+              {
+                  "id": 10,
+                  "booking_group_id": null,
+                  "customer_id": 13,
+                  "customer": {
+                      "id": 13,
+                      "name": "Urban Watsica",
+                      "email": "gledner@example.org",
+                      "phone": "0965858456",
+                      "image_url": "https://via.placeholder.com/200x200.png/005577?text=people+quibusdam",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 4,
+                  "car": {
+                      "id": 4,
+                      "user_id": 17,
+                      "brand_id": 1,
+                      "car_type_id": 4,
+                      "plate_number": "nrz-5466",
+                      "model": "Elantra",
+                      "year": "1975",
+                      "color": "black",
+                      "fuel_type": "hybrid",
+                      "cylinders": 8,
+                      "mileage": 141476,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/00ddee?text=transport+ut",
+                      "is_active": true,
+                      "created_at": "2026-08-07",
+                      "updated_at": "2026-08-07"
+                  },
+                  "branch_id": 4,
+                  "branch": {
+                      "id": 4,
+                      "admin_id": 1,
+                      "name": "Makkah Branch",
+                      "name_ar": "فرع مكة المكرمة",
+                      "city": "Makkah",
+                      "address": "طريق العزيزية، العزيزية",
+                      "latitude": "21.3891000",
+                      "longitude": "39.8579000",
+                      "phone": "0514444444",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 2,
+                  "service": {
+                      "id": 2,
+                      "category_id": 1,
+                      "name": "Interior Cleaning",
+                      "name_ar": "تنظيف داخلي",
+                      "description": "تنظيف داخلي شامل للمقاعد والسجاد",
+                      "base_price": "70.00",
+                      "is_vip_available": true,
+                      "vip_extra_price": "25.00",
+                      "duration_minutes": 45,
+                      "created_at": "2026-08-07 16:16:32",
+                      "updated_at": "2026-08-07 16:16:32"
+                  },
+                  "category_id": 1,
+                  "category": {
+                      "id": 1,
+                      "name": "Car Wash",
+                      "name_ar": "غسيل سيارات",
+                      "description": "تنظيف وتلميع السيارات الداخلي والخارجي",
+                      "is_active": true,
+                      "created_at": "2026-08-07 16:16:31",
+                      "updated_at": null
+                  },
+                  "booking_type": false,
+                  "is_vip": false,
+                  "status": "assigned",
+                  "scheduled_at": "2026-08-02T12:57:56+00:00",
+                  "started_at": null,
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": "2026-08-04T03:57:57+00:00",
+                  "location_lat": "24.7607730",
+                  "location_lng": "46.2973490",
+                  "location_address": "697 Dallin Mount\nSouth Catharinetown, MD 51421",
+                  "distance_km": "29.78",
+                  "discount_amount": "0.00",
+                  "total_price": "70.00",
+                  "price_items": [
+                      {
+                          "id": 12,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "70.00"
+                      }
+                  ],
+                  "notes": "Voluptatem eveniet numquam earum eius atque velit.",
+                  "created_at": "2026-08-07T16:16:40+00:00",
+                  "updated_at": "2026-08-07T16:16:40+00:00"
+              }
+          ],
+          "message": "Bookings retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-07T21:49:18+00:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 10,
+              "total": 40,
+              "last_page": 4
+          }
+      }
+order: 1000

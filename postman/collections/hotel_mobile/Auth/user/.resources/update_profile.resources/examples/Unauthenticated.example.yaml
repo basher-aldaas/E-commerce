@@ -1,0 +1,34 @@
+$kind: http-example
+request:
+  url: "{{url}}/update_profile"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: name
+        value: user
+      - type: text
+        key: email
+        value: user@gmil.com
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 16 Jul 2025 11:12:43 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "Unauthenticated."
+      }
+order: 2000

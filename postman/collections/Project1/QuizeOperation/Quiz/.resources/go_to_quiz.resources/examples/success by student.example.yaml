@@ -1,0 +1,95 @@
+$kind: http-example
+request:
+  url: "{{url}}/go_to_quiz/10"
+  method: GET
+  headers:
+    Accept: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Sat, 01 Jun 2024 15:40:58 GMT
+    - key: Date
+      value: Sat, 01 Jun 2024 15:40:58 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "58"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 9,
+              "course_id": 10,
+              "created_at": "2024-06-01T14:47:50.000000Z",
+              "updated_at": "2024-06-01T14:47:50.000000Z",
+              "questions": [
+                  {
+                      "id": 8,
+                      "quiz_id": 9,
+                      "question": "Ea sit quisquam omnis odio reiciendis qui aut sed. Dolor in exercitationem porro.",
+                      "created_at": "2024-06-01T14:47:50.000000Z",
+                      "updated_at": "2024-06-01T14:47:50.000000Z",
+                      "answers": [
+                          {
+                              "id": 23,
+                              "question_id": 8,
+                              "created_at": "2024-06-01T14:47:50.000000Z",
+                              "updated_at": "2024-06-01T14:47:50.000000Z",
+                              "choice": "Qui.",
+                              "role": 0
+                          },
+                          {
+                              "id": 26,
+                              "question_id": 8,
+                              "created_at": "2024-06-01T14:47:50.000000Z",
+                              "updated_at": "2024-06-01T14:47:50.000000Z",
+                              "choice": "Eius.",
+                              "role": 0
+                          },
+                          {
+                              "id": 28,
+                              "question_id": 8,
+                              "created_at": "2024-06-01T14:47:50.000000Z",
+                              "updated_at": "2024-06-01T14:47:50.000000Z",
+                              "choice": "Esse.",
+                              "role": 0
+                          },
+                          {
+                              "id": 32,
+                              "question_id": 8,
+                              "created_at": "2024-06-01T14:47:50.000000Z",
+                              "updated_at": "2024-06-01T14:47:50.000000Z",
+                              "choice": "Vel.",
+                              "role": 0
+                          },
+                          {
+                              "id": 36,
+                              "question_id": 8,
+                              "created_at": "2024-06-01T14:47:50.000000Z",
+                              "updated_at": "2024-06-01T14:47:50.000000Z",
+                              "choice": "Ex.",
+                              "role": 1
+                          }
+                      ]
+                  }
+              ]
+          },
+          "message": "Getting quiz successfully"
+      }
+order: 7000

@@ -1,0 +1,62 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/auth/login"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: email
+        value: basher1@gmail.com
+      - type: text
+        key: phoneNumber
+        value: "0968538721"
+      - type: text
+        key: password
+        value: 5748489k
+response:
+  statusCode: 202
+  statusText: Accepted
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Sun, 03 Dec 2023 11:17:25 GMT
+    - key: Date
+      value: Sun, 03 Dec 2023 11:17:25 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "user": {
+                  "id": 1,
+                  "userName": "basher",
+                  "email": "basher1@gmail.com",
+                  "phoneNumber": "0968538721",
+                  "email_verified_at": null,
+                  "created_at": "2023-12-03T09:51:20.000000Z",
+                  "updated_at": "2023-12-03T09:51:20.000000Z"
+              },
+              "token": "{{json_web_token_0xm8}}"
+          },
+          "message": "User successfully loged in"
+      }
+order: 1000

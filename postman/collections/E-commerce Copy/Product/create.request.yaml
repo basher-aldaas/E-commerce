@@ -1,0 +1,30 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/products
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: name
+      value: bob
+      disabled: true
+    - type: text
+      key: price
+      value: "50"
+      disabled: true
+    - type: text
+      key: category_id
+      value: "1"
+      disabled: true
+    - type: text
+      key: stock
+      value: "20"
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+examples: ./.resources/create.resources/examples
+order: 2000

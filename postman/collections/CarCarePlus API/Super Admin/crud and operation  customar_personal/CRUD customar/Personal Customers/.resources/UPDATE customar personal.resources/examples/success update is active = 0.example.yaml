@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/customers/personal/16"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: is_active
+        value: "0"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.30
+    Cache-Control: no-cache, private
+    Date: Fri, 31 Jul 2026 20:08:52 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: text
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 16,
+              "name": "Ahmad Khaled",
+              "email": "heidenreich.edwardo@example.net",
+              "phone": "0986978901",
+              "image_url": "https://via.placeholder.com/200x200.png/00ee00?text=people+architecto",
+              "is_active": false,
+              "role": "customer_personal",
+              "created_at": "2026-07-31 19:43:25",
+              "updated_at": "2026-07-31 20:08:51"
+          },
+          "message": "Personal customer updated successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-31T20:08:52+00:00"
+      }
+order: 2000

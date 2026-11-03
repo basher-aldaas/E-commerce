@@ -1,0 +1,22 @@
+# Use this workspace to collaborate
+workspace:
+  id: e56d9221-081c-4225-8a5d-a6a9b9a5e876
+
+localResources:
+  collections:
+    - ../E-commerce-1
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ../E-commerce-1: 30501443-22f4b026-5ff4-4c11-9b83-2ab3a7777993
+    ../postman/collections/E-commerce Copy: ba4d4499-de07-4d6b-98b5-42aae121ee5f
+    ../postman/collections/CarCarePlus API: 71b20f97-1af6-435a-bf9e-76a39fd9968b
+    ../postman/collections/push-notification-firebase: fb8f97ff-d947-4b4b-b017-65290d8751b2
+    ../postman/collections/Project1: 7fcca1de-5248-48a8-8c06-342a3d2df38b
+    ../postman/collections/mailtrap: 36cebf4c-3f3b-43ca-adee-29d294776078
+    ../postman/collections/medicineFactory: 812ea4d4-3911-4958-81fc-5efd97372bd0
+    ../postman/collections/localization: e9dbb097-80f0-4163-b3b7-c52a941469e2
+    ../postman/collections/googleSosialite: 28337d03-563e-4fbc-a549-a3e96451b948
+    ../postman/collections/hotel_mobile: f3dc6008-fa0f-4d5a-b045-8c9977126c3d

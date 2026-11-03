@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{url}}/api/admin/searchCat?name=Antibiotics"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  name: Antibiotics
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+examples: ./.resources/search for Cat.resources/examples
+order: 4000

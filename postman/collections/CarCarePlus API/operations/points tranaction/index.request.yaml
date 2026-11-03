@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/api/points?"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+queryParams:
+  "": null
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+examples: ./.resources/index.resources/examples
+order: 1000

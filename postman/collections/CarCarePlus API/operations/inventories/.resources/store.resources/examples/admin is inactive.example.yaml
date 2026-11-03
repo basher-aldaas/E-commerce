@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/inventories"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: branch_id
+        value: "7"
+        disabled: true
+      - type: text
+        key: material_id
+        value: "2"
+      - type: text
+        key: quantity
+        value: "34"
+      - type: text
+        key: min_quantity
+        value: "2"
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 31 Jul 2026 12:26:53 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "Your account is inactive."
+      }
+order: 6000

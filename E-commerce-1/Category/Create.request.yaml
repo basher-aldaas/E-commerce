@@ -1,0 +1,22 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/categories
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: name
+      value: elecf
+    - type: text
+      key: descreiption
+      value: ""
+      disabled: true
+auth:
+  type: bearer
+  credentials:
+    token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL3YxL2F1dGgvbG9naW4iLCJpYXQiOjE3OTMyMjM2MjcsImV4cCI6MTc5MzIyNzIyNywibmJmIjoxNzkzMjIzNjI3LCJqdGkiOiJzTFdkNGduZE9wTFhGc1FQIiwic3ViIjoiMiIsInBydiI6IjM0Y2VjN2VjMjk2NTZmNTRkMjM4ODAzNzAwY2IzZmE2MWE2MzI5OGEifQ.XOqYEVt_wB2t-V8Blg_bNyc_vC9ybe9Lia2cIKSYN_s
+examples: ./.resources/Create.resources/examples
+order: 1000

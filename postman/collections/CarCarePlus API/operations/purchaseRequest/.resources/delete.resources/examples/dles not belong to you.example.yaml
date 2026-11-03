@@ -1,0 +1,29 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/purchase-requests/1"
+  method: DELETE
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 14 Aug 2026 14:06:06 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": "You are not authorized to modify this purchase request.",
+          "status_code": 403,
+          "timestamp": "2026-08-14T17:06:06+03:00"
+      }
+order: 2000

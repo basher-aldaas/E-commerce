@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/api/cars/update/11"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: plate_number
+      value: utt-3993
+auth:
+  type: bearer
+  credentials:
+    token: "{{customer1-token}}"
+examples: ./.resources/update.resources/examples
+order: 5000

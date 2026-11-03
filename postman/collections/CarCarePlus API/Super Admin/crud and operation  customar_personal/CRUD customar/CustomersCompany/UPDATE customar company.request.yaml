@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/api/customers/personal/4"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\r
+
+    \    \"name\": \"Ahmad Khaled\"\r
+
+    }"
+examples: ./.resources/UPDATE customar company.resources/examples
+order: 4000

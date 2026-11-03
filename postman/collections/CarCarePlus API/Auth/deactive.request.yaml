@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/users/4/deactivate"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/deactive.resources/examples
+order: 8000

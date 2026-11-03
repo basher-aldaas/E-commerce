@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/api/companies/1"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\r
+
+    \"name\":\"New Company\",\r
+
+    \"address\":\"Damascus\",\r
+
+    \"status\":\"approved\"\r
+
+    }"
+order: 2000

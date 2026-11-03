@@ -1,0 +1,66 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/purchase-requests/10/reject"
+  method: POST
+  headers:
+    Accept: application/json
+    ty: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: rejection_reason
+        value: ddd
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 14 Aug 2026 14:28:06 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 10,
+              "branch_id": 3,
+              "branch": {
+                  "id": 3,
+                  "admin_id": 2,
+                  "name": "Dammam Branch",
+                  "name_ar": "فرع الدمام",
+                  "city": "Dammam",
+                  "address": "طريق الملك سعود، الشاطئ",
+                  "latitude": "26.4207000",
+                  "longitude": "50.0888000",
+                  "phone": "0513333333",
+                  "is_active": true,
+                  "working_hours": {
+                      "end": "23:00",
+                      "start": "08:00"
+                  },
+                  "is_24h": false
+              },
+              "from_branch_id": null,
+              "from_branch": null,
+              "status": "rejected",
+              "total_amount": "300.00",
+              "notes": null,
+              "request_type": false,
+              "rejection_reason": "ddd",
+              "approved_at": null,
+              "payment": null,
+              "created_at": "2026-08-14T14:27:59.000000Z",
+              "updated_at": "2026-08-14T14:28:06.000000Z"
+          },
+          "message": "purchase request rejected successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-14T17:28:06+03:00"
+      }
+order: 2000

@@ -1,0 +1,52 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/sub-services"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: service_id
+        value: "3"
+      - type: text
+        key: name
+        value: subService
+      - type: text
+        key: name_ar
+        value: خدمة فرعية
+      - type: text
+        key: price
+        value: "13"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 31 Jul 2026 22:58:43 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 5,
+              "service_id": 3,
+              "name": "subService",
+              "name_ar": "خدمة فرعية",
+              "description": null,
+              "price": "13.00",
+              "is_active": null
+          },
+          "message": "Sub service created successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-31T22:58:43+00:00"
+      }
+order: 1000

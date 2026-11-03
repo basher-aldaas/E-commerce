@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{base_url}}/api/car-brands"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: name
+      value: to
+    - type: text
+      key: ""
+      value: ""
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/store.resources/examples
+order: 3000

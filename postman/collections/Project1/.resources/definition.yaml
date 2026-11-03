@@ -1,0 +1,13 @@
+$kind: collection
+description: ""
+variables:
+  url: ""
+  admin: ""
+  teacher: ""
+  student: ""
+auth:
+  - id: 31f1e026-39e8-4056-956b-20fc679b0235
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{admin}}"

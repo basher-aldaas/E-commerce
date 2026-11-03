@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{url}}/show_teachers"
+method: GET
+headers:
+  Accept: application/json
+examples: ./.resources/show_teachers.resources/examples
+order: 3000

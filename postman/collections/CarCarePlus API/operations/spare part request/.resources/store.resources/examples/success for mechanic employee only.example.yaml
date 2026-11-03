@@ -1,0 +1,107 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/spare-part-requests"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: order_id
+        value: "22"
+      - type: text
+        key: material_id
+        value: "3"
+      - type: text
+        key: quantity
+        value: "5"
+      - type: text
+        key: specifications
+        value: ""
+        disabled: true
+      - type: text
+        key: notes
+        value: ""
+        disabled: true
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Sat, 15 Aug 2026 09:58:42 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 9,
+              "order_id": 22,
+              "order": {
+                  "id": 22,
+                  "booking_group_id": null,
+                  "customer_id": 26,
+                  "company_id": null,
+                  "car_id": 6,
+                  "branch_id": 5,
+                  "workshop_id": null,
+                  "employee_id": null,
+                  "service_id": 5,
+                  "category_id": 2,
+                  "booking_type": false,
+                  "is_vip": false,
+                  "status": "pending",
+                  "scheduled_at": "2026-08-15T23:41:53+03:00",
+                  "started_at": null,
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": null,
+                  "location_lat": "24.6120120",
+                  "location_lng": "46.5302190",
+                  "location_address": "403 Lurline Loop\nHettiefurt, WI 85539",
+                  "distance_km": "24.38",
+                  "discount_amount": "0.00",
+                  "service_price": "0.00",
+                  "sub_service_price": "0.00",
+                  "materials_price": "0.00",
+                  "total_price": "100.00",
+                  "user_package_id": null,
+                  "package_covered_amount": "0.00",
+                  "cash_due_amount": "0.00",
+                  "notes": "Blanditiis sunt odio aut repudiandae voluptatibus autem omnis.",
+                  "created_at": "2026-08-15T12:50:05+03:00",
+                  "updated_at": "2026-08-15T12:50:05+03:00"
+              },
+              "employee_id": 2,
+              "material_id": 3,
+              "material": {
+                  "id": 3,
+                  "material_unit_id": 2,
+                  "name": "Microfiber Towel (Ultra Soft)",
+                  "name_ar": "منشفة مايكروفايبر ناعمة فائقة الامتصاص",
+                  "description": "مناشف خاصة لتجفيف حماية من الخدوش",
+                  "unit_price": "8.00",
+                  "is_visible_to_customer": false,
+                  "is_active": true
+              },
+              "quantity": 5,
+              "specifications": null,
+              "status": "pending",
+              "notes": null,
+              "decided_at": null,
+              "created_at": "2026-08-15T09:58:42.000000Z",
+              "updated_at": "2026-08-15T09:58:42.000000Z"
+          },
+          "message": "spare part request created successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-15T12:58:42+03:00"
+      }
+order: 1000

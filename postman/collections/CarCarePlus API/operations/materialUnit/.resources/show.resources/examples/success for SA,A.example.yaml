@@ -1,0 +1,34 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/material-units/1"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 31 Jul 2026 15:00:35 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 1,
+              "name": "Litre",
+              "name_ar": "لتر",
+              "is_decimal": true
+          },
+          "message": "material unit fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-31T15:00:35+00:00"
+      }
+order: 1000

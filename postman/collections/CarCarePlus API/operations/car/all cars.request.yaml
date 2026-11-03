@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/cars/all"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+examples: ./.resources/all cars.resources/examples
+order: 1000

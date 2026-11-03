@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{url}}/delete_comment/5"
+method: GET
+headers:
+  Accept: application/json
+examples: ./.resources/delete_comment.resources/examples
+order: 5000

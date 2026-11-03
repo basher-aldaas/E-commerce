@@ -1,0 +1,37 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/users/4/activate"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 12 Aug 2026 20:59:00 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 4,
+              "name": "أحمد العتيبي (عميل)",
+              "email": "customer@system.com",
+              "phone": "0500000004",
+              "image_url": "https://via.placeholder.com/200x200.png/0055aa?text=people+vero",
+              "is_active": true,
+              "role": "customer_personal"
+          },
+          "message": "User activated successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-12T23:59:00+03:00"
+      }
+order: 1000

@@ -1,0 +1,72 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/index/medicines?factory_id=1"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    factory_id: "1"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Host
+      value: 127.0.0.1:8000
+    - key: Date
+      value: Wed, 13 Dec 2023 15:58:22 GMT
+    - key: Date
+      value: Wed, 13 Dec 2023 15:58:22 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "58"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 1,
+                  "factory_id": 1,
+                  "catigorie_id": 1,
+                  "medicine_id": 1,
+                  "scientific_name": "Aspirin",
+                  "commercial_name": "Aspirin",
+                  "catigorie": "Analgesics",
+                  "man_company": "tameco",
+                  "exp_day": "2024-09-15",
+                  "price": 2500,
+                  "amount": 90,
+                  "created_at": null,
+                  "updated_at": null
+              },
+              {
+                  "id": 2,
+                  "factory_id": 1,
+                  "catigorie_id": 1,
+                  "medicine_id": 2,
+                  "scientific_name": "Morphine",
+                  "commercial_name": "Morphine",
+                  "catigorie": "Analgesics",
+                  "man_company": "tameco",
+                  "exp_day": "2024-09-15",
+                  "price": 2500,
+                  "amount": 90,
+                  "created_at": null,
+                  "updated_at": null
+              }
+          ],
+          "message": "The medicines from this factory"
+      }
+order: 2000

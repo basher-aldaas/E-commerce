@@ -1,0 +1,269 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/bookings/confirm"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: quote_token
+        value: 98ffabe1-4ae2-4b50-a1c1-293cd93f460b
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Tue, 11 Aug 2026 22:32:21 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 53,
+                  "booking_group_id": null,
+                  "customer_id": 4,
+                  "customer": {
+                      "id": 4,
+                      "name": "أحمد العتيبي (عميل)",
+                      "email": "customer@system.com",
+                      "phone": "0500000004",
+                      "image_url": "https://via.placeholder.com/200x200.png/0055aa?text=people+vero",
+                      "is_active": true,
+                      "role": "customer_personal"
+                  },
+                  "company_id": null,
+                  "car_id": 10,
+                  "car": {
+                      "id": 10,
+                      "user_id": 4,
+                      "brand_id": 2,
+                      "car_type_id": 3,
+                      "plate_number": "kxs-6503",
+                      "model": "Accent",
+                      "year": "2002",
+                      "color": "purple",
+                      "fuel_type": "electric",
+                      "cylinders": 4,
+                      "mileage": 138563,
+                      "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/009977?text=transport+minus",
+                      "is_active": true,
+                      "created_at": "2026-08-11",
+                      "updated_at": "2026-08-11"
+                  },
+                  "branch_id": 1,
+                  "branch": {
+                      "id": 1,
+                      "admin_id": 1,
+                      "name": "Main Riyadh Branch",
+                      "name_ar": "فرع الرياض الرئيسي",
+                      "city": "Riyadh",
+                      "address": "طريق الملك فهد، العليا",
+                      "latitude": "24.7136000",
+                      "longitude": "46.6753000",
+                      "phone": "0511111111",
+                      "is_active": true,
+                      "working_hours": {
+                          "end": "23:00",
+                          "start": "08:00"
+                      },
+                      "is_24h": false
+                  },
+                  "workshop_id": null,
+                  "workshop": null,
+                  "employee_id": null,
+                  "employee": null,
+                  "service_id": 1,
+                  "service": {
+                      "id": 1,
+                      "category_id": 1,
+                      "name": "Exterior Wash",
+                      "name_ar": "غسيل خارجي",
+                      "description": "غسيل خارجي شامل للسيارة",
+                      "base_price": "50.00",
+                      "is_vip_available": true,
+                      "vip_extra_price": "20.00",
+                      "duration_minutes": 30,
+                      "created_at": "2026-08-11 22:24:09",
+                      "updated_at": "2026-08-11 22:24:09"
+                  },
+                  "category_id": 1,
+                  "category": {
+                      "id": 1,
+                      "name": "Car Wash",
+                      "name_ar": "غسيل سيارات",
+                      "description": "تنظيف وتلميع السيارات الداخلي والخارجي",
+                      "is_active": true,
+                      "created_at": "2026-08-11 22:24:07",
+                      "updated_at": null
+                  },
+                  "booking_type": true,
+                  "is_vip": true,
+                  "status": "pending",
+                  "scheduled_at": "2026-08-12T02:32:21+03:00",
+                  "started_at": null,
+                  "completed_at": null,
+                  "cancelled_at": null,
+                  "cancel_reason": null,
+                  "assigned_at": null,
+                  "location_lat": "24.0000000",
+                  "location_lng": "46.0000000",
+                  "location_address": null,
+                  "distance_km": "104.76",
+                  "discount_amount": "0.00",
+                  "service_price": "147.38",
+                  "sub_service_price": "15.00",
+                  "materials_price": "225.00",
+                  "total_price": "387.38",
+                  "user_package_id": 9,
+                  "user_package": {
+                      "id": 9,
+                      "user_id": 4,
+                      "package_id": 1,
+                      "package": {
+                          "id": 1,
+                          "name": "Monthly Shiny Package",
+                          "description": "باقة اللمعان الشهري تشمل 4 غسلات كاملة وبسعر موفر",
+                          "type": "monthly",
+                          "is_company_package": false,
+                          "price": "350.00",
+                          "discount_pct": "0.00",
+                          "services_count": 4,
+                          "valid_days": 30,
+                          "is_active": true,
+                          "created_at": "2026-08-11 22:24:20",
+                          "updated_at": "2026-08-11 22:24:20"
+                      },
+                      "start_date": "2026-08-30",
+                      "end_date": "2026-09-30",
+                      "remaining_count": 1,
+                      "status": "active",
+                      "created_at": "2026-08-12 01:21:07"
+                  },
+                  "package_covered_amount": "157.38",
+                  "cash_due_amount": "230.00",
+                  "price_items": [
+                      {
+                          "id": 87,
+                          "pricing_rule_id": null,
+                          "label": "Base Price",
+                          "amount": "70.00"
+                      },
+                      {
+                          "id": 88,
+                          "pricing_rule_id": null,
+                          "label": "VIP Service Charge",
+                          "amount": "20.00"
+                      },
+                      {
+                          "id": 89,
+                          "pricing_rule_id": 5,
+                          "label": "Extra Distance Charge",
+                          "amount": "42.38"
+                      },
+                      {
+                          "id": 90,
+                          "pricing_rule_id": 6,
+                          "label": "Immediate Booking Charge",
+                          "amount": "15.00"
+                      }
+                  ],
+                  "sub_services": [
+                      {
+                          "id": 32,
+                          "sub_service_id": 1,
+                          "sub_service": {
+                              "id": 1,
+                              "service_id": 1,
+                              "name": "Tire Shine",
+                              "name_ar": "تلميع كفرات",
+                              "description": "تلميع الإطارات بمواد خاصة",
+                              "price": "10.00",
+                              "is_active": true
+                          },
+                          "price": "10.00",
+                          "covered_by_package": true,
+                          "status": "pending",
+                          "notes": null,
+                          "checked_at": null
+                      },
+                      {
+                          "id": 33,
+                          "sub_service_id": 2,
+                          "sub_service": {
+                              "id": 2,
+                              "service_id": 1,
+                              "name": "Window Cleaning",
+                              "name_ar": "تنظيف زجاج",
+                              "description": "تنظيف الزجاج الخارجي",
+                              "price": "5.00",
+                              "is_active": true
+                          },
+                          "price": "5.00",
+                          "covered_by_package": false,
+                          "status": "pending",
+                          "notes": null,
+                          "checked_at": null
+                      }
+                  ],
+                  "materials": [
+                      {
+                          "id": 83,
+                          "material_id": 1,
+                          "material": {
+                              "id": 1,
+                              "material_unit_id": 1,
+                              "name": "Synthetic Engine Oil 5W-30",
+                              "name_ar": "زيت محرك تخليقي 5W-30",
+                              "description": "زيت محرك عالي الجودة يخدم حتى 10,000 كم",
+                              "unit_price": "45.00",
+                              "is_visible_to_customer": true,
+                              "is_active": true
+                          },
+                          "requested_by": 4,
+                          "quantity": "5.00",
+                          "unit_price": "45.00",
+                          "total_price": "225.00",
+                          "status": "used",
+                          "approved_at": "2026-08-12T01:32:21+03:00"
+                      }
+                  ],
+                  "payments": [
+                      {
+                          "id": 13,
+                          "payment_number": "25336759-e565-434b-b81f-cd8ecebffba9",
+                          "type": "order",
+                          "method": "package",
+                          "status": "paid",
+                          "amount": "157.38",
+                          "points_used": 0
+                      },
+                      {
+                          "id": 14,
+                          "payment_number": "6d3ff56a-0ce6-4f3d-b169-b595fcaeaa17",
+                          "type": "order",
+                          "method": "cash",
+                          "status": "pending",
+                          "amount": "230.00",
+                          "points_used": 0
+                      }
+                  ],
+                  "notes": "notes",
+                  "created_at": "2026-08-12T01:32:21+03:00",
+                  "updated_at": "2026-08-12T01:32:21+03:00"
+              }
+          ],
+          "message": "Booking confirmed successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-12T01:32:21+03:00"
+      }
+order: 5000

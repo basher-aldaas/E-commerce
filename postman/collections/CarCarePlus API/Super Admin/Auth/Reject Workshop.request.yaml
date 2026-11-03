@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/registration-requests/workshops/:workshop/reject"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+pathVariables:
+  - key: workshop
+    value: "1"
+    description: Workshop ID
+body:
+  type: text
+  content: |-
+    {
+        "reason": "Location could not be verified"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 5000

@@ -1,0 +1,12 @@
+$kind: collection
+description: ""
+variables:
+  url: http://127.0.0.1:8000/api
+  admin: 9|a5FEfcFx2qFh8oX7vwbGjr0gzbmzQAXKTjpTFOKH16d868c3
+  user: 4|I55rFYDJ4Vx3sqYypsjH2BhPqoKYKj2lR7eS7NXec6f8bb2a
+auth:
+  - id: fcdaa39d-daec-4007-9654-19b0e4e3406b
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{admin}}"

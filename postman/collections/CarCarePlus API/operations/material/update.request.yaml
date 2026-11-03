@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/api/materials/3"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: name
+      value: feule update
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/update.resources/examples
+order: 4000

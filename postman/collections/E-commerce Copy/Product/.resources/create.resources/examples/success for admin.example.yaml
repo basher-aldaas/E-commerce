@@ -1,0 +1,56 @@
+$kind: http-example
+request:
+  url: http://localhost:8000/api/v1/products
+  method: POST
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: name
+        value: bob
+      - type: text
+        key: price
+        value: "50"
+      - type: text
+        key: category_id
+        value: "1"
+      - type: text
+        key: stock
+        value: "20"
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Mon, 02 Nov 2026 21:38:38 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 1,
+              "category_id": "1",
+              "name": "bob",
+              "description": null,
+              "price": "50",
+              "stock": "20",
+              "is_active": false,
+              "image": null,
+              "image_url": null,
+              "created_at": "2026-11-02T21:38:38.000000Z",
+              "updated_at": "2026-11-02T21:38:38.000000Z"
+          },
+          "message": "Product created successfully",
+          "status_code": 201,
+          "timestamp": "2026-11-02T21:38:38+00:00"
+      }
+order: 2000

@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{url}}/show_answer/7"
+method: GET
+headers:
+  Accept: application/json
+examples: ./.resources/show_answer.resources/examples
+order: 4000

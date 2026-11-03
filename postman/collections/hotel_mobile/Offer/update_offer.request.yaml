@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{url}}/update_offer/6"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: title
+      value: ""
+      disabled: true
+examples: ./.resources/update_offer.resources/examples
+order: 2000

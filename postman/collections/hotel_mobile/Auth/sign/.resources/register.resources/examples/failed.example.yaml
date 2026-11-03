@@ -1,0 +1,63 @@
+$kind: http-example
+request:
+  url: "{{url}}/register"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: name
+        value: bashir
+      - type: text
+        key: email
+        value: bashir
+      - type: text
+        key: phone
+        value: "09948759"
+      - type: text
+        key: password
+        value: ""
+      - type: text
+        key: password_confirmation
+        value: ""
+      - type: file
+        key: image
+        src: []
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Tue, 15 Jul 2025 12:21:57 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "58"
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": {
+              "name": [
+                  "The name field must be at least 10 characters."
+              ],
+              "email": [
+                  "The email field must be a valid email address."
+              ],
+              "phone": [
+                  "The phone field must be 10 digits."
+              ],
+              "password": [
+                  "The password field is required."
+              ]
+          }
+      }
+order: 2000

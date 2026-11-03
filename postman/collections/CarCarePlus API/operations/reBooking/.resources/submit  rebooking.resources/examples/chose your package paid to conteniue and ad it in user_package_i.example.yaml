@@ -1,0 +1,139 @@
+$kind: http-example
+name: chose your package paid to conteniue and ad it in user_package_id
+request:
+  url: "{{base_url}}/api/bookings/quote"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: car_ids[0]
+        value: "10"
+      - type: text
+        key: service_id
+        value: "1"
+      - type: text
+        key: booking_type
+        value: "1"
+      - type: text
+        key: payment_method
+        value: package
+      - type: text
+        key: scheduled_at
+        value: 20-10-2026
+        disabled: true
+      - type: text
+        key: location_lat
+        value: "24"
+      - type: text
+        key: location_lng
+        value: "46"
+      - type: text
+        key: branch_id
+        value: "3"
+        disabled: true
+      - type: text
+        key: location_address
+        value: alepo
+        disabled: true
+      - type: text
+        key: is_vip
+        value: "1"
+      - type: text
+        key: sub_service_ids[0]
+        value: "1"
+      - type: text
+        key: sub_service_ids[1]
+        value: "2"
+      - type: text
+        key: materials[0][material_id]
+        value: "1"
+      - type: text
+        key: materials[0][quantity]
+        value: "5"
+      - type: text
+        key: notes
+        value: notes
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Tue, 11 Aug 2026 22:21:15 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "requires_package_selection": true,
+              "available_packages": [
+                  {
+                      "id": 9,
+                      "user_id": 4,
+                      "package_id": 1,
+                      "package": {
+                          "id": 1,
+                          "name": "Monthly Shiny Package",
+                          "description": "باقة اللمعان الشهري تشمل 4 غسلات كاملة وبسعر موفر",
+                          "type": "monthly",
+                          "is_company_package": false,
+                          "price": "350.00",
+                          "discount_pct": "0.00",
+                          "services_count": 4,
+                          "valid_days": 30,
+                          "is_active": true,
+                          "created_at": "2026-08-11 22:24:20",
+                          "updated_at": "2026-08-11 22:24:20"
+                      },
+                      "start_date": "2026-08-30",
+                      "end_date": "2026-09-30",
+                      "remaining_count": 2,
+                      "status": "active",
+                      "created_at": "2026-08-12 01:21:07"
+                  }
+              ],
+              "distance_km": 104.76,
+              "sub_services": [
+                  {
+                      "id": 1,
+                      "service_id": 1,
+                      "name": "Tire Shine",
+                      "name_ar": "تلميع كفرات",
+                      "description": "تلميع الإطارات بمواد خاصة",
+                      "price": "10.00",
+                      "is_active": true
+                  },
+                  {
+                      "id": 2,
+                      "service_id": 1,
+                      "name": "Window Cleaning",
+                      "name_ar": "تنظيف زجاج",
+                      "description": "تنظيف الزجاج الخارجي",
+                      "price": "5.00",
+                      "is_active": true
+                  }
+              ],
+              "materials": [
+                  {
+                      "material_id": 1,
+                      "quantity": 5,
+                      "unit_price": 45,
+                      "total_price": 225
+                  }
+              ],
+              "car_count": 1
+          },
+          "message": "Choose which package to use for this booking",
+          "status_code": 200,
+          "timestamp": "2026-08-12T01:21:15+03:00"
+      }
+order: 16000

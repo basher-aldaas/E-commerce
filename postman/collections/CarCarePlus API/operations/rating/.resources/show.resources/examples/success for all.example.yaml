@@ -1,0 +1,65 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/ratings/2"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 12 Aug 2026 19:02:00 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 2,
+              "order_id": 62,
+              "customer_id": 4,
+              "customer": {
+                  "id": 4,
+                  "name": "أحمد العتيبي (عميل)",
+                  "email": "customer@system.com",
+                  "phone": "0500000004",
+                  "image_url": "https://via.placeholder.com/200x200.png/0055aa?text=people+vero",
+                  "is_active": true,
+                  "role": "customer_personal"
+              },
+              "employee_id": 1,
+              "employee": {
+                  "id": 1,
+                  "branch_id": 1,
+                  "type": "washer",
+                  "is_active": true,
+                  "rating_avg": "5.00",
+                  "user": {
+                      "id": 6,
+                      "name": "فني غسيل 1",
+                      "email": "washer@system.com",
+                      "phone": "0500000006",
+                      "image_url": "https://via.placeholder.com/200x200.png/00ff77?text=people+voluptatem",
+                      "is_active": true,
+                      "role": "employee_washer"
+                  }
+              },
+              "service_rating": 3,
+              "employee_rating": null,
+              "workshop_rating": null,
+              "comment": null,
+              "image_urls": [],
+              "created_at": "2026-08-12T21:59:35+03:00"
+          },
+          "message": "Rating retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-12T22:02:00+03:00"
+      }
+order: 1000

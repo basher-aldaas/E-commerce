@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/api/system-settings/1"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: description
+      value: نسبة ضريبة القيمة المضافة العامة نعديل
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/update.resources/examples
+order: 4000

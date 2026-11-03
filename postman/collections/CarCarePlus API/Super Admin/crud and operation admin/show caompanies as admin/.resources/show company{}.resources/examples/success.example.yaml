@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/companies/1"
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.30
+    Cache-Control: no-cache, private
+    Date: Sun, 02 Aug 2026 23:56:49 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: text
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 1,
+              "name": "Acme Auto",
+              "name_ar": "أكمي أوتو",
+              "commercial_reg": "CR-1234562",
+              "tax_number": "TAX-1234526",
+              "address": "123 King Fahd Rd, Riyadh",
+              "status": "approved",
+              "is_active": true,
+              "owner": {
+                  "id": 29,
+                  "name": "Company Owner",
+                  "email": "company2@example.com",
+                  "phone": "0500000222",
+                  "image_url": null,
+                  "is_active": true,
+                  "role": "customer_company"
+              },
+              "created_at": "2026-08-02"
+          },
+          "message": "Company retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-02T23:56:49+00:00"
+      }
+order: 1000

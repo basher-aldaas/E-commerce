@@ -1,0 +1,69 @@
+$kind: http-example
+request:
+  url: "{{url}}/register"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: full_name
+        value: basher ladaas
+      - type: text
+        key: email
+        value: s4@example.com
+      - type: text
+        key: phone
+        value: "0994875920"
+      - type: text
+        key: password
+        value: "57484899"
+      - type: text
+        key: password_confirmation
+        value: "57484899"
+      - type: text
+        key: birthday
+        value: 2001-02-22
+      - type: text
+        key: address
+        value: ""
+      - type: text
+        key: type
+        value: ""
+      - type: file
+        key: image
+        src: []
+response:
+  statusCode: 500
+  statusText: Internal Server Error
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Mon, 27 May 2024 10:17:08 GMT
+    - key: Date
+      value: Mon, 27 May 2024 10:17:08 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": "Call to a member function store() on null"
+      }
+order: 14000

@@ -1,0 +1,36 @@
+$kind: http-request
+url: "{{base_url}}/api/ratings"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: order_id
+      value: "44"
+    - type: text
+      key: service_rating
+      value: "3"
+    - type: text
+      key: employee_rating
+      value: "1"
+      disabled: true
+    - type: text
+      key: workshop_rating
+      value: "1"
+      disabled: true
+    - type: text
+      key: comment
+      value: ""
+    - type: text
+      key: image_urls[0]
+      value: ""
+      disabled: true
+auth:
+  type: bearer
+  credentials:
+    token: "{{customer1-token}}"
+examples: ./.resources/store.resources/examples
+order: 3000

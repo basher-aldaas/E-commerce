@@ -1,0 +1,5 @@
+$kind: http-request
+url: "{{base_url}}/api/customers/personal/my/profile"
+method: GET
+examples: ./.resources/show my profile.resources/examples
+order: 2000

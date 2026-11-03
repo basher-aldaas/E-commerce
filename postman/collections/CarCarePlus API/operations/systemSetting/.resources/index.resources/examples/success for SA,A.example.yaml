@@ -1,0 +1,100 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/system-settings"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 06 Aug 2026 09:08:05 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 1,
+                  "key": "tax_percentage",
+                  "value": "15",
+                  "type": "number",
+                  "description": "نسبة ضريبة القيمة المضافة العامة",
+                  "updated_at": "2026-08-05 15:45:36"
+              },
+              {
+                  "id": 2,
+                  "key": "allow_cash_payment",
+                  "value": "true",
+                  "type": "boolean",
+                  "description": "السماح بالدفع النقدي عند الاستلام في الموقع",
+                  "updated_at": "2026-08-05 15:45:36"
+              },
+              {
+                  "id": 3,
+                  "key": "free_distance_km",
+                  "value": "5",
+                  "type": "number",
+                  "description": "المسافة المجانية المتاحة للموظف المتنقل قبل احتساب رسوم الطريق",
+                  "updated_at": "2026-08-05 15:45:36"
+              },
+              {
+                  "id": 4,
+                  "key": "vip_discount_percentage",
+                  "value": "10",
+                  "type": "number",
+                  "description": "نسبة الخصم لعملاء VIP",
+                  "updated_at": "2026-08-05 15:45:36"
+              },
+              {
+                  "id": 5,
+                  "key": "minimum_order_amount",
+                  "value": "50",
+                  "type": "number",
+                  "description": "الحد الأدنى لقيمة الطلب",
+                  "updated_at": "2026-08-05 15:45:36"
+              },
+              {
+                  "id": 6,
+                  "key": "support_phone",
+                  "value": "+966500000000",
+                  "type": "string",
+                  "description": "رقم خدمة العملاء",
+                  "updated_at": "2026-08-05 15:45:36"
+              },
+              {
+                  "id": 7,
+                  "key": "mobile_service_enabled",
+                  "value": "true",
+                  "type": "boolean",
+                  "description": "تفعيل الخدمة المتنقلة",
+                  "updated_at": "2026-08-05 15:45:36"
+              },
+              {
+                  "id": 8,
+                  "key": "road_assistance_enabled",
+                  "value": "true",
+                  "type": "boolean",
+                  "description": "تفعيل خدمة المساعدة على الطريق",
+                  "updated_at": "2026-08-05 15:45:36"
+              }
+          ],
+          "message": "system settings fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-06T09:08:05+00:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 15,
+              "total": 8,
+              "last_page": 1
+          }
+      }
+order: 1000

@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{url}}/api/newCart"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content: []
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+examples: ./.resources/new Cart.resources/examples
+order: 8000

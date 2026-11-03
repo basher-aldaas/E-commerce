@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{url}}/get_all_room_not_booking"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content: []
+settings: {}
+examples: ./.resources/get_all_room_not_booking.resources/examples
+order: 8000

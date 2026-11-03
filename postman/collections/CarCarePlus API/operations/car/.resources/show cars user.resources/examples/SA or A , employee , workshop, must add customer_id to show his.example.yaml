@@ -1,0 +1,30 @@
+$kind: http-example
+name: SA or A , employee , workshop, must add customer_id to show his cars while customer does  not need to add his id
+request:
+  url: "{{base_url}}/api/indexClient"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 500
+  statusText: Internal Server Error
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 07 Aug 2026 16:40:16 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": null,
+          "message": "customer_id is required",
+          "status_code": 500,
+          "timestamp": "2026-08-07T16:40:16+00:00"
+      }
+order: 3000

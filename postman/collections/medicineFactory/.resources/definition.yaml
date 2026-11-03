@@ -1,0 +1,17 @@
+$kind: collection
+description: ""
+variables:
+  - key: url
+    value: ""
+    secret: false
+  - key: token
+    value: ""
+    secret: false
+  - key: auth_secret_16kn
+    secret: true
+  - key: json_web_token_0xm8
+    secret: true
+  - key: json_web_token_0qge
+    secret: true
+  - key: json_web_token_1a22
+    secret: true

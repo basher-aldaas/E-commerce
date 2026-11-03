@@ -1,0 +1,88 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/package-service-sub-services"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 06 Aug 2026 08:57:26 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 2,
+                  "package_service_id": 2,
+                  "package_service": {
+                      "id": 2,
+                      "package_id": 1,
+                      "service_id": 1,
+                      "allowed_count": 4,
+                      "created_at": null,
+                      "updated_at": null
+                  },
+                  "sub_service_id": 2,
+                  "sub_service": {
+                      "id": 2,
+                      "service_id": 1,
+                      "name": "Window Cleaning",
+                      "name_ar": "تنظيف زجاج",
+                      "description": "تنظيف الزجاج الخارجي",
+                      "price": "5.00",
+                      "is_active": true
+                  },
+                  "price_override": "15.50",
+                  "is_active": true,
+                  "created_at": "2026-08-05 12:45:44",
+                  "updated_at": null
+              },
+              {
+                  "id": 1,
+                  "package_service_id": 1,
+                  "package_service": {
+                      "id": 1,
+                      "package_id": 1,
+                      "service_id": 1,
+                      "allowed_count": 4,
+                      "created_at": null,
+                      "updated_at": null
+                  },
+                  "sub_service_id": 1,
+                  "sub_service": {
+                      "id": 1,
+                      "service_id": 1,
+                      "name": "Tire Shine",
+                      "name_ar": "تلميع كفرات",
+                      "description": "تلميع الإطارات بمواد خاصة",
+                      "price": "10.00",
+                      "is_active": true
+                  },
+                  "price_override": "0.00",
+                  "is_active": true,
+                  "created_at": "2026-08-05 12:45:44",
+                  "updated_at": null
+              }
+          ],
+          "message": "Package service sub services fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-06T08:57:26+00:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 15,
+              "total": 2,
+              "last_page": 1
+          }
+      }
+order: 1000

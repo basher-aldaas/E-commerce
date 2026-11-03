@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{url}}/show_quizzes_with_question_and_answer"
+  method: GET
+  headers:
+    Accept: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Sat, 01 Jun 2024 09:25:46 GMT
+    - key: Date
+      value: Sat, 01 Jun 2024 09:25:46 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [],
+          "message": "Not found any quiz"
+      }
+order: 6000

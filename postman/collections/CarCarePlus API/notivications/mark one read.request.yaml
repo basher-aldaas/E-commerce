@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/api/notifications/1/read"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content: []
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+order: 5000

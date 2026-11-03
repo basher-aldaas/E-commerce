@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/api/profile/updateProfile"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: name
+      value: مدير تعديل
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+order: 2000

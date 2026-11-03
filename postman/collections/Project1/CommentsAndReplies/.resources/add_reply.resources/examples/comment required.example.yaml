@@ -1,0 +1,49 @@
+$kind: http-example
+request:
+  url: "{{url}}/add_reply/5"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: comment
+        value: ""
+        disabled: true
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Sat, 29 Jun 2024 20:56:28 GMT
+    - key: Date
+      value: Sat, 29 Jun 2024 20:56:28 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "The comment field is required.",
+          "errors": {
+              "comment": [
+                  "The comment field is required."
+              ]
+          }
+      }
+order: 1000

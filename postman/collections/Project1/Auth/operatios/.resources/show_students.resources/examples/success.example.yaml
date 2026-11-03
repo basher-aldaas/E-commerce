@@ -1,0 +1,152 @@
+$kind: http-example
+request:
+  url: "{{url}}/show_students"
+  method: GET
+  headers:
+    Accept: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Mon, 27 May 2024 15:56:35 GMT
+    - key: Date
+      value: Mon, 27 May 2024 15:56:35 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "58"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 2,
+                  "full_name": "Jamaal Dickens",
+                  "email": "katelyn.tremblay@example.org",
+                  "phone": "(769) 442-8560",
+                  "birthday": "1978-07-18",
+                  "address": "732 Rosenbaum Fort Apt. 963\nWest Leo, CT 95943",
+                  "type": "student",
+                  "image": "Et aut laudantium quae sint.",
+                  "wallet": 5,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 3,
+                  "full_name": "Lisette Braun PhD",
+                  "email": "ankunding.jadon@example.org",
+                  "phone": "1-270-568-6691",
+                  "birthday": "2003-11-12",
+                  "address": "515 Hackett Throughway\nEllistown, TN 81126",
+                  "type": "student",
+                  "image": "Atque quod rerum enim.",
+                  "wallet": 7,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 6,
+                  "full_name": "Erich Brekke",
+                  "email": "chaya.wiegand@example.com",
+                  "phone": "+1.630.364.2423",
+                  "birthday": "1972-05-21",
+                  "address": "323 Abernathy Lake\nJoesphton, ID 99541",
+                  "type": "student",
+                  "image": "Et aut voluptas rerum.",
+                  "wallet": 8,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 8,
+                  "full_name": "Fernando Klocko IV",
+                  "email": "candida.volkman@example.org",
+                  "phone": "1-351-890-7457",
+                  "birthday": "2013-10-20",
+                  "address": "7280 Schimmel Camp Apt. 430\nSouth Casimirmouth, MD 85550",
+                  "type": "student",
+                  "image": "Modi eligendi sint officiis.",
+                  "wallet": 9,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 9,
+                  "full_name": "Hipolito Kessler",
+                  "email": "marquis31@example.com",
+                  "phone": "1-828-963-9129",
+                  "birthday": "1980-02-22",
+                  "address": "982 Reichert Throughway Apt. 741\nColumbusstad, TN 84919-1741",
+                  "type": "student",
+                  "image": "Iste voluptatibus debitis ad.",
+                  "wallet": 2,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 11,
+                  "full_name": "Birdie Cormier IV",
+                  "email": "tre.olson@example.com",
+                  "phone": "+1-779-644-0818",
+                  "birthday": "1979-04-07",
+                  "address": "14547 Rick Mills\nHagenesmouth, WI 24523-4386",
+                  "type": "student",
+                  "image": "Dolorum vitae et quos minus.",
+                  "wallet": 7,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 13,
+                  "full_name": "Dino D'Amore",
+                  "email": "ritchie.brycen@example.net",
+                  "phone": "+1-352-442-3130",
+                  "birthday": "1996-07-15",
+                  "address": "81065 Cronin Knoll\nNorth Cristianchester, CT 92332-2868",
+                  "type": "student",
+                  "image": "Enim vel est fugit quam.",
+                  "wallet": 4,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 15,
+                  "full_name": "Edmund Brekke",
+                  "email": "nmoen@example.net",
+                  "phone": "+12409726133",
+                  "birthday": "1973-02-02",
+                  "address": "31952 Zieme Greens Suite 696\nEast Dinoside, WV 35788-2442",
+                  "type": "student",
+                  "image": "Totam non esse accusamus.",
+                  "wallet": 3,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              }
+          ],
+          "message": "getting all students"
+      }
+order: 2000

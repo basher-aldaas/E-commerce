@@ -1,0 +1,51 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/inventory-transactions"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: branch_id
+        value: "2"
+      - type: text
+        key: material_id
+        value: "1"
+      - type: text
+        key: type
+        value: transfer_out
+      - type: text
+        key: quantity
+        value: "1"
+      - type: text
+        key: destination_branch_id
+        value: "2"
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 31 Jul 2026 14:37:07 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": {
+              "destination_branch_id": [
+                  "The destination branch id field and branch id must be different."
+              ]
+          },
+          "message": "The destination branch id field and branch id must be different.",
+          "status_code": 422,
+          "timestamp": "2026-07-31T14:37:07+00:00"
+      }
+order: 4000

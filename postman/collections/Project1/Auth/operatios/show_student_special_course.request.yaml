@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{url}}/show_student_special_course/5"
+method: GET
+headers:
+  Accept: application/json
+examples: ./.resources/show_student_special_course.resources/examples
+order: 8000

@@ -1,0 +1,269 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/customers/personal"
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.30
+    Cache-Control: no-cache, private
+    Date: Mon, 03 Aug 2026 08:30:58 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: text
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 28,
+                  "name": "bashirقق",
+                  "email": "bashir2.d.aldaas@gmail.com",
+                  "phone": "0994875928",
+                  "image_url": null,
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:23:29",
+                  "updated_at": "2026-08-03 08:24:42"
+              },
+              {
+                  "id": 27,
+                  "name": "Effie Gislason",
+                  "email": "xfeil@example.net",
+                  "phone": "0975972729",
+                  "image_url": "https://via.placeholder.com/200x200.png/008855?text=people+modi",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:38",
+                  "updated_at": "2026-08-03 08:18:38"
+              },
+              {
+                  "id": 26,
+                  "name": "Brannon Nikolaus",
+                  "email": "gleichner.nicolette@example.net",
+                  "phone": "0929272343",
+                  "image_url": "https://via.placeholder.com/200x200.png/0033aa?text=people+explicabo",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:37",
+                  "updated_at": "2026-08-03 08:18:37"
+              },
+              {
+                  "id": 25,
+                  "name": "Foster Berge",
+                  "email": "lenny13@example.net",
+                  "phone": "0967604610",
+                  "image_url": "https://via.placeholder.com/200x200.png/0011cc?text=people+et",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:37",
+                  "updated_at": "2026-08-03 08:18:37"
+              },
+              {
+                  "id": 24,
+                  "name": "Lisette Koch",
+                  "email": "gisselle.batz@example.com",
+                  "phone": "0949631144",
+                  "image_url": "https://via.placeholder.com/200x200.png/0099ee?text=people+iure",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:37",
+                  "updated_at": "2026-08-03 08:18:37"
+              },
+              {
+                  "id": 23,
+                  "name": "Hunter Leffler",
+                  "email": "verona.spencer@example.org",
+                  "phone": "0977219969",
+                  "image_url": "https://via.placeholder.com/200x200.png/008844?text=people+adipisci",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:37",
+                  "updated_at": "2026-08-03 08:18:37"
+              },
+              {
+                  "id": 22,
+                  "name": "Enos Ryan",
+                  "email": "fae.auer@example.net",
+                  "phone": "0983848953",
+                  "image_url": "https://via.placeholder.com/200x200.png/0099ff?text=people+neque",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:36",
+                  "updated_at": "2026-08-03 08:18:36"
+              },
+              {
+                  "id": 21,
+                  "name": "Beryl Dickinson",
+                  "email": "leanne18@example.org",
+                  "phone": "0963470343",
+                  "image_url": "https://via.placeholder.com/200x200.png/00bbee?text=people+optio",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:36",
+                  "updated_at": "2026-08-03 08:18:36"
+              },
+              {
+                  "id": 20,
+                  "name": "Prof. Brennon Kerluke III",
+                  "email": "rocio79@example.org",
+                  "phone": "0995673416",
+                  "image_url": "https://via.placeholder.com/200x200.png/001133?text=people+similique",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:36",
+                  "updated_at": "2026-08-03 08:18:36"
+              },
+              {
+                  "id": 19,
+                  "name": "Mr. Luther Lueilwitz DVM",
+                  "email": "trantow.winnifred@example.org",
+                  "phone": "0974905380",
+                  "image_url": "https://via.placeholder.com/200x200.png/00bb66?text=people+illo",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:35",
+                  "updated_at": "2026-08-03 08:18:35"
+              },
+              {
+                  "id": 18,
+                  "name": "Carter Hoeger",
+                  "email": "vprohaska@example.org",
+                  "phone": "0975028590",
+                  "image_url": "https://via.placeholder.com/200x200.png/007777?text=people+facere",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:35",
+                  "updated_at": "2026-08-03 08:18:35"
+              },
+              {
+                  "id": 17,
+                  "name": "Dr. Jaylan Torp",
+                  "email": "spencer.mellie@example.org",
+                  "phone": "0971246828",
+                  "image_url": "https://via.placeholder.com/200x200.png/0011cc?text=people+esse",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:35",
+                  "updated_at": "2026-08-03 08:18:35"
+              },
+              {
+                  "id": 16,
+                  "name": "Eino Thiel V",
+                  "email": "turner.scot@example.com",
+                  "phone": "0984575657",
+                  "image_url": "https://via.placeholder.com/200x200.png/00bb00?text=people+nam",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:35",
+                  "updated_at": "2026-08-03 08:18:35"
+              },
+              {
+                  "id": 15,
+                  "name": "Dr. Tanya Huel",
+                  "email": "kirstin63@example.com",
+                  "phone": "0990057015",
+                  "image_url": "https://via.placeholder.com/200x200.png/000099?text=people+eligendi",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:34",
+                  "updated_at": "2026-08-03 08:18:34"
+              },
+              {
+                  "id": 14,
+                  "name": "Jon Schulist",
+                  "email": "christelle.mcclure@example.org",
+                  "phone": "0990590475",
+                  "image_url": "https://via.placeholder.com/200x200.png/002233?text=people+aliquam",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:34",
+                  "updated_at": "2026-08-03 08:18:34"
+              },
+              {
+                  "id": 13,
+                  "name": "Priscilla Metz V",
+                  "email": "green.lester@example.com",
+                  "phone": "0923251872",
+                  "image_url": "https://via.placeholder.com/200x200.png/00cc99?text=people+aliquam",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:34",
+                  "updated_at": "2026-08-03 08:18:34"
+              },
+              {
+                  "id": 12,
+                  "name": "Geovanni Purdy",
+                  "email": "vaughn.gorczany@example.net",
+                  "phone": "0958009531",
+                  "image_url": "https://via.placeholder.com/200x200.png/00ee11?text=people+debitis",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:33",
+                  "updated_at": "2026-08-03 08:18:33"
+              },
+              {
+                  "id": 11,
+                  "name": "Alfredo Nienow",
+                  "email": "cboehm@example.com",
+                  "phone": "0948972024",
+                  "image_url": "https://via.placeholder.com/200x200.png/003355?text=people+cupiditate",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:33",
+                  "updated_at": "2026-08-03 08:18:33"
+              },
+              {
+                  "id": 10,
+                  "name": "Mr. Hector Rodriguez II",
+                  "email": "oswaldo08@example.com",
+                  "phone": "0956381426",
+                  "image_url": "https://via.placeholder.com/200x200.png/001144?text=people+deserunt",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:33",
+                  "updated_at": "2026-08-03 08:18:33"
+              },
+              {
+                  "id": 9,
+                  "name": "Shanie Gleichner",
+                  "email": "ugrady@example.net",
+                  "phone": "0919034619",
+                  "image_url": "https://via.placeholder.com/200x200.png/005588?text=people+ipsa",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:33",
+                  "updated_at": "2026-08-03 08:18:33"
+              },
+              {
+                  "id": 8,
+                  "name": "Arnoldo Moore",
+                  "email": "hohara@example.org",
+                  "phone": "0922795223",
+                  "image_url": "https://via.placeholder.com/200x200.png/001177?text=people+enim",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:32",
+                  "updated_at": "2026-08-03 08:18:32"
+              },
+              {
+                  "id": 4,
+                  "name": "أحمد العتيبي (عميل)",
+                  "email": "customer@system.com",
+                  "phone": "0500000004",
+                  "image_url": "https://via.placeholder.com/200x200.png/00ccdd?text=people+cupiditate",
+                  "is_active": true,
+                  "role": "customer_personal",
+                  "created_at": "2026-08-03 08:18:30",
+                  "updated_at": "2026-08-03 08:18:30"
+              }
+          ],
+          "message": "Personal customers fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-03T08:30:57+00:00"
+      }
+order: 1000

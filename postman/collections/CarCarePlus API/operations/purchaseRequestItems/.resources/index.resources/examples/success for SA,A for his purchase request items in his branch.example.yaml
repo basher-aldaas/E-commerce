@@ -1,0 +1,180 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/purchase-request-items"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 14 Aug 2026 13:00:02 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 8,
+                  "purchase_req_id": 6,
+                  "material_id": 2,
+                  "material": {
+                      "id": 2,
+                      "material_unit_id": 2,
+                      "name": "Premium Car Shampoo",
+                      "name_ar": "شامبو غسيل سيارات ممتاز",
+                      "description": "شامبو واكس عالي الرغوة لحماية الطلاء",
+                      "unit_price": "15.00",
+                      "is_visible_to_customer": true,
+                      "is_active": true
+                  },
+                  "quantity": "100.00",
+                  "unit_price": "15.00",
+                  "total_price": "1500.00"
+              },
+              {
+                  "id": 7,
+                  "purchase_req_id": 5,
+                  "material_id": 1,
+                  "material": {
+                      "id": 1,
+                      "material_unit_id": 1,
+                      "name": "Synthetic Engine Oil 5W-30",
+                      "name_ar": "زيت محرك تخليقي 5W-30",
+                      "description": "زيت محرك عالي الجودة يخدم حتى 10,000 كم",
+                      "unit_price": "45.00",
+                      "is_visible_to_customer": true,
+                      "is_active": true
+                  },
+                  "quantity": "5.00",
+                  "unit_price": "45.00",
+                  "total_price": "225.00"
+              },
+              {
+                  "id": 6,
+                  "purchase_req_id": 4,
+                  "material_id": 2,
+                  "material": {
+                      "id": 2,
+                      "material_unit_id": 2,
+                      "name": "Premium Car Shampoo",
+                      "name_ar": "شامبو غسيل سيارات ممتاز",
+                      "description": "شامبو واكس عالي الرغوة لحماية الطلاء",
+                      "unit_price": "15.00",
+                      "is_visible_to_customer": true,
+                      "is_active": true
+                  },
+                  "quantity": "20.00",
+                  "unit_price": "15.00",
+                  "total_price": "300.00"
+              },
+              {
+                  "id": 5,
+                  "purchase_req_id": 4,
+                  "material_id": 1,
+                  "material": {
+                      "id": 1,
+                      "material_unit_id": 1,
+                      "name": "Synthetic Engine Oil 5W-30",
+                      "name_ar": "زيت محرك تخليقي 5W-30",
+                      "description": "زيت محرك عالي الجودة يخدم حتى 10,000 كم",
+                      "unit_price": "45.00",
+                      "is_visible_to_customer": true,
+                      "is_active": true
+                  },
+                  "quantity": "10.00",
+                  "unit_price": "45.00",
+                  "total_price": "450.00"
+              },
+              {
+                  "id": 4,
+                  "purchase_req_id": 3,
+                  "material_id": 2,
+                  "material": {
+                      "id": 2,
+                      "material_unit_id": 2,
+                      "name": "Premium Car Shampoo",
+                      "name_ar": "شامبو غسيل سيارات ممتاز",
+                      "description": "شامبو واكس عالي الرغوة لحماية الطلاء",
+                      "unit_price": "15.00",
+                      "is_visible_to_customer": true,
+                      "is_active": true
+                  },
+                  "quantity": "100.00",
+                  "unit_price": "15.00",
+                  "total_price": "1500.00"
+              },
+              {
+                  "id": 3,
+                  "purchase_req_id": 2,
+                  "material_id": 1,
+                  "material": {
+                      "id": 1,
+                      "material_unit_id": 1,
+                      "name": "Synthetic Engine Oil 5W-30",
+                      "name_ar": "زيت محرك تخليقي 5W-30",
+                      "description": "زيت محرك عالي الجودة يخدم حتى 10,000 كم",
+                      "unit_price": "45.00",
+                      "is_visible_to_customer": true,
+                      "is_active": true
+                  },
+                  "quantity": "5.00",
+                  "unit_price": "45.00",
+                  "total_price": "225.00"
+              },
+              {
+                  "id": 2,
+                  "purchase_req_id": 1,
+                  "material_id": 2,
+                  "material": {
+                      "id": 2,
+                      "material_unit_id": 2,
+                      "name": "Premium Car Shampoo",
+                      "name_ar": "شامبو غسيل سيارات ممتاز",
+                      "description": "شامبو واكس عالي الرغوة لحماية الطلاء",
+                      "unit_price": "15.00",
+                      "is_visible_to_customer": true,
+                      "is_active": true
+                  },
+                  "quantity": "20.00",
+                  "unit_price": "15.00",
+                  "total_price": "300.00"
+              },
+              {
+                  "id": 1,
+                  "purchase_req_id": 1,
+                  "material_id": 1,
+                  "material": {
+                      "id": 1,
+                      "material_unit_id": 1,
+                      "name": "Synthetic Engine Oil 5W-30",
+                      "name_ar": "زيت محرك تخليقي 5W-30",
+                      "description": "زيت محرك عالي الجودة يخدم حتى 10,000 كم",
+                      "unit_price": "45.00",
+                      "is_visible_to_customer": true,
+                      "is_active": true
+                  },
+                  "quantity": "10.00",
+                  "unit_price": "45.00",
+                  "total_price": "450.00"
+              }
+          ],
+          "message": "purchase request items fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-14T16:00:02+03:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 15,
+              "total": 8,
+              "last_page": 1
+          }
+      }
+order: 1000

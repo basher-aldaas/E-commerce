@@ -1,0 +1,47 @@
+$kind: http-example
+name: '"You are already solved this quiz'
+request:
+  url: "{{url}}/submit_quiz/10"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: json
+    content: "{\r
+
+      \    \"answers\": [1, 3, 4, 2, 5, 1, 2, 3, 4, 5]\r
+
+      }\r\n"
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Mon, 01 Jul 2024 11:33:04 GMT
+    - key: Date
+      value: Mon, 01 Jul 2024 11:33:04 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [],
+          "message": "You are already solved this quiz"
+      }
+order: 3000

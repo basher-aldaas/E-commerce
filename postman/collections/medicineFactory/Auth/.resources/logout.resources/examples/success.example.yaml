@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/auth/logout?="
+  method: POST
+  headers:
+    Accept: application/json
+  queryParams:
+    "": ""
+  body:
+    type: formdata
+    content: []
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Sun, 26 Nov 2023 20:01:19 GMT
+    - key: Date
+      value: Sun, 26 Nov 2023 20:01:19 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "59"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [],
+          "message": "User successfully loged out"
+      }
+order: 1000

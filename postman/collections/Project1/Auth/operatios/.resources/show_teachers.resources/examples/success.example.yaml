@@ -1,0 +1,180 @@
+$kind: http-example
+request:
+  url: "{{url}}/show_teachers"
+  method: GET
+  headers:
+    Accept: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Mon, 27 May 2024 15:50:50 GMT
+    - key: Date
+      value: Mon, 27 May 2024 15:50:50 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "58"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 1,
+                  "full_name": "Sedrick Quitzon",
+                  "email": "brook.cruickshank@example.com",
+                  "phone": "(423) 588-0786",
+                  "birthday": "1989-03-21",
+                  "address": "77620 Tracy Track Suite 183\nWest Jocelyn, OK 38995",
+                  "type": "teacher",
+                  "image": "Ea quo asperiores est.",
+                  "wallet": 9,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 4,
+                  "full_name": "Prof. Keira Conn",
+                  "email": "qstamm@example.net",
+                  "phone": "(908) 938-1009",
+                  "birthday": "1975-07-15",
+                  "address": "992 O'Connell Fields\nEthamouth, MN 11437",
+                  "type": "teacher",
+                  "image": "Iste illo et aut sit.",
+                  "wallet": 5,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 5,
+                  "full_name": "Trisha Ebert DDS",
+                  "email": "rkunze@example.net",
+                  "phone": "1-561-389-9230",
+                  "birthday": "1979-11-01",
+                  "address": "319 Damion Parkways Suite 399\nBlandafort, OK 97992",
+                  "type": "teacher",
+                  "image": "Aut hic ipsum nemo nulla.",
+                  "wallet": 0,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 7,
+                  "full_name": "Prof. Josefina Gutmann",
+                  "email": "lafayette20@example.net",
+                  "phone": "+14849392591",
+                  "birthday": "2014-07-22",
+                  "address": "1407 Smitham Meadows Apt. 306\nEast Darien, VA 49113",
+                  "type": "teacher",
+                  "image": "Voluptate et facilis quos.",
+                  "wallet": 5,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 10,
+                  "full_name": "Mr. Miles King II",
+                  "email": "giovanna.reilly@example.net",
+                  "phone": "1-410-702-8826",
+                  "birthday": "1983-01-08",
+                  "address": "54734 Raynor Spur\nEast Kaitlynmouth, ND 70943",
+                  "type": "teacher",
+                  "image": "Sed delectus hic molestias.",
+                  "wallet": 5,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 12,
+                  "full_name": "Briana Grant",
+                  "email": "hmuller@example.net",
+                  "phone": "+1-959-562-2893",
+                  "birthday": "1971-09-14",
+                  "address": "5443 Elinor Port Suite 979\nHattieport, NM 19660-7083",
+                  "type": "teacher",
+                  "image": "Doloremque eligendi omnis id.",
+                  "wallet": 4,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 14,
+                  "full_name": "Prof. Arlie Botsford DDS",
+                  "email": "manuela.king@example.org",
+                  "phone": "1-341-549-4970",
+                  "birthday": "1994-04-21",
+                  "address": "756 D'Amore Skyway\nEast Diamond, AK 59216",
+                  "type": "teacher",
+                  "image": "Nemo architecto hic ex non.",
+                  "wallet": 9,
+                  "email_verified_at": "2024-05-27T09:33:28.000000Z",
+                  "created_at": "2024-05-27T09:33:28.000000Z",
+                  "updated_at": "2024-05-27T09:33:28.000000Z"
+              },
+              {
+                  "id": 17,
+                  "full_name": "teacherName",
+                  "email": "teacher@example.com",
+                  "phone": "+1.220.337.6302",
+                  "birthday": "2010-08-13",
+                  "address": "201 Adriana Streets Apt. 778\nMrazmouth, IA 22788-6321",
+                  "type": "teacher",
+                  "image": "Praesentium eligendi qui et.",
+                  "wallet": 4,
+                  "email_verified_at": "2024-05-27T09:33:29.000000Z",
+                  "created_at": "2024-05-27T09:33:29.000000Z",
+                  "updated_at": "2024-05-27T09:33:29.000000Z"
+              },
+              {
+                  "id": 28,
+                  "full_name": "basheraldaa",
+                  "email": "844@gmail.com",
+                  "phone": "4756825448",
+                  "birthday": "2001-01-12",
+                  "address": "doma/adfd",
+                  "type": "teacher",
+                  "image": "/storage/images/ueiCaEoEz5M9bYvh6dPjMOVt3ptHFwz3u7NqOwCO.jpg",
+                  "wallet": 0,
+                  "email_verified_at": null,
+                  "created_at": "2024-05-27T11:03:37.000000Z",
+                  "updated_at": "2024-05-27T11:03:37.000000Z"
+              },
+              {
+                  "id": 39,
+                  "full_name": "basheraldaa",
+                  "email": "44@gmail.com",
+                  "phone": "4454425441",
+                  "birthday": "2001-01-12",
+                  "address": "doma/adfd",
+                  "type": "teacher",
+                  "image": "/storage/images/vht0hTn1MMgOgkeduAyVHyX6b98TWNCjMrfjt4KT.jpg",
+                  "wallet": 0,
+                  "email_verified_at": null,
+                  "created_at": "2024-05-27T11:58:15.000000Z",
+                  "updated_at": "2024-05-27T11:58:15.000000Z"
+              }
+          ],
+          "message": "getting all teachers"
+      }
+order: 1000

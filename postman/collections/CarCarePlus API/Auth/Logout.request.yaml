@@ -1,0 +1,17 @@
+$kind: http-request
+description: Revoke the current access token. Requires auth:sanctum.
+url: "{{base_url}}/api/auth/logout"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: email
+      value: ""
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 5000

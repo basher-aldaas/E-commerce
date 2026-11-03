@@ -1,0 +1,48 @@
+$kind: http-example
+request:
+  url: "{{url}}/user_forgot_password"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: email
+        value: s4@
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Mon, 27 May 2024 10:24:11 GMT
+    - key: Date
+      value: Mon, 27 May 2024 10:24:11 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "58"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "The email field must be a valid email address.",
+          "errors": {
+              "email": [
+                  "The email field must be a valid email address."
+              ]
+          }
+      }
+order: 4000

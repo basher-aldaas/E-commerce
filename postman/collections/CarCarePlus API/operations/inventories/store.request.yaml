@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{base_url}}/api/inventories"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: branch_id
+      value: "7"
+    - type: text
+      key: material_id
+      value: "2"
+    - type: text
+      key: quantity
+      value: "34"
+    - type: text
+      key: min_quantity
+      value: "2"
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/store.resources/examples
+order: 3000

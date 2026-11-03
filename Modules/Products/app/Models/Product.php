@@ -24,6 +24,26 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    /**
+     * Build an absolute, displayable URL for the product image.
+     *
+     * - null / empty  -> null
+     * - already a URL -> returned unchanged
+     * - a stored path -> served from the public storage disk
+     */
+    public function publicImageUrl(): ?string
+    {
+        if (empty($this->image)) {
+            return null;
+        }
+
+        if (preg_match('#^https?://#i', $this->image)) {
+            return $this->image;
+        }
+
+        return asset('storage/'.ltrim($this->image, '/'));
+    }
+
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);

@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{url}}/api/indexMedicines?factory_id=1&catigorie_id=1"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  factory_id: "1"
+  catigorie_id: "1"
+examples: ./.resources/get medicine from catigorie && factory.resources/examples
+order: 6000

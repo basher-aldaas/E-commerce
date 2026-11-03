@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{base_url}}/api/bookings/43/towing-detail/destination"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: destination_lat
+      value: "20"
+    - type: text
+      key: destination_lng
+      value: "20"
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/towing-detail destination.resources/examples
+order: 21000

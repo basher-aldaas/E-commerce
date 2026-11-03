@@ -1,0 +1,44 @@
+$kind: http-request
+description: |-
+  Personal customer self-registration. Active immediately and returns a token.
+
+  Note: `image_url` is an optional image upload (jpg/jpeg/png/webp, max 2MB) — use form-data if you want to send it.
+url: "{{base_url}}/api/auth/register/customer"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: name
+      value: bashir
+    - type: text
+      key: email
+      value: bas835ث479i1r@gmail.com
+    - type: text
+      key: phone
+      value: "0994273528"
+    - type: text
+      key: password
+      value: "11111111"
+    - type: text
+      key: password_confirmation
+      value: "11111111"
+    - type: text
+      key: is_active
+      value: "1"
+    - type: file
+      key: image_url
+      src: []
+      disabled: true
+scripts:
+  - type: afterResponse
+    code: |-
+      const res = pm.response.json();
+      const token = res?.data?.token;
+      if (token) { pm.collectionVariables.set('token', token); console.log('token saved'); }
+    language: text/javascript
+examples: ./.resources/Register Customer (Type 1).resources/examples
+order: 1000

@@ -1,0 +1,32 @@
+$kind: http-request
+url: "{{base_url}}/api/spare-part-requests"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: order_id
+      value: "45"
+    - type: text
+      key: material_id
+      value: "3"
+    - type: text
+      key: quantity
+      value: "5"
+    - type: text
+      key: specifications
+      value: ""
+      disabled: true
+    - type: text
+      key: notes
+      value: ""
+      disabled: true
+auth:
+  type: bearer
+  credentials:
+    token: "{{mechanic-token}}"
+examples: ./.resources/store.resources/examples
+order: 3000

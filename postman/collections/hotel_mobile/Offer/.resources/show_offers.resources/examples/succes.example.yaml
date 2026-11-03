@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{url}}/show_offers"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Sat, 19 Jul 2025 14:45:16 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "59"
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 2,
+                  "room_id": 2,
+                  "title": "for night year",
+                  "description": "this happen has been taked for three dayes",
+                  "discount": 50,
+                  "start_date": "2025-07-20",
+                  "end_date": "2025-07-23",
+                  "created_at": "2025-07-19T12:15:36.000000Z",
+                  "updated_at": "2025-07-19T12:15:36.000000Z"
+              }
+          ],
+          "message": "Getting all offers successfully"
+      }
+order: 1000

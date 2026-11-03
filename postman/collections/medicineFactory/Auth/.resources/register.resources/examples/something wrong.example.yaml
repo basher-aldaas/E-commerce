@@ -1,0 +1,75 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/auth/register"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: userName
+        value: basher
+        disabled: true
+      - type: text
+        key: email
+        value: basher11aldaas@gmail.com
+        disabled: true
+      - type: text
+        key: phoneNumber
+        value: "0996854785"
+        disabled: true
+      - type: text
+        key: password
+        value: 5748489k
+        disabled: true
+      - type: text
+        key: password_confirmation
+        value: 5748489k
+        disabled: true
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Sun, 03 Dec 2023 10:05:18 GMT
+    - key: Date
+      value: Sun, 03 Dec 2023 10:05:18 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: "60"
+    - key: X-RateLimit-Remaining
+      value: "57"
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": [],
+          "message": {
+              "userName": [
+                  "The user name field is required."
+              ],
+              "email": [
+                  "The email field is required."
+              ],
+              "phoneNumber": [
+                  "The phone number field is required."
+              ],
+              "password": [
+                  "The password field is required."
+              ]
+          }
+      }
+order: 1000

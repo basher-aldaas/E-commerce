@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/sub-services"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{company1-token}}"
+examples: ./.resources/index.resources/examples
+order: 1000

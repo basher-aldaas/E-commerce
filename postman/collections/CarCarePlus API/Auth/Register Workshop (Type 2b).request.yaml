@@ -1,0 +1,26 @@
+$kind: http-request
+description: Workshop submits a registration request. Pending super-admin approval (no token issued).
+url: "{{base_url}}/api/auth/register/workshop"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "Workshop Owner",
+        "email": "workshop@example.com",
+        "phone": "0500003003",
+        "password": "password123",
+        "password_confirmation": "password123",
+        "is_active": false,
+        "workshop_name": "Speedy Garage",
+        "workshop_name_ar": "الكراج السريع",
+        "workshop_address": "45 Olaya St, Riyadh",
+        "workshop_city": "Riyadh",
+        "latitude": 24.7136,
+        "longitude": 46.6753
+    }
+examples: ./.resources/Register Workshop (Type 2b).resources/examples
+order: 3000

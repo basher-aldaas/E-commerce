@@ -1,0 +1,19 @@
+$kind: http-request
+url: localhost:8000/api/auth/login
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: email
+      value: basher1@gmail.com
+    - type: text
+      key: password
+      value: "55555555"
+auth:
+  type: bearer
+  credentials:
+    token: "{{auth_secret_0af1}}"
+order: 2000

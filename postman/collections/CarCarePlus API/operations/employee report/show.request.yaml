@@ -1,0 +1,9 @@
+$kind: http-request
+url: "{{base_url}}/api/employee-reports/1"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/show.resources/examples
+order: 2000

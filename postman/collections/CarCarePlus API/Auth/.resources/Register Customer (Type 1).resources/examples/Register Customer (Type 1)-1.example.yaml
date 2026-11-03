@@ -1,0 +1,63 @@
+$kind: http-example
+name: Register Customer (Type 1)
+request:
+  url: "{{base_url}}/api/auth/register/customer"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: name
+        value: bashirقق
+      - type: text
+        key: email
+        value: bashir2.d.aldaasقق@gmail.com
+      - type: text
+        key: phone
+        value: "0994875924"
+      - type: text
+        key: password
+        value: "11111111"
+      - type: text
+        key: password_confirmation
+        value: "11111111"
+      - type: text
+        key: is_active
+        value: "1"
+      - type: file
+        key: image_url
+        src: []
+        disabled: true
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.30
+    Cache-Control: no-cache, private
+    Date: Thu, 30 Jul 2026 09:30:02 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: text
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 32,
+              "name": "bashirقق",
+              "email": "bashir2.d.aldaasقق@gmail.com",
+              "phone": "0994875924",
+              "image_url": null,
+              "is_active": true,
+              "token": "5|Cn72eRAYoj7i1nOBXUsjlnKLauHVRwzruquNH2at759f64df"
+          },
+          "message": "Account registered successfully",
+          "status_code": 201,
+          "timestamp": "2026-07-30T09:30:02+00:00"
+      }
+order: 2000

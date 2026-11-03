@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{url}}/delete_booking/15"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content: []
+settings: {}
+examples: ./.resources/delete_booking.resources/examples
+order: 3000

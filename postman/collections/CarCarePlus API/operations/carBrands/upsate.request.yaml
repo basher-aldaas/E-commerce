@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/api/car-brands/15?name=tooo"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+queryParams:
+  name: tooo
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/upsate.resources/examples
+order: 4000

@@ -1,0 +1,33 @@
+$kind: http-request
+url: "{{base_url}}/api/services"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: category_id
+      value: "2"
+    - type: text
+      key: name
+      value: oil
+    - type: text
+      key: name_ar
+      value: زيت
+    - type: text
+      key: base_price
+      value: "100"
+    - type: text
+      key: is_vip_available
+      value: "0"
+    - type: text
+      key: duration_minutes
+      value: "23"
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/store.resources/examples
+order: 1000

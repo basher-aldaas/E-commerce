@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{url}}/search_video/10"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: video_id
+      value: ""
+examples: ./.resources/search_video.resources/examples
+order: 2000

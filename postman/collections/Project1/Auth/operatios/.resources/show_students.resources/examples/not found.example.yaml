@@ -1,0 +1,35 @@
+$kind: http-example
+request:
+  url: "{{url}}/show_students?بدل رسالة ال Unauthenticated بيطلع not found"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    بدل رسالة ال Unauthenticated بيطلع not found: null
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    - key: Host
+      value: localhost:8000
+    - key: Date
+      value: Mon, 27 May 2024 15:56:57 GMT
+    - key: Date
+      value: Mon, 27 May 2024 15:56:57 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "Unauthenticated."
+      }
+order: 3000

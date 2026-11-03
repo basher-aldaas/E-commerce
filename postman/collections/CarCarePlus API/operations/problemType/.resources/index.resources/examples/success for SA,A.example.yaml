@@ -1,0 +1,66 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/problem-types"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 06 Aug 2026 09:00:13 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 1,
+                  "name": "Flat Tire",
+                  "name_ar": "بنشر / إطار تالف",
+                  "is_active": true
+              },
+              {
+                  "id": 2,
+                  "name": "Dead Battery",
+                  "name_ar": "بطارية فارغة",
+                  "is_active": true
+              },
+              {
+                  "id": 3,
+                  "name": "Engine Overheating",
+                  "name_ar": "ارتفاع حرارة المحرك",
+                  "is_active": true
+              },
+              {
+                  "id": 4,
+                  "name": "Out of Fuel",
+                  "name_ar": "نفاد الوقود",
+                  "is_active": true
+              },
+              {
+                  "id": 5,
+                  "name": "Brake Failure",
+                  "name_ar": "عطل في الفرامل",
+                  "is_active": true
+              }
+          ],
+          "message": "problem types fetched successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-06T09:00:13+00:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 15,
+              "total": 5,
+              "last_page": 1
+          }
+      }
+order: 1000

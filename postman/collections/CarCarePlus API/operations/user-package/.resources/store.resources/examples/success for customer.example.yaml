@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/user-packages"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: package_id
+        value: "1"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Tue, 28 Jul 2026 12:40:00 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 3,
+              "user_id": 28,
+              "package_id": 1,
+              "start_date": "2026-07-28",
+              "end_date": "2026-08-27",
+              "remaining_count": 4,
+              "status": "active",
+              "created_at": null
+          },
+          "message": "User package created successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-28T12:40:00+00:00"
+      }
+order: 1000

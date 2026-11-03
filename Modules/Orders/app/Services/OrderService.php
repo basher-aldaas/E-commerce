@@ -3,7 +3,12 @@
 namespace Modules\Orders\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Mail;
+use Modules\Orders\Exceptions\InsufficientStockException;
+use Modules\Orders\Exceptions\OrderNotFoundException;
+use Modules\Orders\Exceptions\UnauthorizedOrderAccessException;
+use Modules\Orders\Mail\OrderConfirmationMail;
+use Modules\Orders\Mail\OrderStatusUpdatedMail;
 use Modules\Orders\Models\Order;
 use Modules\Products\Models\Product;
 use Modules\Users\Models\User;
@@ -12,19 +17,23 @@ class OrderService
 {
     public function viewOrder(int $orderId, User $user): Order
     {
-        $order = Order::query()->findOrFail($orderId);
+        $order = Order::query()->find($orderId);
+
+        if ($order === null) {
+            throw new OrderNotFoundException();
+        }
 
         $isAdmin = $user->hasRole('admin');
 
         $isOwner = (int) $order->user_id === (int) $user->id;
 
-        abort_unless(
-            $isAdmin || $isOwner,
-            403,
-            'You are not allowed to view this order.'
-        );
+        if (! ($isAdmin || $isOwner)) {
+            throw new UnauthorizedOrderAccessException(
+                message: 'You are not allowed to view this order.'
+            );
+        }
 
-        return $order;
+        return $order->load('items.product');
     }
 
     public function getOrders(): mixed
@@ -46,26 +55,44 @@ class OrderService
     {
         $user = auth('api')->user();
 
-        abort_unless(
-            $user->hasRole('admin'),
-            403,
-            'You are not allowed to update order status.'
-        );
+        if (! $user->hasRole('admin')) {
+            throw new UnauthorizedOrderAccessException(
+                message: 'You are not allowed to update order status.'
+            );
+        }
 
-        $order = Order::query()->findOrFail($orderId);
+        $order = DB::transaction(function () use ($orderId, $status) {
+            // Lock the order row so two concurrent status updates can't race.
+            $order = Order::query()
+                ->lockForUpdate()
+                ->find($orderId);
 
-        $order->update([
-            'status' => $status,
-        ]);
+            if ($order === null) {
+                throw new OrderNotFoundException();
+            }
 
-        return $order->refresh();
+            $order->update([
+                'status' => $status,
+            ]);
+
+            return $order->refresh();
+        });
+
+        // Notify the customer once the change is committed.
+        $order->loadMissing('user');
+
+        if ($order->user !== null) {
+            Mail::to($order->user->email)->send(new OrderStatusUpdatedMail($order));
+        }
+
+        return $order;
     }
 
     public function createOrder(array $data): Order
     {
         $user = auth('api')->user();
 
-        return DB::transaction(function () use ($data, $user) {
+        $order = DB::transaction(function () use ($data, $user) {
 
             $order = Order::query()->create([
                 'user_id' => $user->id,
@@ -86,11 +113,14 @@ class OrderService
 
                 // التحقق من توفر الكمية
                 if ($product->stock < $quantity) {
-                    throw ValidationException::withMessages([
-                        'items' => [
-                            "Insufficient stock for product: {$product->name}",
-                        ],
-                    ]);
+                    throw new InsufficientStockException(
+                        message: "Insufficient stock for product: {$product->name}",
+                        errors: [
+                            'product_id' => $product->id,
+                            'available' => $product->stock,
+                            'requested' => $quantity,
+                        ]
+                    );
                 }
 
                 // اعتماد السعر المخزن في قاعدة البيانات
@@ -118,6 +148,11 @@ class OrderService
 
             return $order->load('items');
         });
+
+        // Send the confirmation only after the transaction has committed.
+        Mail::to($user->email)->send(new OrderConfirmationMail($order));
+
+        return $order;
     }
 
 
@@ -125,17 +160,21 @@ class OrderService
     {
         $user = auth('api')->user();
 
-        $order = Order::query()->findOrFail($orderId);
+        $order = Order::query()->find($orderId);
+
+        if ($order === null) {
+            throw new OrderNotFoundException();
+        }
 
         $isAdmin = $user->hasRole('admin');
 
         $isOwner = (int) $order->user_id === (int) $user->id;
 
-        abort_unless(
-            $isAdmin || $isOwner,
-            403,
-            'You are not allowed to track this order.'
-        );
+        if (! ($isAdmin || $isOwner)) {
+            throw new UnauthorizedOrderAccessException(
+                message: 'You are not allowed to track this order.'
+            );
+        }
 
         return [
             'order_id' => $order->id,

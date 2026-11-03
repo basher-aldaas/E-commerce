@@ -1,0 +1,35 @@
+$kind: http-example
+request:
+  url: "{{url}}/api/index/medicines?catigorie_id=1"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    catigorie_id: "1"
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    - key: Host
+      value: 127.0.0.1:8000
+    - key: Date
+      value: Mon, 04 Dec 2023 20:49:15 GMT
+    - key: Date
+      value: Mon, 04 Dec 2023 20:49:15 GMT
+    - key: Connection
+      value: close
+    - key: X-Powered-By
+      value: PHP/8.2.10
+    - key: Cache-Control
+      value: no-cache, private
+    - key: Content-Type
+      value: application/json
+    - key: Access-Control-Allow-Origin
+      value: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "Unauthenticated."
+      }
+order: 1000

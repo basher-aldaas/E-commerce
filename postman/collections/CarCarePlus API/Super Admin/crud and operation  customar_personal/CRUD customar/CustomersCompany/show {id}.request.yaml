@@ -1,0 +1,9 @@
+$kind: http-request
+url: "{{base_url}}/api/customers/company/1"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+examples: ./.resources/show {id}.resources/examples
+order: 2000

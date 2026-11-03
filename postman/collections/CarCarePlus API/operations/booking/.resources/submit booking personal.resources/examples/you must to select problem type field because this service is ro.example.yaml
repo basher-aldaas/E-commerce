@@ -1,0 +1,103 @@
+$kind: http-example
+name: you must to select problem type field because this service is road assistant service
+request:
+  url: "{{base_url}}/api/bookings/quote"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: car_ids[0]
+        value: "10"
+      - type: text
+        key: service_id
+        value: "6"
+      - type: text
+        key: booking_type
+        value: "1"
+      - type: text
+        key: payment_method
+        value: cash
+      - type: text
+        key: user_package_id
+        value: "9"
+        disabled: true
+      - type: text
+        key: scheduled_at
+        value: 20-10-2026
+        disabled: true
+      - type: text
+        key: location_lat
+        value: "24"
+      - type: text
+        key: location_lng
+        value: "46"
+      - type: text
+        key: branch_id
+        value: "3"
+        disabled: true
+      - type: text
+        key: location_address
+        value: alepo
+        disabled: true
+      - type: text
+        key: is_vip
+        value: "1"
+      - type: text
+        key: sub_service_ids[0]
+        value: "1"
+        disabled: true
+      - type: text
+        key: sub_service_ids[1]
+        value: "2"
+        disabled: true
+      - type: text
+        key: materials[0][material_id]
+        value: "1"
+      - type: text
+        key: materials[0][quantity]
+        value: "5"
+      - type: text
+        key: notes
+        value: notes
+      - type: text
+        key: problem_type_id
+        value: "1"
+        disabled: true
+      - type: text
+        key: problem_description
+        value: fdfd
+        disabled: true
+      - type: text
+        key: problem_image_url
+        value: ""
+        disabled: true
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Tue, 11 Aug 2026 23:06:07 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": {
+              "problem_type_id": [
+                  "Select the problem type for this road assistance booking."
+              ]
+          },
+          "message": "Select the problem type for this road assistance booking.",
+          "status_code": 422,
+          "timestamp": "2026-08-12T02:06:07+03:00"
+      }
+order: 23000

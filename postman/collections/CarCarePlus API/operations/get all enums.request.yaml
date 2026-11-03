@@ -1,0 +1,9 @@
+$kind: http-request
+url: "{{base_url}}/api/enums"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{customer1-token}}"
+examples: ./.resources/get all enums.resources/examples
+order: 38000

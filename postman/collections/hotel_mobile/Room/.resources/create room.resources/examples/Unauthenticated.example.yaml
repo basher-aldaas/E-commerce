@@ -1,0 +1,58 @@
+$kind: http-example
+request:
+  url: "{{url}}/create_room"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: title
+        value: Bed Room
+      - type: file
+        key: image
+        src:
+          - /C:/Users/Lenovo/Desktop/hotel image/room1.jpg
+      - type: text
+        key: description
+        value: In the third floor , It has  a bath room and 2 TV
+      - type: text
+        key: price
+        value: "50"
+      - type: text
+        key: wifi
+        value: "0"
+      - type: text
+        key: room_type
+        value: regular
+      - type: text
+        key: status
+        value: ""
+        disabled: true
+      - type: text
+        key: bed_number
+        value: "1"
+      - type: text
+        key: valuation
+        value: ""
+        disabled: true
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    Host: 127.0.0.1:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 16 Jul 2025 12:22:01 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "message": "Unauthenticated."
+      }
+order: 2000

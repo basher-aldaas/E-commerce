@@ -1,0 +1,91 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/purchase-requests/7"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: items[0][material_id]
+        value: "1"
+      - type: text
+        key: items[0][quantity]
+        value: "50"
+      - type: text
+        key: items[0][unit_price]
+        value: "20"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Fri, 14 Aug 2026 14:03:54 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 7,
+              "branch_id": 3,
+              "branch": {
+                  "id": 3,
+                  "admin_id": 2,
+                  "name": "Dammam Branch",
+                  "name_ar": "فرع الدمام",
+                  "city": "Dammam",
+                  "address": "طريق الملك سعود، الشاطئ",
+                  "latitude": "26.4207000",
+                  "longitude": "50.0888000",
+                  "phone": "0513333333",
+                  "is_active": true,
+                  "working_hours": {
+                      "end": "23:00",
+                      "start": "08:00"
+                  },
+                  "is_24h": false
+              },
+              "from_branch_id": null,
+              "from_branch": null,
+              "status": "pending",
+              "total_amount": "1000.00",
+              "notes": null,
+              "request_type": false,
+              "rejection_reason": null,
+              "approved_at": null,
+              "items": [
+                  {
+                      "id": 12,
+                      "purchase_req_id": 7,
+                      "material_id": 1,
+                      "material": {
+                          "id": 1,
+                          "material_unit_id": 1,
+                          "name": "Synthetic Engine Oil 5W-30",
+                          "name_ar": "زيت محرك تخليقي 5W-30",
+                          "description": "زيت محرك عالي الجودة يخدم حتى 10,000 كم",
+                          "unit_price": "45.00",
+                          "is_visible_to_customer": true,
+                          "is_active": true
+                      },
+                      "quantity": "50.00",
+                      "unit_price": "20.00",
+                      "total_price": "1000.00"
+                  }
+              ],
+              "created_at": "2026-08-14T13:28:16.000000Z",
+              "updated_at": "2026-08-14T14:03:13.000000Z"
+          },
+          "message": "purchase request updated successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-14T17:03:54+03:00"
+      }
+order: 1000

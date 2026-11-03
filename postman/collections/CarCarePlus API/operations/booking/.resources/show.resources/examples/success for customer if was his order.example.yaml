@@ -1,0 +1,153 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/bookings/1"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Thu, 06 Aug 2026 11:53:31 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 1,
+              "booking_group_id": null,
+              "customer_id": 4,
+              "customer": {
+                  "id": 4,
+                  "name": "أحمد العتيبي (عميل)",
+                  "email": "customer@system.com",
+                  "phone": "0500000004",
+                  "image_url": "https://via.placeholder.com/200x200.png/002255?text=people+aliquid",
+                  "is_active": true,
+                  "role": "customer_personal"
+              },
+              "company_id": null,
+              "car_id": 7,
+              "car": {
+                  "id": 7,
+                  "user_id": 14,
+                  "brand_id": 2,
+                  "car_type_id": 1,
+                  "branch_id": 2,
+                  "plate_number": "nos-0272",
+                  "model": "Sonata",
+                  "year": "1978",
+                  "color": "green",
+                  "fuel_type": "petrol",
+                  "cylinders": 6,
+                  "mileage": 97627,
+                  "image_url": "http://localhost:8000/storage/https://via.placeholder.com/400x300.png/0011ee?text=transport+quaerat",
+                  "is_active": true,
+                  "created_at": "2026-08-06",
+                  "updated_at": "2026-08-06"
+              },
+              "branch_id": 4,
+              "branch": {
+                  "id": 4,
+                  "admin_id": 2,
+                  "name": "Makkah Branch",
+                  "name_ar": "فرع مكة المكرمة",
+                  "city": "Makkah",
+                  "address": "طريق العزيزية، العزيزية",
+                  "latitude": "21.3891000",
+                  "longitude": "39.8579000",
+                  "phone": "0514444444",
+                  "is_active": true,
+                  "working_hours": {
+                      "end": "23:00",
+                      "start": "08:00"
+                  },
+                  "is_24h": false
+              },
+              "employee_id": 1,
+              "employee": {
+                  "id": 1,
+                  "branch_id": 1,
+                  "type": "washer",
+                  "is_active": true,
+                  "rating_avg": "5.00",
+                  "user": {
+                      "id": 6,
+                      "name": "فني غسيل 1",
+                      "email": "washer@system.com",
+                      "phone": "0500000006",
+                      "image_url": "https://via.placeholder.com/200x200.png/0022cc?text=people+quibusdam",
+                      "is_active": true,
+                      "role": "employee_washer"
+                  }
+              },
+              "service_id": 6,
+              "service": {
+                  "id": 6,
+                  "category_id": 3,
+                  "name": "Flat Tire Change",
+                  "name_ar": "تغيير إطار",
+                  "description": "تغيير الإطار المثقوب على الطريق",
+                  "base_price": "60.00",
+                  "is_vip_available": false,
+                  "vip_extra_price": null,
+                  "duration_minutes": 25,
+                  "created_at": "2026-08-06 10:49:24",
+                  "updated_at": "2026-08-06 10:49:24"
+              },
+              "category_id": 3,
+              "category": {
+                  "id": 3,
+                  "name": "Roadside Assistance",
+                  "name_ar": "المساعدة على الطريق",
+                  "description": "خدمات الطوارئ والإنقاذ أثناء السير",
+                  "is_active": true,
+                  "created_at": "2026-08-06 10:49:23",
+                  "updated_at": null
+              },
+              "booking_type": false,
+              "is_vip": true,
+              "status": "pending",
+              "scheduled_at": "2026-08-12T01:32:26+00:00",
+              "started_at": null,
+              "completed_at": null,
+              "cancelled_at": null,
+              "cancel_reason": null,
+              "assigned_at": null,
+              "location_lat": "24.8987580",
+              "location_lng": "46.4943900",
+              "location_address": "9543 Cartwright Drives\nWest Deborah, TN 13556",
+              "distance_km": "8.51",
+              "discount_amount": "0.00",
+              "total_price": "110.00",
+              "price_items": [
+                  {
+                      "id": 1,
+                      "pricing_rule_id": null,
+                      "label": "Base Price",
+                      "amount": "60.00"
+                  },
+                  {
+                      "id": 2,
+                      "pricing_rule_id": null,
+                      "label": "VIP Charge",
+                      "amount": "50.00"
+                  }
+              ],
+              "notes": "Iste veritatis et tempore officiis.",
+              "created_at": "2026-08-06T10:49:32+00:00",
+              "updated_at": "2026-08-06T10:49:32+00:00"
+          },
+          "message": "Booking retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-06T11:53:31+00:00"
+      }
+order: 4000

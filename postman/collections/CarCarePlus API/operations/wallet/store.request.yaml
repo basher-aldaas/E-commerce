@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{base_url}}/api/wallets/4/adjust"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: amount
+      value: "10000"
+    - type: text
+      key: note
+      value: ""
+      disabled: true
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+examples: ./.resources/store.resources/examples
+order: 4000

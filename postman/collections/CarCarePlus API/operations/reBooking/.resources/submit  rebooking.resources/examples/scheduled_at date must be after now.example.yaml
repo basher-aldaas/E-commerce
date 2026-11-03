@@ -1,0 +1,51 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/bookings/quote"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: car_ids[0]
+        value: "1"
+      - type: text
+        key: service_id
+        value: "1"
+      - type: text
+        key: booking_type
+        value: "0"
+      - type: text
+        key: payment_method
+        value: cash
+      - type: text
+        key: scheduled_at
+        value: 20-10-2025
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Tue, 11 Aug 2026 19:42:34 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": {
+              "scheduled_at": [
+                  "The scheduled at field must be a date after or equal to now."
+              ]
+          },
+          "message": "The scheduled at field must be a date after or equal to now.",
+          "status_code": 422,
+          "timestamp": "2026-08-11T22:42:34+03:00"
+      }
+order: 8000

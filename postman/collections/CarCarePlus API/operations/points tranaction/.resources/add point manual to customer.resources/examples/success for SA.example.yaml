@@ -1,0 +1,50 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/points/transactions/4"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: points
+        value: "10"
+      - type: text
+        key: notes
+        value: ndnd
+        disabled: true
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Wed, 12 Aug 2026 10:51:41 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 10,
+              "customer_id": 4,
+              "type": "earn",
+              "points": 10,
+              "balance_before": 977016,
+              "balance_after": 977026,
+              "reference_type": "manual_adjustment",
+              "reference_id": 1,
+              "note": null,
+              "created_at": null
+          },
+          "message": "Points adjusted successfully",
+          "status_code": 200,
+          "timestamp": "2026-08-12T13:51:41+03:00"
+      }
+order: 2000

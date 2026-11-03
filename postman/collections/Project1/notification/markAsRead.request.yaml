@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{url}}/markAsRead/5"
+method: POST
+headers:
+  Accept: application/json
+examples: ./.resources/markAsRead.resources/examples
+order: 3000

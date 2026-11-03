@@ -1,0 +1,3 @@
+$kind: collection
+description: All endpoints require auth:sanctum and the super_admin role.
+order: 2000

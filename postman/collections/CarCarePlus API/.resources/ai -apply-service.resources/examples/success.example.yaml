@@ -1,0 +1,47 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/ai/apply-service"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: json
+    content: "{\r
+
+      \    \"order_id\": 1,\r
+
+      \    \"service_id\": 5\r
+
+      }"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.30
+    Cache-Control: no-cache, private
+    Date: Tue, 18 Aug 2026 11:11:16 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: text
+    content: |-
+      {
+          "success": true,
+          "message": "تم تطبيق الخدمة على طلب الصيانة بنجاح.",
+          "data": {
+              "order_id": 1,
+              "service": {
+                  "id": 5,
+                  "name": "General Inspection",
+                  "name_ar": "فحص شامل",
+                  "price": "100.00",
+                  "duration_minutes": 30
+              },
+              "category_id": 2,
+              "total_price": "100.00"
+          }
+      }
+order: 1000

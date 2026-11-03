@@ -1,0 +1,7 @@
+$kind: collection
+description: ""
+variables:
+  - key: auth_secret_0af1
+    secret: true
+  - key: auth_secret_0h6k
+    secret: true

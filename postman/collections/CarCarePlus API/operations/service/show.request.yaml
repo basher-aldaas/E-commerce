@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/api/services/1"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+  Accept-Language: ar
+body:
+  type: formdata
+  content: []
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+settings: {}
+examples: ./.resources/show.resources/examples
+order: 4000

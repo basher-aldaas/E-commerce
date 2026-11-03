@@ -1,0 +1,62 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/services"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: json
+    content: "{\r
+
+      \    \"category_id\":2,\r
+
+      \    \"name\":\"Oil Change\",\r
+
+      \    \"name_ar\":\"تغيير الزيت\",\r
+
+      \    \"description\":\"Premium oil\",\r
+
+      \    \"base_price\":30,\r
+
+      \    \"is_vip_available\":true,\r
+
+      \    \"vip_extra_price\":10,\r
+
+      \    \"duration_minutes\":45\r
+
+      }"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.30
+    Cache-Control: no-cache, private
+    Date: Fri, 17 Jul 2026 20:59:38 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: text
+    content: |-
+      {
+          "status": 1,
+          "data": {
+              "id": 9,
+              "category_id": 2,
+              "name": "Oil Change",
+              "name_ar": "تغيير الزيت",
+              "description": "Premium oil",
+              "base_price": "30.00",
+              "is_vip_available": true,
+              "vip_extra_price": "10.00",
+              "duration_minutes": 45,
+              "created_at": "2026-07-17 20:59:38",
+              "updated_at": "2026-07-17 20:59:38"
+          },
+          "message": "Service created successfully",
+          "status_code": 200,
+          "timestamp": "2026-07-17T20:59:38+00:00"
+      }
+order: 1000

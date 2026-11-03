@@ -1,0 +1,18 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/orders/2/status
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: status
+      value: confirmed
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin}}"
+examples: ./.resources/update status.resources/examples
+order: 3000

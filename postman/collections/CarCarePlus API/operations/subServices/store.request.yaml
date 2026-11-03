@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{base_url}}/api/sub-services"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: service_id
+      value: "3"
+    - type: text
+      key: name
+      value: subService
+    - type: text
+      key: name_ar
+      value: خدمة فرعية
+    - type: text
+      key: price
+      value: "13"
+auth:
+  type: bearer
+  credentials:
+    token: "{{super-token}}"
+examples: ./.resources/store.resources/examples
+order: 3000
