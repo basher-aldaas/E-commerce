@@ -1,6 +1,0 @@
-$kind: http-request
-url: "{{url}}/course/show_courses/2"
-method: GET
-headers:
-  Accept: application/json
-order: 1000

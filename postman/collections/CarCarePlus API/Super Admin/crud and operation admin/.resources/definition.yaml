@@ -1,8 +1,0 @@
-$kind: collection
-auth:
-  - id: e1cc50c0-1a0d-4b31-8bf0-6cee6f1ffa11
-    type: bearer
-    name: bearer auth
-    credentials:
-      token: "{{auth_secret_0wx6}}"
-order: 5000

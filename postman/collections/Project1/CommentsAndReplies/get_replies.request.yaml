@@ -1,7 +1,0 @@
-$kind: http-request
-url: "{{url}}/get_replies/1"
-method: GET
-headers:
-  Accept: application/json
-examples: ./.resources/get_replies.resources/examples
-order: 2000

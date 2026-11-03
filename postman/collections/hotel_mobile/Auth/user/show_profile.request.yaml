@@ -1,5 +1,0 @@
-$kind: http-request
-url: "{{url}}/show_profile"
-method: GET
-examples: ./.resources/show_profile.resources/examples
-order: 1000

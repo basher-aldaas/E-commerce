@@ -1,9 +1,0 @@
-$kind: http-request
-url: "{{base_url}}/api/wallets"
-method: GET
-auth:
-  type: bearer
-  credentials:
-    token: "{{super-token}}"
-examples: ./.resources/index.resources/examples
-order: 1000

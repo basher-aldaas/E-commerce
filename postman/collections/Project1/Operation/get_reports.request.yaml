@@ -1,7 +1,0 @@
-$kind: http-request
-url: "{{url}}/get_reports"
-method: GET
-headers:
-  Accept: application/json
-examples: ./.resources/get_reports.resources/examples
-order: 6000

@@ -1,8 +1,0 @@
-$kind: http-request
-url: "{{base_url}}/api/customers/company/5"
-method: DELETE
-headers:
-  Accept: application/json
-  Content-Type: application/json
-examples: ./.resources/delete.resources/examples
-order: 3000

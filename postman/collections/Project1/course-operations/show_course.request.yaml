@@ -1,4 +1,0 @@
-$kind: http-request
-url: "{{url}}/course/show_course/7"
-method: GET
-order: 6000

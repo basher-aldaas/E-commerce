@@ -1,7 +1,0 @@
-$kind: http-request
-url: "{{url}}/get_all_notifications_not_read"
-method: GET
-headers:
-  Accept: application/json
-examples: ./.resources/get_all_notifications_not_read.resources/examples
-order: 2000

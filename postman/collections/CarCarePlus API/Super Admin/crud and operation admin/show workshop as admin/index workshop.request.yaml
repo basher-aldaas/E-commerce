@@ -1,5 +1,0 @@
-$kind: http-request
-url: ""
-method: GET
-examples: ./.resources/index workshop.resources/examples
-order: 2000

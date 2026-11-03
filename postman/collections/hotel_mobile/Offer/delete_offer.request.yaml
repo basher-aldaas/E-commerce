@@ -1,8 +1,0 @@
-$kind: http-request
-url: "{{url}}/delete_offer/1"
-method: GET
-headers:
-  Accept: application/json
-  Content-Type: application/json
-examples: ./.resources/delete_offer.resources/examples
-order: 5000

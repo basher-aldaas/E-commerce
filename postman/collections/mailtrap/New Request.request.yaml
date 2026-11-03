@@ -1,6 +1,0 @@
-$kind: http-request
-url: localhost:8000/api/send_mail
-method: GET
-headers:
-  Accept: application/json
-order: 1000

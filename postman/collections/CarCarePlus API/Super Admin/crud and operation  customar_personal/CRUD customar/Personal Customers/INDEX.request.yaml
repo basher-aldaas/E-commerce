@@ -1,9 +1,0 @@
-$kind: http-request
-url: "{{base_url}}/api/customers/personal"
-method: GET
-auth:
-  type: bearer
-  credentials:
-    token: "{{admin}}"
-examples: ./.resources/INDEX.resources/examples
-order: 1000

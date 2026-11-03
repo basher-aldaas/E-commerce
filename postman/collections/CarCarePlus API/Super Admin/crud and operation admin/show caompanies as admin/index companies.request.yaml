@@ -1,8 +1,0 @@
-$kind: http-request
-url: "{{base_url}}/api/companies"
-method: GET
-headers:
-  Accept: application/json
-  Content-Type: application/json
-examples: ./.resources/index companies.resources/examples
-order: 1000

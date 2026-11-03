@@ -1,9 +1,0 @@
-$kind: http-request
-url: "{{base_url}}/api/workshops/cars/2/history"
-method: GET
-auth:
-  type: bearer
-  credentials:
-    token: "{{workshop}}"
-examples: ./.resources/car history orders.resources/examples
-order: 2000

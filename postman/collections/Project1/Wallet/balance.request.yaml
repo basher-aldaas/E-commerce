@@ -1,7 +1,0 @@
-$kind: http-request
-url: "{{url}}/wallet/balance"
-method: GET
-headers:
-  Accept: application/json
-examples: ./.resources/balance.resources/examples
-order: 4000
