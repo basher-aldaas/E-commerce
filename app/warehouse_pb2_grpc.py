@@ -54,6 +54,21 @@ class WarehouseStub:
                 request_serializer=warehouse__pb2.ReleaseRequest.SerializeToString,
                 response_deserializer=warehouse__pb2.ReleaseResponse.FromString,
                 _registered_method=True)
+        self.ReturnStock = channel.unary_unary(
+                '/Warehouse/ReturnStock',
+                request_serializer=warehouse__pb2.ReturnStockRequest.SerializeToString,
+                response_deserializer=warehouse__pb2.ReturnStockResponse.FromString,
+                _registered_method=True)
+        self.InitializeStock = channel.unary_unary(
+                '/Warehouse/InitializeStock',
+                request_serializer=warehouse__pb2.InitializeStockRequest.SerializeToString,
+                response_deserializer=warehouse__pb2.InitializeStockResponse.FromString,
+                _registered_method=True)
+        self.SetStock = channel.unary_unary(
+                '/Warehouse/SetStock',
+                request_serializer=warehouse__pb2.SetStockRequest.SerializeToString,
+                response_deserializer=warehouse__pb2.SetStockResponse.FromString,
+                _registered_method=True)
 
 
 class WarehouseServicer:
@@ -83,6 +98,24 @@ class WarehouseServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ReturnStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def InitializeStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_WarehouseServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -105,6 +138,21 @@ def add_WarehouseServicer_to_server(servicer, server):
                     servicer.Release,
                     request_deserializer=warehouse__pb2.ReleaseRequest.FromString,
                     response_serializer=warehouse__pb2.ReleaseResponse.SerializeToString,
+            ),
+            'ReturnStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReturnStock,
+                    request_deserializer=warehouse__pb2.ReturnStockRequest.FromString,
+                    response_serializer=warehouse__pb2.ReturnStockResponse.SerializeToString,
+            ),
+            'InitializeStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.InitializeStock,
+                    request_deserializer=warehouse__pb2.InitializeStockRequest.FromString,
+                    response_serializer=warehouse__pb2.InitializeStockResponse.SerializeToString,
+            ),
+            'SetStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetStock,
+                    request_deserializer=warehouse__pb2.SetStockRequest.FromString,
+                    response_serializer=warehouse__pb2.SetStockResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -215,6 +263,87 @@ class Warehouse:
             '/Warehouse/Release',
             warehouse__pb2.ReleaseRequest.SerializeToString,
             warehouse__pb2.ReleaseResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReturnStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Warehouse/ReturnStock',
+            warehouse__pb2.ReturnStockRequest.SerializeToString,
+            warehouse__pb2.ReturnStockResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def InitializeStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Warehouse/InitializeStock',
+            warehouse__pb2.InitializeStockRequest.SerializeToString,
+            warehouse__pb2.InitializeStockResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Warehouse/SetStock',
+            warehouse__pb2.SetStockRequest.SerializeToString,
+            warehouse__pb2.SetStockResponse.FromString,
             options,
             channel_credentials,
             insecure,

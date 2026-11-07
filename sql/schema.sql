@@ -9,11 +9,13 @@ CREATE TABLE IF NOT EXISTS stock (
 
 CREATE TABLE IF NOT EXISTS reservations (
     id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    order_id    INT UNSIGNED NOT NULL,
-    status      ENUM('RESERVED', 'CONFIRMED', 'RELEASED') NOT NULL,
+    reservation_key CHAR(36) NULL,
+    order_id    INT UNSIGNED NULL,
+    status      ENUM('RESERVED', 'CONFIRMED', 'RELEASED', 'RETURNED') NOT NULL,
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_reservations_order (order_id)
+    UNIQUE KEY uq_reservations_order (order_id),
+    UNIQUE KEY uq_reservations_key (reservation_key)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS reservation_items (

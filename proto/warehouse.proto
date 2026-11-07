@@ -1,10 +1,28 @@
 syntax = "proto3";
 
+option php_namespace = "App\\Grpc\\Warehouse";
+option php_metadata_namespace = "App\\Grpc\\Warehouse\\Metadata";
+
 service Warehouse {
   rpc GetStock (StockRequest) returns (StockResponse);
   rpc Reserve (ReserveRequest) returns (ReserveResponse);
   rpc Confirm (ConfirmRequest) returns (ConfirmResponse);
   rpc Release (ReleaseRequest) returns (ReleaseResponse);
+  rpc ReturnStock (ReturnStockRequest) returns (ReturnStockResponse);
+  rpc InitializeStock (InitializeStockRequest) returns (InitializeStockResponse);
+  rpc SetStock (SetStockRequest) returns (SetStockResponse);
+}
+
+enum ResultCode {
+  RESULT_UNSPECIFIED = 0;
+  RESULT_OK = 1;
+  RESULT_INSUFFICIENT_STOCK = 2;
+  RESULT_PRODUCT_NOT_FOUND = 3;
+  RESULT_RESERVATION_NOT_FOUND = 4;
+  RESULT_KEY_CONFLICT = 5;
+  RESULT_ALREADY_RELEASED = 6;
+  RESULT_INVALID_STATE = 7;
+  RESULT_ALREADY_INITIALIZED = 8;
 }
 
 message StockItem {
@@ -12,38 +30,103 @@ message StockItem {
   int32 quantity = 2;
 }
 
+message StockLevel {
+  int32 product_id = 1;
+  int32 quantity = 2;
+  // False when the Warehouse has no stock row for this product.
+  bool tracked = 3;
+}
+
 message StockRequest {
   repeated int32 product_ids = 1;
 }
 
 message StockResponse {
-  repeated StockItem items = 1;
+  repeated StockLevel items = 1;
+}
+
+message StockShortage {
+  int32 product_id = 1;
+  int32 requested = 2;
+  int32 available = 3;
 }
 
 message ReserveRequest {
-  int32 order_id = 1;
+  reserved 1;
+  reserved "order_id";
   repeated StockItem items = 2;
+  // UUID chosen by the caller. Retrying with the same key never reserves twice.
+  string reservation_key = 3;
 }
 
 message ReserveResponse {
   bool success = 1;
   string reason = 2;
+  ResultCode code = 3;
+  // Set when code is RESULT_INSUFFICIENT_STOCK or RESULT_PRODUCT_NOT_FOUND.
+  StockShortage shortage = 4;
 }
 
 message ConfirmRequest {
-  int32 order_id = 1;
+  reserved 1;
+  reserved "order_id";
+  string reservation_key = 2;
 }
 
 message ConfirmResponse {
   bool success = 1;
   string reason = 2;
+  ResultCode code = 3;
 }
 
+// Cancels a reservation that was never confirmed. An unknown key is recorded as
+// released, so a Reserve still in flight cannot take stock afterwards.
 message ReleaseRequest {
-  int32 order_id = 1;
+  reserved 1;
+  reserved "order_id";
+  string reservation_key = 2;
 }
 
 message ReleaseResponse {
   bool success = 1;
   string reason = 2;
+  ResultCode code = 3;
+}
+
+// Puts back the stock of a confirmed reservation, for example a cancelled order.
+message ReturnStockRequest {
+  string reservation_key = 1;
+}
+
+message ReturnStockResponse {
+  bool success = 1;
+  string reason = 2;
+  ResultCode code = 3;
+}
+
+// Creates the stock row of a new product. It never changes an existing row.
+message InitializeStockRequest {
+  int32 product_id = 1;
+  int32 quantity = 2;
+}
+
+message InitializeStockResponse {
+  bool success = 1;
+  string reason = 2;
+  ResultCode code = 3;
+  // The quantity now stored, including when the row already existed.
+  int32 quantity = 4;
+}
+
+// Sets a product's available quantity, creating the row if needed.
+message SetStockRequest {
+  int32 product_id = 1;
+  int32 quantity = 2;
+}
+
+message SetStockResponse {
+  bool success = 1;
+  string reason = 2;
+  ResultCode code = 3;
+  int32 quantity = 4;
 }

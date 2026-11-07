@@ -16,6 +16,10 @@ def _connect():
         charset="utf8mb4",
         cursorclass=DictCursor,
         autocommit=False,
+        connect_timeout=settings.db_connect_timeout,
+        read_timeout=settings.db_io_timeout,
+        write_timeout=settings.db_io_timeout,
+        init_command=f"SET SESSION innodb_lock_wait_timeout = {settings.db_lock_wait_timeout:d}",
     )
 
 

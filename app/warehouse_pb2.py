@@ -24,31 +24,50 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fwarehouse.proto\"1\n\tStockItem\x12\x12\n\nproduct_id\x18\x01 \x01(\x05\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"#\n\x0cStockRequest\x12\x13\n\x0bproduct_ids\x18\x01 \x03(\x05\"*\n\rStockResponse\x12\x19\n\x05items\x18\x01 \x03(\x0b\x32\n.StockItem\"=\n\x0eReserveRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x05\x12\x19\n\x05items\x18\x02 \x03(\x0b\x32\n.StockItem\"2\n\x0fReserveResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06reason\x18\x02 \x01(\t\"\"\n\x0e\x43onfirmRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x05\"2\n\x0f\x43onfirmResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06reason\x18\x02 \x01(\t\"\"\n\x0eReleaseRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x05\"2\n\x0fReleaseResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06reason\x18\x02 \x01(\t2\xc0\x01\n\tWarehouse\x12)\n\x08GetStock\x12\r.StockRequest\x1a\x0e.StockResponse\x12,\n\x07Reserve\x12\x0f.ReserveRequest\x1a\x10.ReserveResponse\x12,\n\x07\x43onfirm\x12\x0f.ConfirmRequest\x1a\x10.ConfirmResponse\x12,\n\x07Release\x12\x0f.ReleaseRequest\x1a\x10.ReleaseResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fwarehouse.proto\"1\n\tStockItem\x12\x12\n\nproduct_id\x18\x01 \x01(\x05\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"C\n\nStockLevel\x12\x12\n\nproduct_id\x18\x01 \x01(\x05\x12\x10\n\x08quantity\x18\x02 \x01(\x05\x12\x0f\n\x07tracked\x18\x03 \x01(\x08\"#\n\x0cStockRequest\x12\x13\n\x0bproduct_ids\x18\x01 \x03(\x05\"+\n\rStockResponse\x12\x1a\n\x05items\x18\x01 \x03(\x0b\x32\x0b.StockLevel\"I\n\rStockShortage\x12\x12\n\nproduct_id\x18\x01 \x01(\x05\x12\x11\n\trequested\x18\x02 \x01(\x05\x12\x11\n\tavailable\x18\x03 \x01(\x05\"T\n\x0eReserveRequest\x12\x19\n\x05items\x18\x02 \x03(\x0b\x32\n.StockItem\x12\x17\n\x0freservation_key\x18\x03 \x01(\tJ\x04\x08\x01\x10\x02R\x08order_id\"o\n\x0fReserveResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06reason\x18\x02 \x01(\t\x12\x19\n\x04\x63ode\x18\x03 \x01(\x0e\x32\x0b.ResultCode\x12 \n\x08shortage\x18\x04 \x01(\x0b\x32\x0e.StockShortage\"9\n\x0e\x43onfirmRequest\x12\x17\n\x0freservation_key\x18\x02 \x01(\tJ\x04\x08\x01\x10\x02R\x08order_id\"M\n\x0f\x43onfirmResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06reason\x18\x02 \x01(\t\x12\x19\n\x04\x63ode\x18\x03 \x01(\x0e\x32\x0b.ResultCode\"9\n\x0eReleaseRequest\x12\x17\n\x0freservation_key\x18\x02 \x01(\tJ\x04\x08\x01\x10\x02R\x08order_id\"M\n\x0fReleaseResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06reason\x18\x02 \x01(\t\x12\x19\n\x04\x63ode\x18\x03 \x01(\x0e\x32\x0b.ResultCode\"-\n\x12ReturnStockRequest\x12\x17\n\x0freservation_key\x18\x01 \x01(\t\"Q\n\x13ReturnStockResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06reason\x18\x02 \x01(\t\x12\x19\n\x04\x63ode\x18\x03 \x01(\x0e\x32\x0b.ResultCode\">\n\x16InitializeStockRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x05\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"g\n\x17InitializeStockResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06reason\x18\x02 \x01(\t\x12\x19\n\x04\x63ode\x18\x03 \x01(\x0e\x32\x0b.ResultCode\x12\x10\n\x08quantity\x18\x04 \x01(\x05\"7\n\x0fSetStockRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x05\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"`\n\x10SetStockResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06reason\x18\x02 \x01(\t\x12\x19\n\x04\x63ode\x18\x03 \x01(\x0e\x32\x0b.ResultCode\x12\x10\n\x08quantity\x18\x04 \x01(\x05*\x82\x02\n\nResultCode\x12\x16\n\x12RESULT_UNSPECIFIED\x10\x00\x12\r\n\tRESULT_OK\x10\x01\x12\x1d\n\x19RESULT_INSUFFICIENT_STOCK\x10\x02\x12\x1c\n\x18RESULT_PRODUCT_NOT_FOUND\x10\x03\x12 \n\x1cRESULT_RESERVATION_NOT_FOUND\x10\x04\x12\x17\n\x13RESULT_KEY_CONFLICT\x10\x05\x12\x1b\n\x17RESULT_ALREADY_RELEASED\x10\x06\x12\x18\n\x14RESULT_INVALID_STATE\x10\x07\x12\x1e\n\x1aRESULT_ALREADY_INITIALIZED\x10\x08\x32\xf1\x02\n\tWarehouse\x12)\n\x08GetStock\x12\r.StockRequest\x1a\x0e.StockResponse\x12,\n\x07Reserve\x12\x0f.ReserveRequest\x1a\x10.ReserveResponse\x12,\n\x07\x43onfirm\x12\x0f.ConfirmRequest\x1a\x10.ConfirmResponse\x12,\n\x07Release\x12\x0f.ReleaseRequest\x1a\x10.ReleaseResponse\x12\x38\n\x0bReturnStock\x12\x13.ReturnStockRequest\x1a\x14.ReturnStockResponse\x12\x44\n\x0fInitializeStock\x12\x17.InitializeStockRequest\x1a\x18.InitializeStockResponse\x12/\n\x08SetStock\x12\x10.SetStockRequest\x1a\x11.SetStockResponseB3\xca\x02\x12\x41pp\\Grpc\\Warehouse\xe2\x02\x1b\x41pp\\Grpc\\Warehouse\\Metadatab\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'warehouse_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
+  _globals['DESCRIPTOR']._loaded_options = None
+  _globals['DESCRIPTOR']._serialized_options = b'\312\002\022App\\Grpc\\Warehouse\342\002\033App\\Grpc\\Warehouse\\Metadata'
+  _globals['_RESULTCODE']._serialized_start=1226
+  _globals['_RESULTCODE']._serialized_end=1484
   _globals['_STOCKITEM']._serialized_start=19
   _globals['_STOCKITEM']._serialized_end=68
-  _globals['_STOCKREQUEST']._serialized_start=70
-  _globals['_STOCKREQUEST']._serialized_end=105
-  _globals['_STOCKRESPONSE']._serialized_start=107
-  _globals['_STOCKRESPONSE']._serialized_end=149
-  _globals['_RESERVEREQUEST']._serialized_start=151
-  _globals['_RESERVEREQUEST']._serialized_end=212
-  _globals['_RESERVERESPONSE']._serialized_start=214
-  _globals['_RESERVERESPONSE']._serialized_end=264
-  _globals['_CONFIRMREQUEST']._serialized_start=266
-  _globals['_CONFIRMREQUEST']._serialized_end=300
-  _globals['_CONFIRMRESPONSE']._serialized_start=302
-  _globals['_CONFIRMRESPONSE']._serialized_end=352
-  _globals['_RELEASEREQUEST']._serialized_start=354
-  _globals['_RELEASEREQUEST']._serialized_end=388
-  _globals['_RELEASERESPONSE']._serialized_start=390
-  _globals['_RELEASERESPONSE']._serialized_end=440
-  _globals['_WAREHOUSE']._serialized_start=443
-  _globals['_WAREHOUSE']._serialized_end=635
+  _globals['_STOCKLEVEL']._serialized_start=70
+  _globals['_STOCKLEVEL']._serialized_end=137
+  _globals['_STOCKREQUEST']._serialized_start=139
+  _globals['_STOCKREQUEST']._serialized_end=174
+  _globals['_STOCKRESPONSE']._serialized_start=176
+  _globals['_STOCKRESPONSE']._serialized_end=219
+  _globals['_STOCKSHORTAGE']._serialized_start=221
+  _globals['_STOCKSHORTAGE']._serialized_end=294
+  _globals['_RESERVEREQUEST']._serialized_start=296
+  _globals['_RESERVEREQUEST']._serialized_end=380
+  _globals['_RESERVERESPONSE']._serialized_start=382
+  _globals['_RESERVERESPONSE']._serialized_end=493
+  _globals['_CONFIRMREQUEST']._serialized_start=495
+  _globals['_CONFIRMREQUEST']._serialized_end=552
+  _globals['_CONFIRMRESPONSE']._serialized_start=554
+  _globals['_CONFIRMRESPONSE']._serialized_end=631
+  _globals['_RELEASEREQUEST']._serialized_start=633
+  _globals['_RELEASEREQUEST']._serialized_end=690
+  _globals['_RELEASERESPONSE']._serialized_start=692
+  _globals['_RELEASERESPONSE']._serialized_end=769
+  _globals['_RETURNSTOCKREQUEST']._serialized_start=771
+  _globals['_RETURNSTOCKREQUEST']._serialized_end=816
+  _globals['_RETURNSTOCKRESPONSE']._serialized_start=818
+  _globals['_RETURNSTOCKRESPONSE']._serialized_end=899
+  _globals['_INITIALIZESTOCKREQUEST']._serialized_start=901
+  _globals['_INITIALIZESTOCKREQUEST']._serialized_end=963
+  _globals['_INITIALIZESTOCKRESPONSE']._serialized_start=965
+  _globals['_INITIALIZESTOCKRESPONSE']._serialized_end=1068
+  _globals['_SETSTOCKREQUEST']._serialized_start=1070
+  _globals['_SETSTOCKREQUEST']._serialized_end=1125
+  _globals['_SETSTOCKRESPONSE']._serialized_start=1127
+  _globals['_SETSTOCKRESPONSE']._serialized_end=1223
+  _globals['_WAREHOUSE']._serialized_start=1487
+  _globals['_WAREHOUSE']._serialized_end=1856
 # @@protoc_insertion_point(module_scope)

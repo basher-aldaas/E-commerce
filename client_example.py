@@ -1,7 +1,13 @@
 """مثال عميل بسيط يستدعي الخدمة (للتجربة اليدوية، مش جزء من السيرفر).
 
-    python client_example.py
+    python client_example.py                 reads stock only
+    python client_example.py --reserve-demo  also reserves and releases one unit
+
+The demo changes stock briefly on whichever database the server is using.
 """
+
+import sys
+import uuid
 
 import grpc
 
@@ -16,16 +22,20 @@ def main():
         stub = pb_grpc.WarehouseStub(channel)
 
         stock = stub.GetStock(pb.StockRequest(product_ids=[1, 2]), timeout=TIMEOUT_SECONDS)
-        print("stock:", [(i.product_id, i.quantity) for i in stock.items])
+        print("stock:", [(i.product_id, i.quantity, i.tracked) for i in stock.items])
 
+        if "--reserve-demo" not in sys.argv:
+            return
+
+        key = str(uuid.uuid4())
         reply = stub.Reserve(
-            pb.ReserveRequest(order_id=5001, items=[pb.StockItem(product_id=1, quantity=2)]),
+            pb.ReserveRequest(reservation_key=key, items=[pb.StockItem(product_id=1, quantity=1)]),
             timeout=TIMEOUT_SECONDS,
         )
         print("reserve:", reply.success, reply.reason)
 
-        reply = stub.Confirm(pb.ConfirmRequest(order_id=5001), timeout=TIMEOUT_SECONDS)
-        print("confirm:", reply.success, reply.reason)
+        reply = stub.Release(pb.ReleaseRequest(reservation_key=key), timeout=TIMEOUT_SECONDS)
+        print("release:", reply.success, reply.reason)
 
 
 if __name__ == "__main__":
