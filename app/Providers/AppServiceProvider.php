@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Services\Warehouse\GrpcWarehouseGateway;
+use App\Services\Warehouse\WarehouseGateway;
+use App\Services\Warehouse\WarehouseStub;
+use Grpc\ChannelCredentials;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Http\Request;
@@ -15,7 +19,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(WarehouseGateway::class, fn () => new GrpcWarehouseGateway(
+            new WarehouseStub(config('warehouse.target'), [
+                'credentials' => ChannelCredentials::createInsecure(),
+            ]),
+            config('warehouse.read_timeout_ms'),
+            config('warehouse.write_timeout_ms'),
+            config('warehouse.write_retries'),
+        ));
     }
 
     /**
