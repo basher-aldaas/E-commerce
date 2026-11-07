@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | General API Rate Limit
+    |--------------------------------------------------------------------------
+    |
+    | Requests allowed per minute on API routes, per user or per guest IP address.
+    | Login has its own stricter limiter in AuthController.
+    |
+    */
+
+    'api_rate_limit_per_minute' => env('API_RATE_LIMIT_PER_MINUTE', 60),
+
 ];

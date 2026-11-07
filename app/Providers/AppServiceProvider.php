@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Console\ServeCommand;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -33,5 +36,10 @@ class AppServiceProvider extends ServiceProvider
             'DB_USERNAME',
             'DB_PASSWORD',
         ]);
+
+        // General API limit: per user when authenticated, otherwise per IP address.
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(
+            (int) config('app.api_rate_limit_per_minute')
+        )->by($request->user()?->getAuthIdentifier() ?: $request->ip()));
     }
 }

@@ -100,7 +100,7 @@ class Handler
                 data: [],
                 message: $e->getMessage() ?: 'HTTP error.',
                 code: $e->getStatusCode()
-            );
+            )->withHeaders($e->getHeaders()); // e.g. Retry-After on a 429.
         }
 
         // 500 — anything unexpected. Only leak details while debugging.

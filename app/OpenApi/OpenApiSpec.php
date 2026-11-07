@@ -27,6 +27,10 @@ use OpenApi\Attributes as OA;
         All responses use a common envelope: `status` (1 = success, 0 = error),
         `data`, `message`, `status_code`, `timestamp`. List endpoints add a
         `pagination` object.
+
+        **Rate limiting** — API routes allow 60 requests per minute by default, per user
+        or per guest IP address. Over the limit they return `429` with a `Retry-After`
+        header. Login has its own stricter limit.
         TXT,
 )]
 #[OA\Server(url: 'http://localhost:8000', description: 'Local development server')]
