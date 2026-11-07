@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+service Warehouse {
+  rpc GetStock (StockRequest) returns (StockResponse);
+  rpc Reserve (ReserveRequest) returns (ReserveResponse);
+  rpc Confirm (ConfirmRequest) returns (ConfirmResponse);
+  rpc Release (ReleaseRequest) returns (ReleaseResponse);
+}
+
+message StockItem {
+  int32 product_id = 1;
+  int32 quantity = 2;
+}
+
+message StockRequest {
+  repeated int32 product_ids = 1;
+}
+
+message StockResponse {
+  repeated StockItem items = 1;
+}
+
+message ReserveRequest {
+  int32 order_id = 1;
+  repeated StockItem items = 2;
+}
+
+message ReserveResponse {
+  bool success = 1;
+  string reason = 2;
+}
+
+message ConfirmRequest {
+  int32 order_id = 1;
+}
+
+message ConfirmResponse {
+  bool success = 1;
+  string reason = 2;
+}
+
+message ReleaseRequest {
+  int32 order_id = 1;
+}
+
+message ReleaseResponse {
+  bool success = 1;
+  string reason = 2;
+}
