@@ -1,0 +1,43 @@
+$kind: http-example
+request:
+  url: http://localhost:8000/api/v1/categories
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: name
+        value: elecf
+      - type: text
+        key: descreiption
+        value: ""
+        disabled: true
+response:
+  statusCode: 422
+  statusText: Unprocessable Content
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Mon, 02 Nov 2026 21:32:46 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": {
+              "name": [
+                  "The name has already been taken."
+              ]
+          },
+          "message": "Validation failed",
+          "status_code": 422,
+          "timestamp": "2026-11-02T21:32:46+00:00"
+      }
+order: 3000

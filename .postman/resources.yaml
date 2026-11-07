@@ -11,7 +11,7 @@ localResources:
 cloudResources:
   collections:
     ../E-commerce-1: 30501443-22f4b026-5ff4-4c11-9b83-2ab3a7777993
-    ../postman/collections/E-commerce Copy: ba4d4499-de07-4d6b-98b5-42aae121ee5f
+    ../postman/collections/E-commerce Copy: b5dbe3c1-31d3-4573-9b0c-05b4019bb596
     ../postman/collections/CarCarePlus API: 71b20f97-1af6-435a-bf9e-76a39fd9968b
     ../postman/collections/push-notification-firebase: fb8f97ff-d947-4b4b-b017-65290d8751b2
     ../postman/collections/Project1: 7fcca1de-5248-48a8-8c06-342a3d2df38b

@@ -23,7 +23,7 @@ services:
     image: mysql:8.0
     container_name: ecommerce-mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: E-commerce

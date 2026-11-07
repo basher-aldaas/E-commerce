@@ -1,0 +1,48 @@
+$kind: http-example
+request:
+  url: http://localhost:8000/api/v1/orders
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: items[0][product_id]
+        value: "1"
+      - type: text
+        key: items[0][quantity]
+        value: "2"
+      - type: text
+        key: items[1][product_id]
+        value: "2"
+      - type: text
+        key: items[1][quantity]
+        value: "800"
+response:
+  statusCode: 409
+  statusText: Conflict
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Mon, 02 Nov 2026 21:52:12 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 0,
+          "data": {
+              "product_id": 2,
+              "available": 8,
+              "requested": 800
+          },
+          "message": "Insufficient stock for product: bob",
+          "status_code": 409,
+          "timestamp": "2026-11-02T21:52:12+00:00"
+      }
+order: 2000

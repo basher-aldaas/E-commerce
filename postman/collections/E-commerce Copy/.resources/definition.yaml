@@ -1,0 +1,18 @@
+$kind: collection
+description: ""
+variables:
+  - key: admin
+    secret: true
+    disabled: false
+  - key: user
+    secret: true
+    disabled: false
+  - key: bashir
+    secret: true
+    disabled: false
+  - key: json_web_token_0hgk
+    secret: true
+    disabled: false
+  - key: json_web_token_06r5
+    secret: true
+    disabled: false

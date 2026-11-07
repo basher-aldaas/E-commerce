@@ -1,0 +1,56 @@
+$kind: http-example
+request:
+  url: http://localhost:8000/api/v2/products?category_id=3&min_price=10&in_stock=1
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  queryParams:
+    category_id: "3"
+    min_price: "10"
+    in_stock: "1"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.11
+    Cache-Control: no-cache, private
+    Date: Mon, 02 Nov 2026 22:31:02 GMT
+    Content-Type: application/json
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+          "status": 1,
+          "data": [
+              {
+                  "id": 3,
+                  "name": "MailProd",
+                  "description": null,
+                  "price": "30.00",
+                  "stock": 3,
+                  "in_stock": true,
+                  "is_active": true,
+                  "image_url": "http://localhost:8000/storage/m.jpg",
+                  "category": {
+                      "id": 3,
+                      "name": "MailCat"
+                  },
+                  "created_at": "2026-11-02T22:23:43.000000Z",
+                  "updated_at": "2026-11-02T22:23:43.000000Z"
+              }
+          ],
+          "message": "Products retrieved successfully",
+          "status_code": 200,
+          "timestamp": "2026-11-02T22:31:02+00:00",
+          "pagination": {
+              "current_page": 1,
+              "per_page": 15,
+              "total": 1,
+              "last_page": 1
+          }
+      }
+order: 1000
