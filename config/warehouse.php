@@ -13,6 +13,9 @@ return [
     |
     */
 
+    // While false, no connection is made: stock is null and orders return 503.
+    'enabled' => (bool) env('WAREHOUSE_GRPC_ENABLED', false),
+
     'target' => env('WAREHOUSE_GRPC_TARGET', '127.0.0.1:50051'),
 
     'read_timeout_ms' => (int) env('WAREHOUSE_GRPC_READ_TIMEOUT_MS', 1000),

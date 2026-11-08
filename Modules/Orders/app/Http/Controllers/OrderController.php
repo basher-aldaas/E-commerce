@@ -110,6 +110,7 @@ class OrderController extends Controller
         path: '/api/v1/orders/{orderId}/status',
         tags: ['Orders'],
         summary: 'Update an order\'s status (admin only)',
+        description: 'Cancelling returns the order\'s stock to the Warehouse service first; if that fails, the order keeps its status and the request can be retried. A cancelled order cannot be reopened.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(name: 'orderId', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer'), example: 9),
@@ -138,7 +139,10 @@ class OrderController extends Controller
             new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
             new OA\Response(response: 403, description: 'You are not allowed to update order status', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
             new OA\Response(response: 404, description: 'Order not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 409, description: 'The order cannot move to this status', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
             new OA\Response(response: 422, description: 'Validation failed', content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorEnvelope')),
+            new OA\Response(response: 503, description: 'Warehouse service unavailable while cancelling', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 504, description: 'Warehouse service timed out while cancelling', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
         ],
     )]
     public function updateStatus(
@@ -161,8 +165,11 @@ class OrderController extends Controller
         path: '/api/v1/orders',
         tags: ['Orders'],
         summary: 'Place a new order',
-        description: 'Creates an order for the authenticated user. Stock is checked and decremented; prices come from the database, not the request.',
+        description: 'Creates an order for the authenticated user. All items are reserved in the Warehouse service in one call, and no order is created if that fails. Prices come from the database, not the request.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'Idempotency-Key', in: 'header', required: false, description: 'A unique value per order attempt. Repeating it returns the original order instead of ordering twice.', schema: new OA\Schema(type: 'string')),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -176,7 +183,7 @@ class OrderController extends Controller
                             required: ['product_id', 'quantity'],
                             properties: [
                                 new OA\Property(property: 'product_id', type: 'integer', example: 1),
-                                new OA\Property(property: 'quantity', type: 'integer', minimum: 1, example: 2),
+                                new OA\Property(property: 'quantity', type: 'integer', minimum: 1, maximum: 2147483647, example: 2),
                             ],
                             type: 'object',
                         ),
@@ -198,13 +205,17 @@ class OrderController extends Controller
             ),
             new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
             new OA\Response(response: 403, description: 'Forbidden (missing create_order)', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
-            new OA\Response(response: 422, description: 'Validation failed or insufficient stock', content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorEnvelope')),
+            new OA\Response(response: 409, description: 'Insufficient stock, or an order with this Idempotency-Key is still in progress', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 422, description: 'Validation failed, or the Idempotency-Key was used with different items', content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorEnvelope')),
+            new OA\Response(response: 503, description: 'Warehouse service unavailable. No order was created.', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 504, description: 'Warehouse service timed out. No order was created.', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
         ],
     )]
     public function store(CreateOrderRequest $request): JsonResponse
     {
         $order = $this->orderService->createOrder(
-            $request->validated()
+            $request->validated(),
+            $request->header('Idempotency-Key')
         );
 
         return Response::Success(

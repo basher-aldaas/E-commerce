@@ -252,7 +252,7 @@ class GrpcWarehouseGatewayTest extends TestCase
 
     public function test_the_gateway_is_bound_from_config_without_connecting(): void
     {
-        config(['warehouse.target' => '127.0.0.1:1']);
+        config(['warehouse.enabled' => true, 'warehouse.target' => '127.0.0.1:1']);
 
         $this->assertInstanceOf(GrpcWarehouseGateway::class, $this->app->make(WarehouseGateway::class));
     }

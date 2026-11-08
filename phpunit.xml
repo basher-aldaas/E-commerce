@@ -35,5 +35,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="WAREHOUSE_GRPC_ENABLED" value="false" force="true"/>
+        <env name="WAREHOUSE_GRPC_TARGET" value="127.0.0.1:1" force="true"/>
     </php>
 </phpunit>

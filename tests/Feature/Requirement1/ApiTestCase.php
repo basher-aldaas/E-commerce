@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Requirement1;
 
+use App\Services\Warehouse\WarehouseGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
@@ -11,11 +12,14 @@ use Modules\Products\Models\Product;
 use Modules\Users\Database\Seeders\RolesAndPermissionsSeeder;
 use Modules\Users\Models\User;
 use RuntimeException;
+use Tests\Support\FakeWarehouseGateway;
 use Tests\TestCase;
 
 abstract class ApiTestCase extends TestCase
 {
     use RefreshDatabase;
+
+    protected FakeWarehouseGateway $warehouse;
 
     protected function setUp(): void
     {
@@ -23,6 +27,9 @@ abstract class ApiTestCase extends TestCase
 
         Mail::fake();
         $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->warehouse = new FakeWarehouseGateway();
+        $this->app->instance(WarehouseGateway::class, $this->warehouse);
     }
 
     /**
@@ -84,19 +91,26 @@ abstract class ApiTestCase extends TestCase
         $this->app['tymon.jwt']->unsetToken();
     }
 
+    /** The `stock` attribute goes to the fake Warehouse, not to Laravel. */
     protected function makeProduct(array $attributes = []): Product
     {
         static $sequence = 0;
         $sequence++;
 
-        return Product::create($attributes + [
+        $stock = $attributes['stock'] ?? 10;
+        unset($attributes['stock']);
+
+        $product = Product::create($attributes + [
             'category_id' => $attributes['category_id'] ?? $this->makeCategory()->id,
             'name' => "Product {$sequence}",
             'description' => 'Test product',
             'price' => 10.00,
-            'stock' => 10,
             'is_active' => true,
         ]);
+
+        $this->warehouse->stock[$product->id] = $stock;
+
+        return $product;
     }
 
     protected function makeCategory(?string $name = null): Category

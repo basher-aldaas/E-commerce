@@ -33,7 +33,7 @@ class ProductController extends Controller
             new OA\Parameter(name: 'category_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'min_price', in: 'query', required: false, schema: new OA\Schema(type: 'number', format: 'float', minimum: 0)),
             new OA\Parameter(name: 'max_price', in: 'query', required: false, schema: new OA\Schema(type: 'number', format: 'float', minimum: 0)),
-            new OA\Parameter(name: 'in_stock', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'in_stock', in: 'query', required: false, description: 'Needs the Warehouse service: returns 503 or 504 if it cannot answer.', schema: new OA\Schema(type: 'boolean')),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100)),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1)),
         ],
@@ -52,6 +52,8 @@ class ProductController extends Controller
             ),
             new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
             new OA\Response(response: 422, description: 'Validation failed', content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorEnvelope')),
+            new OA\Response(response: 503, description: 'Warehouse service unavailable (only when using in_stock)', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 504, description: 'Warehouse service timed out (only when using in_stock)', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
         ],
     )]
     public function index(Request $request): JsonResponse

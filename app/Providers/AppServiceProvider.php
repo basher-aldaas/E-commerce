@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Warehouse\DisabledWarehouseGateway;
 use App\Services\Warehouse\GrpcWarehouseGateway;
 use App\Services\Warehouse\WarehouseGateway;
 use App\Services\Warehouse\WarehouseStub;
@@ -19,14 +20,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(WarehouseGateway::class, fn () => new GrpcWarehouseGateway(
-            new WarehouseStub(config('warehouse.target'), [
-                'credentials' => ChannelCredentials::createInsecure(),
-            ]),
-            config('warehouse.read_timeout_ms'),
-            config('warehouse.write_timeout_ms'),
-            config('warehouse.write_retries'),
-        ));
+        $this->app->singleton(WarehouseGateway::class, function () {
+            if (! config('warehouse.enabled')) {
+                return new DisabledWarehouseGateway();
+            }
+
+            return new GrpcWarehouseGateway(
+                new WarehouseStub(config('warehouse.target'), [
+                    'credentials' => ChannelCredentials::createInsecure(),
+                ]),
+                config('warehouse.read_timeout_ms'),
+                config('warehouse.write_timeout_ms'),
+                config('warehouse.write_retries'),
+            );
+        });
     }
 
     /**

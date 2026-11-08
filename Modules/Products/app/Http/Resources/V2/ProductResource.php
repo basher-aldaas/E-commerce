@@ -23,7 +23,7 @@ class ProductResource extends JsonResource
             'description' => $this->description,
             'price' => (string) $this->price,
             'stock' => $this->stock,
-            'in_stock' => $this->stock > 0,
+            'in_stock' => $this->stock === null ? null : $this->stock > 0,
             'is_active' => (bool) $this->is_active,
             'image_url' => $this->publicImageUrl(),
             'category' => $this->whenLoaded('category', fn () => [

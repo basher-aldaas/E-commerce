@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\Users\Models\User;
 
 // use Modules\Orders\Database\Factories\OrderFactory;
@@ -35,6 +36,12 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /** Orders placed before the Warehouse integration have none. */
+    public function reservation(): HasOne
+    {
+        return $this->hasOne(OrderReservation::class);
     }
 
     // protected static function newFactory(): OrderFactory

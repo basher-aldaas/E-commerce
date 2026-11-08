@@ -17,6 +17,9 @@ use App\Services\Warehouse\Data\WarehouseResult;
  */
 interface WarehouseGateway
 {
+    /** Quantities travel as int32 over gRPC, so requests must not exceed this. */
+    public const MAX_QUANTITY = 2147483647;
+
     /**
      * @param  list<int>  $productIds
      * @return array<int, StockLevel> Keyed by product ID.
