@@ -10,6 +10,12 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# The gRPC extension the Warehouse client needs (grpc/grpc requires ext-grpc).
+# It is compiled from source, so the first build takes several minutes;
+# later builds reuse the cached layer.
+COPY --from=mlocati/php-extension-installer:2.7 /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions grpc
+
 # Composer from the official image.
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

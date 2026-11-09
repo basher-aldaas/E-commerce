@@ -32,5 +32,9 @@ php artisan migrate --force
 #    findOrCreate), so it is safe on every boot.
 php artisan db:seed --force
 
-# 6. Start the dev server.
-php artisan serve --host=0.0.0.0 --port=8000
+# 6. Start the dev server. --no-reload makes it pass the container's environment
+#    (docker-compose.yml) to the PHP server process. Without it, artisan serve
+#    drops variables such as WAREHOUSE_GRPC_TARGET and the server falls back to
+#    .env, where the Warehouse is 127.0.0.1:50051 (nothing listens there inside
+#    the container). Side effect: after editing .env, restart the container.
+php artisan serve --host=0.0.0.0 --port=8000 --no-reload
