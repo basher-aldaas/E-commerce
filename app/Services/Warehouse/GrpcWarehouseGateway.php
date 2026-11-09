@@ -26,10 +26,10 @@ class GrpcWarehouseGateway implements WarehouseGateway
     private const RETRY_DELAY_MICROSECONDS = 100_000;
 
     public function __construct(
-        private readonly WarehouseStub $stub,
-        private readonly int $readTimeoutMs,
-        private readonly int $writeTimeoutMs,
-        private readonly int $writeRetries,
+        private readonly WarehouseStub $stub,//المسؤل عن ارسال طلبات ال grpc
+        private readonly int $readTimeoutMs,//اقصى مدة لانتظار عملية القراءة
+        private readonly int $writeTimeoutMs,//اقصى مدة لانتظار عملية الكتابة
+        private readonly int $writeRetries,//عدد مرات اعادة محاولة عملية الكتابة
     ) {}
 
     public function getStock(array $productIds): array
