@@ -13,6 +13,6 @@ body:
 auth:
   type: bearer
   credentials:
-    token: "{{admin}}"
+    token: "{{user}}"
 examples: ./.resources/update status.resources/examples
 order: 3000

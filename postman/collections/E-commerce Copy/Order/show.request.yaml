@@ -7,6 +7,6 @@ headers:
 auth:
   type: bearer
   credentials:
-    token: "{{user}}"
+    token: "{{bashir}}"
 examples: ./.resources/show.resources/examples
 order: 1000
