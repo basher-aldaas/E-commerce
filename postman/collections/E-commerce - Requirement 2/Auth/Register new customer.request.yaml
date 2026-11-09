@@ -1,0 +1,36 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/auth/register"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+        "name": "Postman Customer",
+        "email": "{{customer_email}}",
+        "password": "{{password}}",
+        "password_confirmation": "{{password}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: beforeRequest
+    code: |-
+      const n = Date.now();
+      pm.collectionVariables.set("run_id", n);
+      pm.collectionVariables.set("customer_email", "customer" + n + "@test.com");
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 201", () => pm.response.to.have.status(201));
+
+      const d = pm.response.json().data;
+      pm.test("Returns a token and the user", () => {
+          pm.expect(d.access_token).to.be.a("string");
+          pm.expect(d.user.email).to.eql(pm.collectionVariables.get("customer_email"));
+      });
+      pm.collectionVariables.set("customer_token", d.access_token);
+    language: text/javascript
+order: 3000

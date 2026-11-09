@@ -1,0 +1,57 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/v1/orders/{{order2_id}}/status"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+          "status": "cancelled"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.36
+    Cache-Control: no-cache, private
+    Date: Mon, 09 Nov 2026 14:10:00 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "58"
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+    Referrer-Policy: strict-origin-when-cross-origin
+    Permissions-Policy: camera=(), microphone=(), geolocation=()
+    Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+        "status": 1,
+        "data": {
+          "id": 46,
+          "user_id": 120,
+          "status": "cancelled",
+          "total_amount": "59.98",
+          "created_at": "2026-11-09T13:52:51.000000Z",
+          "updated_at": "2026-11-09T14:09:37.000000Z",
+          "user": {
+            "id": 120,
+            "name": "Postman Customer",
+            "email": "customer1794231305557@test.com",
+            "email_verified_at": null,
+            "created_at": "2026-11-09T13:35:08.000000Z",
+            "updated_at": "2026-11-09T13:35:08.000000Z"
+          }
+        },
+        "message": "Order status updated successfully",
+        "status_code": 200,
+        "timestamp": "2026-11-09T14:10:00+00:00"
+      }
+order: 1000

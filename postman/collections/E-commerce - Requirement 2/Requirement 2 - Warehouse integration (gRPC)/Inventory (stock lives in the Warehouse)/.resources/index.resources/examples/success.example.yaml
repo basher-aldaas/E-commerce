@@ -1,0 +1,55 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/v1/products/85"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.36
+    Cache-Control: no-cache, private
+    Date: Mon, 09 Nov 2026 13:44:13 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "57"
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+    Referrer-Policy: strict-origin-when-cross-origin
+    Permissions-Policy: camera=(), microphone=(), geolocation=()
+    Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+        "status": 1,
+        "data": {
+          "id": 85,
+          "category_id": 81,
+          "name": "Electric Kettle",
+          "description": "1.7 L fast-boil kettle with automatic shut-off.",
+          "price": "29.99",
+          "stock": 8,
+          "is_active": true,
+          "image": "products/electric-kettle.png",
+          "image_url": "http://localhost:8000/storage/products/electric-kettle.png",
+          "category": {
+            "id": 81,
+            "name": "Home & Kitchen",
+            "description": "Furniture, appliances, and kitchenware.",
+            "created_at": "2026-11-09T11:41:08.000000Z",
+            "updated_at": "2026-11-09T11:41:08.000000Z"
+          },
+          "created_at": "2026-11-09T11:41:09.000000Z",
+          "updated_at": "2026-11-09T11:41:09.000000Z"
+        },
+        "message": "Product retrieved successfully",
+        "status_code": 200,
+        "timestamp": "2026-11-09T13:44:12+00:00"
+      }
+order: 1000

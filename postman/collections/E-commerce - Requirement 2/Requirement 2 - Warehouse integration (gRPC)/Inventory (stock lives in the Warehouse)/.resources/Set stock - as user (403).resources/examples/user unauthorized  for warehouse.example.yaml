@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/v1/inventory/85"
+  method: PATCH
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+          "stock": 1000
+      }
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.36
+    Cache-Control: no-cache, private
+    Date: Mon, 09 Nov 2026 13:49:59 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "59"
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+    Referrer-Policy: strict-origin-when-cross-origin
+    Permissions-Policy: camera=(), microphone=(), geolocation=()
+    Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+        "status": 0,
+        "data": [],
+        "message": "This action is unauthorized.",
+        "status_code": 403,
+        "timestamp": "2026-11-09T13:49:59+00:00"
+      }
+order: 1000
