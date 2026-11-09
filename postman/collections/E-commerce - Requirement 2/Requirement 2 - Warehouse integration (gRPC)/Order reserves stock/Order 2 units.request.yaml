@@ -1,0 +1,28 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/orders"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+        "items": [
+            { "product_id": 85, "quantity": 2 }
+        ]
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{customer_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 201", () => pm.response.to.have.status(201));
+
+      pm.collectionVariables.set("order2_id", pm.response.json().data.id);
+      pm.collectionVariables.set("expected_stock", Number(pm.collectionVariables.get("expected_stock")) - 2);
+    language: text/javascript
+examples: .resources/Order 2 units.resources/examples
+order: 1000

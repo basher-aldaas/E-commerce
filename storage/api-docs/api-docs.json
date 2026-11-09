@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "E-commerce API",
-        "description": "REST API for the modular E-commerce application (auth, products, categories,\ninventory, orders, notifications).\n\n**Authentication** — obtain a JWT from `POST /api/v1/auth/login` (or `register`)\nand send it as `Authorization: Bearer <token>` on every protected endpoint.\nClick **Authorize** and paste just the token.\n\nAll responses use a common envelope: `status` (1 = success, 0 = error),\n`data`, `message`, `status_code`, `timestamp`. List endpoints add a\n`pagination` object.",
+        "description": "REST API for the modular E-commerce application (auth, products, categories,\ninventory, orders, notifications).\n\n**Authentication** — obtain a JWT from `POST /api/v1/auth/login` (or `register`)\nand send it as `Authorization: Bearer <token>` on every protected endpoint.\nClick **Authorize** and paste just the token.\n\nAll responses use a common envelope: `status` (1 = success, 0 = error),\n`data`, `message`, `status_code`, `timestamp`. List endpoints add a\n`pagination` object.\n\n**Rate limiting** — API routes allow 60 requests per minute by default, per user\nor per guest IP address. Over the limit they return `429` with a `Retry-After`\nheader. Login has its own stricter limit.",
         "version": "1.0.0"
     },
     "servers": [
@@ -240,8 +240,19 @@
                     "Orders"
                 ],
                 "summary": "Place a new order",
-                "description": "Creates an order for the authenticated user. Stock is checked and decremented; prices come from the database, not the request.",
+                "description": "Creates an order for the authenticated user. All items are reserved in the Warehouse service in one call, and no order is created if that fails. Prices come from the database, not the request.",
                 "operationId": "c32561a3f0cbb6c04a3e9ef0a34d1d81",
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "description": "A unique value per order attempt. Repeating it returns the original order instead of ordering twice.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -266,6 +277,7 @@
                                                 "quantity": {
                                                     "type": "integer",
                                                     "example": 2,
+                                                    "maximum": 2147483647,
                                                     "minimum": 1
                                                 }
                                             },
@@ -331,12 +343,42 @@
                             }
                         }
                     },
+                    "409": {
+                        "description": "Insufficient stock, or an order with this Idempotency-Key is still in progress",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
                     "422": {
-                        "description": "Validation failed or insufficient stock",
+                        "description": "Validation failed, or the Idempotency-Key was used with different items",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Warehouse service unavailable. No order was created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "Warehouse service timed out. No order was created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
                                 }
                             }
                         }
@@ -355,6 +397,7 @@
                     "Orders"
                 ],
                 "summary": "Update an order's status (admin only)",
+                "description": "Cancelling returns the order's stock to the Warehouse service first; if that fails, the order keeps its status and the request can be retried. A cancelled order cannot be reopened.",
                 "operationId": "0fad504f97e177ab73df22bb32ce8861",
                 "parameters": [
                     {
@@ -456,12 +499,42 @@
                             }
                         }
                     },
+                    "409": {
+                        "description": "The order cannot move to this status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "Validation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Warehouse service unavailable while cancelling",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "Warehouse service timed out while cancelling",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
                                 }
                             }
                         }
@@ -750,6 +823,7 @@
                     "Inventory"
                 ],
                 "summary": "Update a product's stock level",
+                "description": "Sets the available quantity in the Warehouse service, which owns all stock.",
                 "operationId": "ac28a4956b7e0381d16e43b055581811",
                 "parameters": [
                     {
@@ -775,6 +849,7 @@
                                     "stock": {
                                         "type": "integer",
                                         "example": 50,
+                                        "maximum": 2147483647,
                                         "minimum": 0
                                     }
                                 },
@@ -851,6 +926,26 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Warehouse service unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "Warehouse service timed out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
                                 }
                             }
                         }
@@ -940,6 +1035,7 @@
                     "Products"
                 ],
                 "summary": "Create a product",
+                "description": "Creates the product and initializes its stock in the Warehouse service. If the Warehouse cannot do that, the product is not created.",
                 "operationId": "a71d33ee4d7378dbc3a485d660f08f4a",
                 "requestBody": {
                     "required": true,
@@ -975,6 +1071,7 @@
                                     "stock": {
                                         "type": "integer",
                                         "example": 20,
+                                        "maximum": 2147483647,
                                         "minimum": 0
                                     },
                                     "image": {
@@ -1041,12 +1138,42 @@
                             }
                         }
                     },
+                    "409": {
+                        "description": "The Warehouse already has different stock for this product ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "Validation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Warehouse service unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "Warehouse service timed out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
                                 }
                             }
                         }
@@ -1187,6 +1314,7 @@
                     {
                         "name": "in_stock",
                         "in": "query",
+                        "description": "Needs the Warehouse service: returns 503 or 504 if it cannot answer.",
                         "required": false,
                         "schema": {
                             "type": "boolean"
@@ -1266,6 +1394,26 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Warehouse service unavailable (only when using in_stock)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "Warehouse service timed out (only when using in_stock)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorEnvelope"
                                 }
                             }
                         }
@@ -1789,8 +1937,10 @@
                         "example": "50.00"
                     },
                     "stock": {
+                        "description": "Quantity from the Warehouse service. Null when it is unavailable.",
                         "type": "integer",
-                        "example": 18
+                        "example": 18,
+                        "nullable": true
                     },
                     "is_active": {
                         "type": "boolean",
@@ -1849,12 +1999,16 @@
                         "example": "50.00"
                     },
                     "stock": {
+                        "description": "Quantity from the Warehouse service. Null when it is unavailable.",
                         "type": "integer",
-                        "example": 18
+                        "example": 18,
+                        "nullable": true
                     },
                     "in_stock": {
+                        "description": "Null when the Warehouse service is unavailable.",
                         "type": "boolean",
-                        "example": true
+                        "example": true,
+                        "nullable": true
                     },
                     "is_active": {
                         "type": "boolean",

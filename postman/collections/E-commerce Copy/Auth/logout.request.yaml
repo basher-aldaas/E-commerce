@@ -1,0 +1,15 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/auth/logout
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: formdata
+  content: []
+auth:
+  type: bearer
+  credentials:
+    token: "{{user}}"
+examples: ./.resources/logout.resources/examples
+order: 2000

@@ -11,6 +11,9 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -23,14 +26,35 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
-        <env name="DB_URL" value=""/>
+        <!-- WARNING: tests run on the app's real MySQL database, E-commerce.
+             RefreshDatabase drops and recreates every table in it, so all its
+             data is lost on each run. Host, port and credentials (DB_HOST,
+             DB_PORT, DB_USERNAME, DB_PASSWORD) come from the environment or .env.
+
+             In Docker these variables are already set by docker-compose.yml,
+             so each one is set twice:
+             - <env force="true"> replaces getenv() and $_ENV (without force,
+               PHPUnit keeps an existing value);
+             - <server> replaces $_SERVER, which Laravel reads first.
+             With <env> alone, the container's own values win. -->
+        <env name="DB_CONNECTION" value="mysql" force="true"/>
+        <env name="DB_DATABASE" value="E-commerce" force="true"/>
+        <env name="DB_URL" value="" force="true"/>
+        <server name="DB_CONNECTION" value="mysql"/>
+        <server name="DB_DATABASE" value="E-commerce"/>
+        <server name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Tests never reach a real Warehouse: they bind a fake gateway, and the
+             integration tests start their own server. docker-compose.yml sets
+             WAREHOUSE_GRPC_ENABLED=true in $_SERVER, hence <server> as well. -->
+        <env name="WAREHOUSE_GRPC_ENABLED" value="false" force="true"/>
+        <env name="WAREHOUSE_GRPC_TARGET" value="127.0.0.1:1" force="true"/>
+        <server name="WAREHOUSE_GRPC_ENABLED" value="false"/>
+        <server name="WAREHOUSE_GRPC_TARGET" value="127.0.0.1:1"/>
     </php>
 </phpunit>

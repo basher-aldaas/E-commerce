@@ -87,6 +87,7 @@ class ProductController extends Controller
         path: '/api/v1/products',
         tags: ['Products'],
         summary: 'Create a product',
+        description: 'Creates the product and initializes its stock in the Warehouse service. If the Warehouse cannot do that, the product is not created.',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -99,7 +100,7 @@ class ProductController extends Controller
                         new OA\Property(property: 'description', type: 'string', nullable: true),
                         new OA\Property(property: 'price', type: 'number', format: 'float', minimum: 0, example: 50.00),
                         new OA\Property(property: 'category_id', type: 'integer', example: 1),
-                        new OA\Property(property: 'stock', type: 'integer', minimum: 0, example: 20),
+                        new OA\Property(property: 'stock', type: 'integer', minimum: 0, maximum: 2147483647, example: 20),
                         new OA\Property(property: 'image', type: 'string', format: 'binary', nullable: true, description: 'JPG/PNG/WebP, max 2 MB'),
                     ],
                 ),
@@ -119,7 +120,10 @@ class ProductController extends Controller
             ),
             new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
             new OA\Response(response: 403, description: 'Forbidden (missing create_product)', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 409, description: 'The Warehouse already has different stock for this product ID', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
             new OA\Response(response: 422, description: 'Validation failed', content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorEnvelope')),
+            new OA\Response(response: 503, description: 'Warehouse service unavailable', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 504, description: 'Warehouse service timed out', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
         ],
     )]
     public function store(StoreProductRequest $request): JsonResponse

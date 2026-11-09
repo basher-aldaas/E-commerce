@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{base_url}}/api/v2/products?category_id={{category_id}}&in_stock=1"
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+queryParams:
+  category_id: "{{category_id}}"
+  in_stock: "1"
+auth:
+  type: bearer
+  credentials:
+    token: "{{user_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 200", () => pm.response.to.have.status(200));
+
+      pm.test("Every product returned is in stock", () => pm.response.json().data.forEach(p => pm.expect(p.in_stock).to.eql(true)));
+    language: text/javascript
+order: 8000

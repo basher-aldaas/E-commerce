@@ -1,0 +1,344 @@
+$kind: http-example
+name: success
+request:
+  url: "{{base_url}}/api/v1/products"
+  method: GET
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.36
+    Cache-Control: no-cache, private
+    Date: Mon, 09 Nov 2026 13:44:35 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "59"
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+    Referrer-Policy: strict-origin-when-cross-origin
+    Permissions-Policy: camera=(), microphone=(), geolocation=()
+    Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+        "status": 1,
+        "data": [
+          {
+            "id": 97,
+            "category_id": 88,
+            "name": "Postman Product 1794229133431",
+            "description": "Created by the Postman collection",
+            "price": "25.50",
+            "stock": 4,
+            "is_active": true,
+            "image": null,
+            "image_url": null,
+            "category": {
+              "id": 88,
+              "name": "Postman Category 1794229133431",
+              "description": "Created by the Postman collection",
+              "created_at": "2026-11-09T12:59:05.000000Z",
+              "updated_at": "2026-11-09T12:59:05.000000Z"
+            },
+            "created_at": "2026-11-09T12:59:11.000000Z",
+            "updated_at": "2026-11-09T12:59:11.000000Z"
+          },
+          {
+            "id": 96,
+            "category_id": 87,
+            "name": "Postman Product 1794228968168",
+            "description": "Created by the Postman collection",
+            "price": "25.50",
+            "stock": 4,
+            "is_active": true,
+            "image": null,
+            "image_url": null,
+            "category": {
+              "id": 87,
+              "name": "Postman Category 1794228968168",
+              "description": "Created by the Postman collection",
+              "created_at": "2026-11-09T12:56:20.000000Z",
+              "updated_at": "2026-11-09T12:56:20.000000Z"
+            },
+            "created_at": "2026-11-09T12:56:29.000000Z",
+            "updated_at": "2026-11-09T12:56:29.000000Z"
+          },
+          {
+            "id": 89,
+            "category_id": 83,
+            "name": "Camping Tent",
+            "description": "Waterproof four-person tent with quick setup.",
+            "price": "129.00",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/camping-tent.png",
+            "image_url": "http://localhost:8000/storage/products/camping-tent.png",
+            "category": {
+              "id": 83,
+              "name": "Sports & Outdoors",
+              "description": "Fitness equipment and outdoor gear.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 95,
+            "category_id": 86,
+            "name": "Arabica Coffee Beans",
+            "description": "1 kg bag of medium-roast whole beans.",
+            "price": "19.50",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/arabica-coffee-beans.png",
+            "image_url": "http://localhost:8000/storage/products/arabica-coffee-beans.png",
+            "category": {
+              "id": 86,
+              "name": "Groceries",
+              "description": "Food, beverages, and household essentials.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 94,
+            "category_id": 86,
+            "name": "Organic Olive Oil",
+            "description": "750 ml bottle of cold-pressed extra virgin olive oil.",
+            "price": "12.99",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/organic-olive-oil.png",
+            "image_url": "http://localhost:8000/storage/products/organic-olive-oil.png",
+            "category": {
+              "id": 86,
+              "name": "Groceries",
+              "description": "Food, beverages, and household essentials.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 93,
+            "category_id": 85,
+            "name": "Family Board Game",
+            "description": "A strategy game for two to six players.",
+            "price": "31.00",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/family-board-game.png",
+            "image_url": "http://localhost:8000/storage/products/family-board-game.png",
+            "category": {
+              "id": 85,
+              "name": "Toys & Games",
+              "description": "Toys, board games, and puzzles.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 92,
+            "category_id": 85,
+            "name": "Wooden Building Blocks",
+            "description": "100-piece set of colorful wooden blocks.",
+            "price": "22.99",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/wooden-building-blocks.png",
+            "image_url": "http://localhost:8000/storage/products/wooden-building-blocks.png",
+            "category": {
+              "id": 85,
+              "name": "Toys & Games",
+              "description": "Toys, board games, and puzzles.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 91,
+            "category_id": 84,
+            "name": "World History Atlas",
+            "description": "Illustrated maps tracing major world events.",
+            "price": "35.50",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/world-history-atlas.png",
+            "image_url": "http://localhost:8000/storage/products/world-history-atlas.png",
+            "category": {
+              "id": 84,
+              "name": "Books",
+              "description": "Printed books across all genres.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 90,
+            "category_id": 84,
+            "name": "Learn PHP in 30 Days",
+            "description": "A hands-on guide for beginner programmers.",
+            "price": "27.00",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/learn-php-in-30-days.png",
+            "image_url": "http://localhost:8000/storage/products/learn-php-in-30-days.png",
+            "category": {
+              "id": 84,
+              "name": "Books",
+              "description": "Printed books across all genres.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 88,
+            "category_id": 83,
+            "name": "Yoga Mat",
+            "description": "Non-slip 6 mm mat with a carrying strap.",
+            "price": "24.99",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/yoga-mat.png",
+            "image_url": "http://localhost:8000/storage/products/yoga-mat.png",
+            "category": {
+              "id": 83,
+              "name": "Sports & Outdoors",
+              "description": "Fitness equipment and outdoor gear.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 87,
+            "category_id": 82,
+            "name": "Electric Beard Trimmer",
+            "description": "Rechargeable trimmer with adjustable length settings.",
+            "price": "39.50",
+            "stock": 9,
+            "is_active": true,
+            "image": "products/electric-beard-trimmer.png",
+            "image_url": "http://localhost:8000/storage/products/electric-beard-trimmer.png",
+            "category": {
+              "id": 82,
+              "name": "Beauty & Personal Care",
+              "description": "Skincare, makeup, and grooming products.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 86,
+            "category_id": 82,
+            "name": "Hydrating Face Cream",
+            "description": "Daily moisturizer for all skin types.",
+            "price": "18.75",
+            "stock": 9,
+            "is_active": true,
+            "image": "products/hydrating-face-cream.png",
+            "image_url": "http://localhost:8000/storage/products/hydrating-face-cream.png",
+            "category": {
+              "id": 82,
+              "name": "Beauty & Personal Care",
+              "description": "Skincare, makeup, and grooming products.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 85,
+            "category_id": 81,
+            "name": "Electric Kettle",
+            "description": "1.7 L fast-boil kettle with automatic shut-off.",
+            "price": "29.99",
+            "stock": 8,
+            "is_active": true,
+            "image": "products/electric-kettle.png",
+            "image_url": "http://localhost:8000/storage/products/electric-kettle.png",
+            "category": {
+              "id": 81,
+              "name": "Home & Kitchen",
+              "description": "Furniture, appliances, and kitchenware.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:09.000000Z",
+            "updated_at": "2026-11-09T11:41:09.000000Z"
+          },
+          {
+            "id": 80,
+            "category_id": 79,
+            "name": "Wireless Headphones",
+            "description": "Over-ear Bluetooth headphones with noise cancellation.",
+            "price": "89.99",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/wireless-headphones.png",
+            "image_url": "http://localhost:8000/storage/products/wireless-headphones.png",
+            "category": {
+              "id": 79,
+              "name": "Electronics",
+              "description": "Phones, computers, and other electronic devices.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:08.000000Z",
+            "updated_at": "2026-11-09T11:41:08.000000Z"
+          },
+          {
+            "id": 84,
+            "category_id": 81,
+            "name": "Stainless Steel Cookware Set",
+            "description": "Five-piece set of pots and pans with lids.",
+            "price": "119.00",
+            "stock": 10,
+            "is_active": true,
+            "image": "products/stainless-steel-cookware-set.png",
+            "image_url": "http://localhost:8000/storage/products/stainless-steel-cookware-set.png",
+            "category": {
+              "id": 81,
+              "name": "Home & Kitchen",
+              "description": "Furniture, appliances, and kitchenware.",
+              "created_at": "2026-11-09T11:41:08.000000Z",
+              "updated_at": "2026-11-09T11:41:08.000000Z"
+            },
+            "created_at": "2026-11-09T11:41:08.000000Z",
+            "updated_at": "2026-11-09T11:41:08.000000Z"
+          }
+        ],
+        "message": "Products retrieved successfully",
+        "status_code": 200,
+        "timestamp": "2026-11-09T13:44:35+00:00",
+        "pagination": {
+          "current_page": 1,
+          "per_page": 15,
+          "total": 18,
+          "last_page": 2
+        }
+      }
+order: 2000

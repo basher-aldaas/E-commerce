@@ -1,0 +1,63 @@
+$kind: http-example
+request:
+  url: "{{base_url}}/api/v1/orders"
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+    Idempotency-Key: "{{idempotency_key}}"
+  body:
+    type: json
+    content: |-
+      {
+          "items": [
+              { "product_id": 86, "quantity": 1 }
+          ]
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Host: localhost:8000
+    Connection: close
+    X-Powered-By: PHP/8.3.36
+    Cache-Control: no-cache, private
+    Date: Mon, 09 Nov 2026 14:03:43 GMT
+    Content-Type: application/json
+    X-RateLimit-Limit: "60"
+    X-RateLimit-Remaining: "59"
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+    Referrer-Policy: strict-origin-when-cross-origin
+    Permissions-Policy: camera=(), microphone=(), geolocation=()
+    Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+    Access-Control-Allow-Origin: "*"
+  body:
+    type: json
+    content: |-
+      {
+        "status": 1,
+        "data": {
+          "id": 48,
+          "user_id": 120,
+          "status": "pending",
+          "total_amount": "18.75",
+          "created_at": "2026-11-09T14:02:41.000000Z",
+          "updated_at": "2026-11-09T14:02:41.000000Z",
+          "items": [
+            {
+              "id": 49,
+              "order_id": 48,
+              "product_id": 86,
+              "quantity": 1,
+              "unit_price": "18.75",
+              "created_at": "2026-11-09T14:02:41.000000Z",
+              "updated_at": "2026-11-09T14:02:41.000000Z"
+            }
+          ]
+        },
+        "message": "Order created successfully",
+        "status_code": 201,
+        "timestamp": "2026-11-09T14:03:43+00:00"
+      }
+order: 1000

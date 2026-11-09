@@ -2,22 +2,33 @@
 
 namespace Modules\Products\Services;
 
-use Illuminate\Support\Facades\DB;
+use App\Exceptions\Warehouse\WarehouseRequestException;
+use App\Services\Warehouse\WarehouseGateway;
+use Illuminate\Support\Facades\Log;
 use Modules\Products\Models\Product;
 
 class InventoryService
 {
+    public function __construct(
+        private readonly WarehouseGateway $warehouse
+    ) {}
+
     public function updateStock(int $productId, int $quantity): Product
     {
-        return DB::transaction(function () use ($productId, $quantity) {
-            $product = Product::query()
-                ->lockForUpdate()
-                ->findOrFail($productId);
+        $product = Product::query()->findOrFail($productId);
 
-            $product->stock = $quantity;
-            $product->save();
+        $result = $this->warehouse->setStock($productId, $quantity);
 
-            return $product->refresh();
-        });
+        if (! $result->success) {
+            Log::error('Warehouse refused a stock update', [
+                'product_id' => $productId,
+                'code' => $result->code->name,
+                'reason' => $result->reason,
+            ]);
+
+            throw new WarehouseRequestException();
+        }
+
+        return $product->withStockLevel($result->quantity);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Modules\Orders\Providers;
 
+use Modules\Orders\Console\ReconcileOrderReservations;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 
@@ -22,7 +23,9 @@ class OrdersServiceProvider extends ModuleServiceProvider
      *
      * @var string[]
      */
-    // protected array $commands = [];
+    protected array $commands = [
+        ReconcileOrderReservations::class,
+    ];
 
     /**
      * Provider classes to register.
@@ -39,8 +42,8 @@ class OrdersServiceProvider extends ModuleServiceProvider
      * 
      * @param $schedule
      */
-    // protected function configureSchedules(Schedule $schedule): void
-    // {
-    //     $schedule->command('inspire')->hourly();
-    // }
+    protected function configureSchedules(Schedule $schedule): void
+    {
+        $schedule->command('warehouse:reconcile')->everyMinute()->withoutOverlapping();
+    }
 }

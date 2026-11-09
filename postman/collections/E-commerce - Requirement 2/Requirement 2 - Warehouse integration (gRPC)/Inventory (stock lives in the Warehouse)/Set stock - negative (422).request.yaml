@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/inventory/85"
+method: PATCH
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+        "stock": -1
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: pm.test("Status is 422", () => pm.response.to.have.status(422));
+    language: text/javascript
+examples: .resources/Set stock - negative (422).resources/examples
+order: 6000

@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\Handler;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // lets unauthenticated requests surface as a clean 401 JSON response via
         // App\Exceptions\Handler instead.
         $middleware->redirectGuestsTo(fn () => null);
+
+        $middleware->append(SecurityHeaders::class);
+        $middleware->throttleApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         Handler::register($exceptions);

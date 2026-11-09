@@ -1,0 +1,3 @@
+$kind: collection
+description: "Laravel reads and writes all stock through the Python Warehouse service over gRPC. Run after Requirement 1: these requests reuse its product and check the stock at each step. If the Warehouse container is down, stock requests return 503 (unavailable) or 504 (timeout)."
+order: 2000

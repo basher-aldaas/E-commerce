@@ -2,6 +2,7 @@
 
 namespace Modules\Products\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,8 +17,26 @@ class Product extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['category_id', 'name', 'description', 'price', 'image', 'stock', 'is_active'];
+    protected $fillable = ['category_id', 'name', 'description', 'price', 'image', 'is_active'];
 
+    /** Quantity read from the Warehouse. Null means not loaded or unavailable. */
+    private ?int $warehouseStock = null;
+
+    public function withStockLevel(?int $quantity): static
+    {
+        $this->warehouseStock = $quantity;
+
+        return $this;
+    }
+
+    /**
+     * The Warehouse owns stock. This hides the old `stock` column everywhere,
+     * including JSON, so its stale value can't be read by accident.
+     */
+    protected function stock(): Attribute
+    {
+        return Attribute::get(fn () => $this->warehouseStock);
+    }
 
     public function category(): BelongsTo
     {

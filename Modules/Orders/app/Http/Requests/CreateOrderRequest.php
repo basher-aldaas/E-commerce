@@ -3,6 +3,7 @@
 namespace Modules\Orders\Http\Requests;
 
 use App\Http\Requests\ApiFormRequest;
+use App\Services\Warehouse\WarehouseGateway;
 use Illuminate\Validation\Rule;
 
 class CreateOrderRequest extends ApiFormRequest
@@ -23,6 +24,7 @@ class CreateOrderRequest extends ApiFormRequest
                 'required',
                 'integer',
                 'min:1',
+                'max:'.WarehouseGateway::MAX_QUANTITY,
             ],
         ];
     }

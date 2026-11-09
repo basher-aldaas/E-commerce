@@ -1,0 +1,12 @@
+$kind: http-request
+url: http://localhost:8000/api/v1/orders/2
+method: GET
+headers:
+  Accept: application/json
+  Content-Type: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{bashir}}"
+examples: ./.resources/show.resources/examples
+order: 1000

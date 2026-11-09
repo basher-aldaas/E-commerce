@@ -3,18 +3,23 @@
 namespace Modules\Orders\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Modules\Orders\Exceptions\InsufficientStockException;
 use Modules\Orders\Exceptions\OrderNotFoundException;
+use Modules\Orders\Exceptions\OrderStatusConflictException;
 use Modules\Orders\Exceptions\UnauthorizedOrderAccessException;
-use Modules\Orders\Mail\OrderConfirmationMail;
-use Modules\Orders\Mail\OrderStatusUpdatedMail;
 use Modules\Orders\Models\Order;
-use Modules\Products\Models\Product;
+use Modules\Orders\Models\OrderReservation;
+use Modules\Products\Services\ProductStockReader;
 use Modules\Users\Models\User;
 
 class OrderService
 {
+    public function __construct(
+        private readonly OrderPlacementService $placement,
+        private readonly OrderStockService $stock,
+        private readonly OrderNotifier $notifier,
+        private readonly ProductStockReader $stockReader,
+    ) {}
+
     public function viewOrder(int $orderId, User $user): Order
     {
         $order = Order::query()->find($orderId);
@@ -33,7 +38,11 @@ class OrderService
             );
         }
 
-        return $order->load('items.product');
+        $order->load('items.product');
+
+        $this->stockReader->attach($order->items->pluck('product')->filter());
+
+        return $order;
     }
 
     public function getOrders(): mixed
@@ -61,7 +70,7 @@ class OrderService
             );
         }
 
-        $order = DB::transaction(function () use ($orderId, $status) {
+        [$order, $reservationToReturn] = DB::transaction(function () use ($orderId, $status) {
             // Lock the order row so two concurrent status updates can't race.
             $order = Order::query()
                 ->lockForUpdate()
@@ -71,90 +80,39 @@ class OrderService
                 throw new OrderNotFoundException();
             }
 
+            $reservation = $order->reservation()->first();
+
+            $this->guardStatusChange($order, $reservation, $status);
+
+            // The stock must be back before the order counts as cancelled, so record
+            // the intent here and call the Warehouse after this transaction.
+            if ($status === 'cancelled' && $this->holdsStock($reservation)) {
+                $reservation->update(['status' => OrderReservation::RETURN_PENDING]);
+
+                return [$order, $reservation];
+            }
+
             $order->update([
                 'status' => $status,
             ]);
 
-            return $order->refresh();
+            return [$order->refresh(), null];
         });
 
-        // Notify the customer once the change is committed.
-        $order->loadMissing('user');
-
-        if ($order->user !== null) {
-            Mail::to($order->user->email)->send(new OrderStatusUpdatedMail($order));
+        if ($reservationToReturn !== null) {
+            $order = $this->stock->returnAndCancel($reservationToReturn);
         }
 
+        // Notify the customer once the change is committed.
+        $this->notifier->statusChanged($order);
+
         return $order;
     }
 
-    public function createOrder(array $data): Order
+    public function createOrder(array $data, ?string $idempotencyKey = null): Order
     {
-        $user = auth('api')->user();
-
-        $order = DB::transaction(function () use ($data, $user) {
-
-            $order = Order::query()->create([
-                'user_id' => $user->id,
-                'status' => 'pending',
-                'total_amount' => 0,
-            ]);
-
-            $total = 0;
-
-            foreach ($data['items'] as $item) {
-
-                // قفل سجل المنتج لمنع تعارض عمليات الشراء المتزامنة
-                $product = Product::query()
-                    ->lockForUpdate()
-                    ->findOrFail($item['product_id']);
-
-                $quantity = (int) $item['quantity'];
-
-                // التحقق من توفر الكمية
-                if ($product->stock < $quantity) {
-                    throw new InsufficientStockException(
-                        message: "Insufficient stock for product: {$product->name}",
-                        errors: [
-                            'product_id' => $product->id,
-                            'available' => $product->stock,
-                            'requested' => $quantity,
-                        ]
-                    );
-                }
-
-                // اعتماد السعر المخزن في قاعدة البيانات
-                $price = $product->price;
-                $subtotal = $price * $quantity;
-
-                // إنشاء تفاصيل الطلب
-                $order->items()->create([
-                    'product_id' => $product->id,
-                    'quantity' => $quantity,
-                    'unit_price' => $price,
-                ]);
-
-                // خصم الكمية من المخزون
-                $product->decrement('stock', $quantity);
-
-                // تجميع إجمالي الطلب
-                $total += $subtotal;
-            }
-
-            // تحديث إجمالي الطلب
-            $order->update([
-                'total_amount' => $total,
-            ]);
-
-            return $order->load('items');
-        });
-
-        // Send the confirmation only after the transaction has committed.
-        Mail::to($user->email)->send(new OrderConfirmationMail($order));
-
-        return $order;
+        return $this->placement->place(auth('api')->user(), $data['items'], $idempotencyKey);
     }
-
 
     public function trackOrderStatus(int $orderId): array
     {
@@ -182,5 +140,31 @@ class OrderService
         ];
     }
 
+    private function guardStatusChange(Order $order, ?OrderReservation $reservation, string $status): void
+    {
+        if ($status === 'cancelled') {
+            return;
+        }
 
+        if ($order->status === 'cancelled') {
+            throw new OrderStatusConflictException(
+                message: 'A cancelled order cannot be reopened.'
+            );
+        }
+
+        if ($reservation?->status === OrderReservation::RETURN_PENDING) {
+            throw new OrderStatusConflictException(
+                message: 'This order is being cancelled. Retry the cancellation instead.'
+            );
+        }
+    }
+
+    private function holdsStock(?OrderReservation $reservation): bool
+    {
+        return in_array($reservation?->status, [
+            OrderReservation::SAVED,
+            OrderReservation::CONFIRMED,
+            OrderReservation::RETURN_PENDING,
+        ], true);
+    }
 }

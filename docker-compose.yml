@@ -15,15 +15,19 @@ services:
       DB_DATABASE: E-commerce
       DB_USERNAME: root
       DB_PASSWORD: ""
+      WAREHOUSE_GRPC_ENABLED: "true"
+      WAREHOUSE_GRPC_TARGET: warehouse:50051
     depends_on:
       mysql:
+        condition: service_healthy
+      warehouse:
         condition: service_healthy
 
   mysql:
     image: mysql:8.0
     container_name: ecommerce-mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: E-commerce
@@ -35,5 +39,62 @@ services:
       timeout: 5s
       retries: 10
 
+  # The Warehouse gRPC service (separate repo). No "ports:" on purpose:
+  # only containers on this network can reach it, users go through Laravel.
+  warehouse:
+    build:
+      context: ${WAREHOUSE_SERVICE_PATH:-../../warehouse-service}
+    container_name: ecommerce-warehouse
+    environment:
+      WAREHOUSE_DB_HOST: warehouse-mysql
+      WAREHOUSE_DB_PORT: 3306
+      WAREHOUSE_DB_USER: warehouse
+      WAREHOUSE_DB_PASSWORD: warehouse
+      WAREHOUSE_DB_NAME: warehouse
+    depends_on:
+      warehouse-mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import grpc; grpc.channel_ready_future(grpc.insecure_channel('127.0.0.1:50051')).result(timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Warehouse data lives in its own MySQL server and volume, never in
+  # Laravel's database. The "warehouse" user can only see this database.
+  warehouse-mysql:
+    image: mysql:8.0
+    container_name: ecommerce-warehouse-mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: warehouse
+      MYSQL_USER: warehouse
+      MYSQL_PASSWORD: warehouse
+    volumes:
+      - warehouse-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # phpMyAdmin at http://localhost:8080. Choose the server on the login page:
+  #   mysql           -> Laravel DB    (user root, empty password)
+  #   warehouse-mysql -> Warehouse DB  (user warehouse, password warehouse)
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: ecommerce-phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOSTS: mysql,warehouse-mysql
+      PMA_ARBITRARY: 0
+    volumes:
+      - ./docker/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php:ro
+    depends_on:
+      - mysql
+      - warehouse-mysql
+
 volumes:
   mysql-data:
+  warehouse-mysql-data:

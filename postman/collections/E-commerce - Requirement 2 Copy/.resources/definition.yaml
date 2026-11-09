@@ -1,0 +1,22 @@
+$kind: collection
+description: |-
+  Run the whole collection in order with the Collection Runner.
+
+  Needs `docker compose up -d` and a seeded database (admin@system.com / user@system.com, password `password123`). Each run creates its own category, product and orders, so IDs never have to be edited by hand.
+variables:
+  base_url: http://localhost:8000
+  admin_email: admin@system.com
+  user_email: user@system.com
+  password: password123
+  admin_token: ""
+  user_token: ""
+  customer_token: ""
+  customer_email: ""
+  run_id: ""
+  category_id: ""
+  product_id: ""
+  order_id: ""
+  order2_id: ""
+  order3_id: ""
+  idempotency_key: ""
+  expected_stock: ""

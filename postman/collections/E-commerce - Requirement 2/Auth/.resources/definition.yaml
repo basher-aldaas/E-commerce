@@ -1,0 +1,3 @@
+$kind: collection
+description: Logs in the seeded admin and user, and registers a fresh customer. Saves the three tokens.
+order: 1000

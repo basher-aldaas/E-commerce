@@ -74,9 +74,9 @@ function toast(msg, type) {
   clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = 'none', 3500);
 }
 
-async function api(method, path, body) {
+async function api(method, path, body, extraHeaders = {}) {
   const isForm = body instanceof FormData;
-  const headers = { 'Accept': 'application/json' };
+  const headers = { 'Accept': 'application/json', ...extraHeaders };
   if (body && !isForm) headers['Content-Type'] = 'application/json';   // let the browser set multipart boundary
   if (S.token) headers['Authorization'] = 'Bearer ' + S.token;
   let res;
@@ -178,11 +178,15 @@ function vShop(page = 1) {
         ${x.image_url ? `<img class="cardimg" src="${esc(x.image_url)}" alt="" onerror="this.replaceWith(ph('cardimg'))">` : ph('cardimg').outerHTML}
         <b>${esc(x.name)}</b><span class="muted">${esc(x.category ? x.category.name : '—')}</span>
         <span class="muted">${esc(x.description || '')}</span><span class="price">${money(x.price)}</span>
-        <span class="muted">${x.in_stock ? x.stock + ' in stock' : 'Out of stock'}</span>
+        <span class="muted">${stockLabel(x)}</span>
         <div class="row"><button class="sec sm" onclick="vProduct(${x.id})">View</button>
         ${isAdmin() ? '' : `<button class="sm" ${x.in_stock ? '' : 'disabled'} onclick='addCart(${JSON.stringify({ id: x.id, name: x.name, price: x.price, stock: x.stock })})'>Add to cart</button>`}</div>
       </div>`).join('') + `</div>` : `<div class="empty">No products match your filters.</div>`) + pager(p, 'vShop');
   });
+}
+function stockLabel(x) {
+  if (x.in_stock === null) return 'Stock unavailable right now';
+  return x.in_stock ? x.stock + ' in stock' : 'Out of stock';
 }
 function vProduct(id) {
   S.view = 'shop'; renderNav();
@@ -193,7 +197,7 @@ function vProduct(id) {
         ${x.image_url ? `<img src="${esc(x.image_url)}" alt="" style="width:100%;max-height:280px;object-fit:cover;border-radius:8px;margin-bottom:12px" onerror="this.remove()">` : ''}
         <h1 style="margin:0 0 6px">${esc(x.name)}</h1><span class="pill">${esc(x.category ? x.category.name : '—')}</span>
         <p class="muted">${esc(x.description || 'No description.')}</p><p class="price">${money(x.price)}</p>
-        <p class="muted">${x.in_stock ? x.stock + ' in stock' : 'Out of stock'} · ${x.is_active ? 'Active' : 'Inactive'}</p>
+        <p class="muted">${stockLabel(x)} · ${x.is_active ? 'Active' : 'Inactive'}</p>
         ${isAdmin() ? '' : `<button ${x.in_stock ? '' : 'disabled'} onclick='addCart(${JSON.stringify({ id: x.id, name: x.name, price: x.price, stock: x.stock })})'>Add to cart</button>`}
       </div>`;
   });
@@ -236,7 +240,14 @@ function setQty(i, v) { S.cart[i].qty = Math.max(1, Math.min(parseInt(v) || 1, S
 function rmCart(i) { S.cart.splice(i, 1); save('cart', S.cart); vCart(); renderNav(); }
 const checkout = () => run(async () => {
   const items = S.cart.map(c => ({ product_id: c.id, quantity: c.qty }));
-  const d = (await api('POST', '/orders', { items })).data;
+  // Retrying the same cart reuses its key, so a lost reply can't order twice.
+  const payload = JSON.stringify(items);
+  if (S.checkoutPayload !== payload) {
+    S.checkoutPayload = payload;
+    S.checkoutKey = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  }
+  const d = (await api('POST', '/orders', { items }, { 'Idempotency-Key': S.checkoutKey })).data;
+  S.checkoutPayload = null;
   S.cart = []; save('cart', []); toast('Order #' + d.id + ' placed! Total ' + money(d.total_amount), 'ok'); go('orders');
 });
 
@@ -323,7 +334,7 @@ function vProds(page = 1) {
         p.items.map(x => `<tr>
         <td>${x.image_url ? `<img class="thumb" src="${esc(x.image_url)}" onerror="this.replaceWith(ph())">` : ph().outerHTML}</td>
         <td>${x.id}</td><td>${esc(x.name)}</td><td>${esc(catName(x.category_id))}</td><td>${money(x.price)}</td>
-        <td><input id="s${x.id}" type="number" min="0" value="${x.stock}" style="width:80px"></td>
+        <td><input id="s${x.id}" type="number" min="0" value="${x.stock ?? ''}" placeholder="unavailable" style="width:80px"></td>
         <td><button class="sm" onclick="setStock(${x.id})">Save stock</button></td></tr>`).join('') + `</table></div>` + pager(p, 'vProds')
         : `<div class="empty">No products yet.</div>`);
   });
@@ -346,6 +357,7 @@ const addProd = () => run(async () => {
   toast('Product created', 'ok'); vProds();
 });
 const setStock = id => run(async () => {
+  if ($('s' + id).value === '') { toast('Enter a stock quantity first'); return; }
   await api('PATCH', '/inventory/' + id, { stock: Number($('s' + id).value) }); toast('Stock updated', 'ok');
 });
 

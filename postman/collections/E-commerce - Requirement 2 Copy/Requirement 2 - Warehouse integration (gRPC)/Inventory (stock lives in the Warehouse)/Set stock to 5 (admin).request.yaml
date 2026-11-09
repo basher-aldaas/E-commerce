@@ -1,0 +1,25 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/inventory/85"
+method: PATCH
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+        "stock": 5
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 200", () => pm.response.to.have.status(200));
+
+      pm.test("Stock is 5", () => pm.expect(pm.response.json().data.stock).to.eql(5));
+      pm.collectionVariables.set("expected_stock", 5);
+    language: text/javascript
+order: 3000

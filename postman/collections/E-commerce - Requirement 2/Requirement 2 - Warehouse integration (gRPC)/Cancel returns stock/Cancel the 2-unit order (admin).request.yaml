@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/orders/{{order2_id}}/status"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+        "status": "cancelled"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 200", () => pm.response.to.have.status(200));
+
+      pm.test("Cancelled", () => pm.expect(pm.response.json().data.status).to.eql("cancelled"));
+      pm.collectionVariables.set("expected_stock", Number(pm.collectionVariables.get("expected_stock")) + 2);
+    language: text/javascript
+examples: .resources/Cancel the 2-unit order (admin).resources/examples
+order: 1000
