@@ -362,12 +362,39 @@ docker compose exec app php artisan db:seed --force
 | `docker compose down -v` | **يحذف الـ volumes:** قاعدتا `E-commerce` و `warehouse` بالكامل |
 | `docker volume rm ...` | يحذف قاعدة البيانات المرتبطة بذلك الـ volume |
 | `php artisan migrate:fresh` / `migrate:refresh` / `migrate:reset` / `db:wipe` | يحذف جداول Laravel وبياناتها |
-| `php artisan test` **داخل حاوية `app`** | راجع التحذير أدناه |
+| `php artisan test` | **يحذف كل بيانات قاعدة `E-commerce`** ويتركها فارغة (انظر "الاختبارات" أدناه) |
+### الاختبارات
 
-> **⚠️ لا تشغّل `php artisan test` داخل حاوية `app`.**
-> `phpunit.xml` يضبط `DB_CONNECTION=sqlite` بدون `force="true"`، بينما الحاوية تضبط مسبقاً `DB_CONNECTION=mysql` و `DB_DATABASE=E-commerce`.
-> PHPUnit لا يستبدل متغيراً موجوداً بدون `force`، والاختبارات تستخدم `RefreshDatabase`، فقد تمسح قاعدة `E-commerce` الحقيقية.
-> شغّل الاختبارات على جهازك خارج Docker (حيث تعمل على SQLite في الذاكرة)، أو أضف `force="true"` لمتغيرات قاعدة البيانات في `phpunit.xml` أولاً.
+> **⚠️ الاختبارات تعمل على قاعدة `E-commerce` الحقيقية نفسها، وتحذف كل بياناتها.**
+> `RefreshDatabase` يحذف كل الجداول ويعيد إنشاءها في بداية التشغيل. بعد الانتهاء تبقى الجداول **فارغة**: لا مستخدمين ولا منتجات ولا طلبات.
+> خذ نسخة احتياطية قبل التشغيل (الأوامر أعلاه)، ولا تشغّل الاختبارات على نظام فيه بيانات تحتاجها.
+
+**الإعدادات الفعلية في `phpunit.xml`:**
+
+| المتغير | القيمة في الاختبارات | لماذا |
+|---|---|---|
+| `DB_CONNECTION` | `mysql` | نفس اتصال التطبيق، بدون SQLite |
+| `DB_DATABASE` | `E-commerce` | نفس قاعدة التطبيق |
+| `DB_HOST` / `DB_PORT` / `DB_USERNAME` / `DB_PASSWORD` | لا تُضبط في `phpunit.xml` | تأتي من بيئة التشغيل: داخل Docker من `docker-compose.yml`، وخارجه من `.env` |
+| `WAREHOUSE_GRPC_ENABLED` | `false` | الاختبارات تستخدم Warehouse وهمياً (`tests/Support/FakeWarehouseGateway.php`) ولا تتصل بالخدمة الحقيقية |
+| `WAREHOUSE_GRPC_TARGET` | `127.0.0.1:1` | عنوان لا يستمع عليه شيء، كحماية إضافية |
+
+كل متغير من هذه يُضبط بطريقتين: `<env force="true">` و `<server>`. داخل Docker هذه المتغيرات معرّفة مسبقاً من `docker-compose.yml`، و Laravel يقرأ `$_SERVER` أولاً. `<env force>` وحده لا يغيّر `$_SERVER`، فتبقى قيم الحاوية هي المستخدمة.
+`ApiTestCase` يرفض التشغيل إذا لم يكن الاتصال `mysql/E-commerce`، حتى لا يحذف `RefreshDatabase` أي قاعدة أخرى.
+
+**تشغيل الاختبارات (داخل الحاوية):**
+```powershell
+docker compose exec app php artisan test
+```
+
+**إعادة بيانات التطبيق بعد الاختبارات:**
+- الحسابات والفئات والمنتجات التجريبية: `docker compose exec app php artisan db:seed --force`، أو `docker compose restart app` لأن `entrypoint.sh` يشغّل الـ seeders.
+  انتبه: أرقام المنتجات الجديدة قد لا تبدأ من 1، لأن عدّاد `AUTO_INCREMENT` في MySQL يستمر بعد الاختبارات. عندها لن تطابق المخزون التجريبي في Warehouse (المنتجات 1 و 2 و 3)، فأدخل الكميات من **Manage products** ← **Save stock**.
+- البيانات الأصلية كاملة: استعِد النسخة الاحتياطية التي أخذتها قبل التشغيل.
+
+ملاحظات:
+- اختبارات `tests/Integration` تُتخطّى (skipped) داخل Docker، لأنها تحتاج قاعدة `warehouse_test` وبيئة Python الافتراضية (`venv`) الخاصة بـ Warehouse. لا تلمس قاعدة `warehouse` الحقيقية.
+- خارج Docker تتصل الاختبارات بالخادم المحدد في `.env` (`DB_HOST` و `DB_PORT`)، وتحذف قاعدة `E-commerce` الموجودة عليه.
 
 **قاعدة Warehouse:** الأمر `python -m app.cli migrate` يرفض العمل على قاعدة لا ينتهي اسمها بـ `_test` إلا مع `--apply-to-real-database`. خذ نسخة احتياطية قبل استخدامه. التفاصيل في `README.md` الخاص بـ Warehouse.
 
@@ -421,7 +448,7 @@ docker compose exec mysql rm /tmp/backup-ecommerce.sql
 | `port is already allocated` على 8000 أو 8080 أو 3307 | برنامج آخر يستخدم المنفذ (XAMPP، MySQL محلي...) | أوقف ذلك البرنامج، أو غيّر الرقم الأيسر في `ports:` داخل `docker-compose.yml` |
 | `Conflict. The container name "/ecommerce-..." is already in use` | حاوية قديمة بنفس الاسم | `docker compose down` (بدون `-v`) ثم `docker compose up -d` |
 | المتجر يعرض "Stock unavailable right now" والطلبات ترجع `503` | Laravel لا يصل إلى Warehouse | 1) `docker compose ps`: هل `warehouse` بحالة healthy؟ 2) `docker compose logs warehouse`. 3) في `storage/logs/laravel.log` ابحث عن `Warehouse call failed`: إذا ظهر `127.0.0.1:50051` فالعنوان خاطئ، فتأكد من وجود `--no-reload` في `docker/entrypoint.sh` ثم `docker compose restart app` |
-| منتج معيّن يعرض "Stock unavailable" والباقي يعمل | المنتج ليس له سجل في جدول `stock` في Warehouse (الـ seed يضيف المنتجات 1 و 2 و 3 فقط) | من حساب admin: صفحة **Manage products** ← أدخل الكمية ← **Save stock** |
+| منتج يعرض "Out of stock" (الكمية 0) مع أنه يجب أن يكون متوفراً | المنتج ليس له سجل في جدول `stock` في Warehouse، و Laravel يعرض المنتج غير المسجّل كأنه نفد. الـ seed يضيف المنتجات 1 و 2 و 3 فقط، وبعد الاختبارات تأخذ المنتجات أرقاماً جديدة | من حساب admin: صفحة **Manage products** ← أدخل الكمية ← **Save stock**. `setStock` ينشئ السجل إذا لم يكن موجوداً |
 | خطأ `Class "Grpc\..." not found`، أو `composer install` يفشل لأن الحزمة تتطلب `ext-grpc` | إضافة `grpc` غير مثبتة في الصورة | `docker compose build --no-cache app` ثم `docker compose up -d` |
 | `No application encryption key has been specified` | `APP_KEY` فارغ | `docker compose exec app php artisan key:generate` ثم `docker compose restart app` |
 | تسجيل الدخول يفشل، وفي `storage/logs/laravel.log` يظهر `SecretMissingException` | `JWT_SECRET` غير موجود في `.env` | `docker compose exec app php artisan jwt:secret` ثم `docker compose restart app` |
@@ -467,4 +494,9 @@ docker compose exec app php artisan tinker --execute="dump(app(App\Services\Ware
 - **Warehouse:** جدولا `reservations` (`RESERVED` و `CONFIRMED` و `RELEASED` و `RETURNED`) و `stock` في قاعدة `warehouse`.
 - **الأخطاء:** `storage/logs/laravel.log` (ابحث عن `Warehouse call failed`) و `docker compose logs warehouse`.
 
-> **ملاحظة معروفة:** إذا كان Warehouse متوقفاً لحظة الطلب، يسجّل Laravel الحجز بحالة `release_pending`. حالياً لا يوجد أمر يعيد محاولة هذه الحجوزات تلقائياً. لا يُحجز أي مخزون بسببها، لكنها تبقى في الجدول.
+> **الحجوزات المعلّقة:** إذا كان Warehouse متوقفاً أو بطيئاً لحظة الطلب، تبقى الحجوزات بحالة مثل `release_pending` أو `saved` أو `return_pending`.
+> الأمر `php artisan warehouse:reconcile` يكمل هذه الحجوزات (`--older-than=2` افتراضياً: فقط ما مرّ عليه دقيقتان).
+> الـ scheduler في Laravel مضبوط لتشغيله كل دقيقة (`OrdersServiceProvider`)، **لكن لا توجد حاوية تشغّل الـ scheduler** في `docker-compose.yml`. لذلك شغّله يدوياً عند الحاجة:
+> ```powershell
+> docker compose exec app php artisan warehouse:reconcile
+> ```

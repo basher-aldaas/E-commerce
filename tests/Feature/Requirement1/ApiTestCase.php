@@ -33,17 +33,18 @@ abstract class ApiTestCase extends TestCase
     }
 
     /**
-     * RefreshDatabase drops every table on its connection, so refuse to start
-     * unless that connection is the throwaway in-memory database.
+     * RefreshDatabase drops every table on its connection. Tests are meant to
+     * run on the app's MySQL database E-commerce (see phpunit.xml), so refuse
+     * any other target, such as the Warehouse database.
      */
     protected function beforeRefreshingDatabase(): void
     {
         $connection = config('database.default');
-        $database = config("database.connections.{$connection}.database");
+        $database = (string) config("database.connections.{$connection}.database");
 
-        if ($connection !== 'sqlite' || $database !== ':memory:') {
+        if ($connection !== 'mysql' || $database !== 'E-commerce') {
             throw new RuntimeException(
-                "Refusing to run: tests must use in-memory SQLite, not {$connection}/{$database}."
+                "Refusing to run: tests must use the MySQL database E-commerce, not {$connection}/{$database}."
             );
         }
     }

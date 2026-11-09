@@ -16,6 +16,10 @@ RUN apt-get update \
 COPY --from=mlocati/php-extension-installer:2.7 /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions grpc
 
+# GD, used by UploadedFile::fake()->image() in the tests. A separate layer so
+# adding it doesn't recompile grpc.
+RUN install-php-extensions gd
+
 # Composer from the official image.
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

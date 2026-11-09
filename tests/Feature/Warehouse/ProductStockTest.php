@@ -219,9 +219,24 @@ class ProductStockTest extends ApiTestCase
         ];
     }
 
+    /**
+     * The id MySQL will give the next product. Not "max id + 1": rolled-back
+     * inserts from earlier tests still advance AUTO_INCREMENT. Stats expiry 0
+     * makes information_schema read the live counter instead of a cached value.
+     */
+    private function nextProductId(): int
+    {
+        DB::statement('SET SESSION information_schema_stats_expiry = 0');
+
+        return (int) DB::scalar(
+            'SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?',
+            ['products']
+        );
+    }
+
     public function test_existing_warehouse_stock_is_never_overwritten_by_a_new_product(): void
     {
-        $nextId = 1;
+        $nextId = $this->nextProductId();
         $this->warehouse->stock[$nextId] = 8;
         $category = $this->makeCategory();
         $this->actingAsApi($this->makeUser('admin'));
@@ -235,13 +250,17 @@ class ProductStockTest extends ApiTestCase
 
     public function test_a_retry_that_finds_its_own_first_attempt_succeeds(): void
     {
-        $this->warehouse->stock[1] = 12;
+        $nextId = $this->nextProductId();
+        $this->warehouse->stock[$nextId] = 12;
         $category = $this->makeCategory();
         $this->actingAsApi($this->makeUser('admin'));
 
         $response = $this->postJson('/api/v1/products', $this->productPayload(['category_id' => $category->id]));
 
         $this->assertEnvelope($response, 201);
+        // The id check proves the product hit the pre-existing row, so this
+        // exercises the AlreadyInitialized path rather than a fresh insert.
+        $response->assertJsonPath('data.id', $nextId);
         $response->assertJsonPath('data.stock', 12);
     }
 
