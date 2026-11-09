@@ -8,7 +8,7 @@
 
 ## 1. Project Architecture
 
-يتكون النظام من مشروعين مستقلين داخل Repository واحد على GitHub، لكن كل مشروع موجود على Branch مختلف.
+يتكون النظام من مشروعين مستقلين داخل Repository واحد على GitHub (`https://github.com/basher-aldaas/E-commerce.git`)، لكن كل مشروع موجود على Branch مختلف.
 
 | Project | Branch | Technology |
 |---|---|---|
@@ -73,13 +73,15 @@ cd "$HOME\Desktop\eco"
 ### Step 2: Clone Laravel Project
 
 ```powershell
-git clone -b feature/secondRequirement https://github.com/basher-aldaas/eco-requirement1.git E-commerce
+git clone -c core.longpaths=true -b feature/secondRequirement https://github.com/basher-aldaas/E-commerce.git E-commerce
 ```
+
+**Note:** الخيار `-c core.longpaths=true` ضروري على Windows، لأن أحد ملفات Postman داخل المشروع مساره أطول من 260 حرفاً. بدونه يفشل الـ clone.
 
 ### Step 3: Clone Warehouse Project
 
 ```powershell
-git clone -b feature/laravel-integration https://github.com/basher-aldaas/eco-requirement1.git warehouse-service
+git clone -b feature/laravel-integration https://github.com/basher-aldaas/E-commerce.git warehouse-service
 ```
 
 الآن أصبح لديك المشروعان في مجلدين منفصلين.
