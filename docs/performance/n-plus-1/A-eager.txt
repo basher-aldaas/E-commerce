@@ -1,0 +1,6 @@
+per_page=15 run=1 | A: eager loading | queries= 5 | db_ms= 23.98 | total_s= 1.417907 | sha= 7be2991c9b71deac
+per_page=15 run=2 | A: eager loading | queries= 5 | db_ms= 35.45 | total_s= 0.386426 | sha= 7be2991c9b71deac
+per_page=15 run=3 | A: eager loading | queries= 5 | db_ms= 23.28 | total_s= 0.296739 | sha= 7be2991c9b71deac
+per_page=50 run=1 | A: eager loading | queries= 5 | db_ms= 26.91 | total_s= 0.410752 | sha= 96cb3717dd5beb22
+per_page=50 run=2 | A: eager loading | queries= 5 | db_ms= 30.17 | total_s= 0.288764 | sha= 96cb3717dd5beb22
+per_page=50 run=3 | A: eager loading | queries= 5 | db_ms= 29.29 | total_s= 0.276444 | sha= 96cb3717dd5beb22

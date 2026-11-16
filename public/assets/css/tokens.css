@@ -1,0 +1,91 @@
+/*
+ * Dukkan design tokens (Phase 3 concept, approved 2026-11-14).
+ * Deep petrol for actions and brand, white product surfaces on a cool canvas,
+ * saffron only for the logo bar, the cart count and the demo marker.
+ * Light-only (C3). Fonts are self-hosted under the SIL OFL 1.1 (see fonts/OFL.txt).
+ */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("../fonts/BricolageGrotesque-latin.woff2") format("woff2");
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("../fonts/Figtree-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+
+  --ink: #15212b;
+  --ink-2: #4a5a66;
+  --ink-3: #5f6e78;
+  --line: #e2e7ea;
+  --line-strong: #c9d2d7;
+  --canvas: #f6f8f8;
+  --surface: #ffffff;
+  --brand: #0b5563;
+  --brand-hover: #08434e;
+  --brand-tint: #e3f0f1;
+  --brand-line: #c3dfe2;
+  --saffron: #f2b544;
+
+  --ok: #1e7b4c;      --ok-bg: #e6f4ec;    --ok-line: #bfe0cc;
+  --warn: #8f5400;    --warn-bg: #fff3dc;  --warn-line: #f1d9a8;
+  --bad: #b3261e;     --bad-bg: #fdecea;   --bad-line: #f3c4bf;
+  --unk: #56636c;     --unk-bg: #eef1f3;   --unk-line: #d5dce0;
+
+  --console: #0f1a21;
+  --console-2: #182730;
+  --console-line: #22323b;
+  --console-fg: #d7e2e6;
+  --console-dim: #8ea1aa;
+  --console-ok: #5fd49a;
+  --console-bad: #ff8a80;
+  --console-warn: #f2c66d;
+  --console-info: #8fd0ff;
+
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+
+  --text-xs: 0.75rem;   /* 12 */
+  --text-sm: 0.8125rem; /* 13 */
+  --text-md: 0.875rem;  /* 14 */
+  --text-base: 1rem;    /* 16 */
+  --text-lg: 1.1875rem; /* 19 */
+  --text-xl: 1.5rem;    /* 24 */
+  --text-2xl: 1.875rem; /* 30 */
+  --text-3xl: 2.375rem; /* 38 */
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(21, 33, 43, 0.05);
+  --shadow-pop: 0 18px 48px rgba(10, 20, 28, 0.22);
+
+  --page-max: 1320px;
+  --gutter: max(16px, env(safe-area-inset-left, 0px));
+  --header-h: 64px;
+  --tabbar-h: 60px;
+  --demo-w: 380px;
+  --focus: 0 0 0 2px var(--surface), 0 0 0 4px var(--brand);
+}

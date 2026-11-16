@@ -4,12 +4,13 @@ namespace Modules\Products\Http\Resources\V2;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\Products\Models\Product;
 
 /**
  * Products API v2 representation.
  *
  * Differences from v1:
- * - adds a computed `in_stock` flag
+ * - adds a computed `in_stock` flag (null when the Warehouse can't be asked)
  * - exposes `category` as a compact {id, name} object (when loaded)
  * - drops the raw `image` column in favour of `image_url` only
  */
@@ -23,7 +24,10 @@ class ProductResource extends JsonResource
             'description' => $this->description,
             'price' => (string) $this->price,
             'stock' => $this->stock,
-            'in_stock' => $this->stock === null ? null : $this->stock > 0,
+            'stock_status' => $this->stock_status,
+            'in_stock' => $this->stock_status === Product::STOCK_UNAVAILABLE
+                ? null
+                : $this->stock_status === Product::STOCK_IN_STOCK,
             'is_active' => (bool) $this->is_active,
             'image_url' => $this->publicImageUrl(),
             'category' => $this->whenLoaded('category', fn () => [

@@ -1,0 +1,17 @@
+Second run, 2026-11-14. Scheduler paused. 60 sequential GET /api/v1/orders (admin, page 1),
+after 3 warm-up requests. DB figures from performance_schema
+events_statements_summary_global_by_event_name, EVENT_NAME='statement/com/Execute'.
+
+with indexes    (run 1): HTTP p50 284 ms, p95 314 ms | DB statements/request 5.0, DB time/request 17.71 ms
+-- migrate:rollback --step=1 (add_order_listing_indexes)
+without indexes (run 1): HTTP p50 342 ms, p95 386 ms | DB statements/request 5.0, DB time/request 78.53 ms
+without indexes (run 2): HTTP p50 342 ms, p95 380 ms | DB statements/request 5.0, DB time/request 76.36 ms
+-- migrate (add_order_listing_indexes)
+with indexes    (run 2): HTTP p50 286 ms, p95 320 ms | DB statements/request 5.0, DB time/request 17.71 ms
+with indexes    (run 3): HTTP p50 285 ms, p95 355 ms | DB statements/request 5.0, DB time/request 18.39 ms
+
+k6 (10 VUs, 30 s, API_RATE_LIMIT_PER_MINUTE=100000), p50 / p95 / req/s, 0 % errors in all:
+admin    without indexes: 394 / 757 / 21.1   386 / 710 / 23.3
+admin    with indexes:    346 / 628 / 25.6   393 / 687 / 23.2
+customer without indexes: 328 / 627 / 26.7   312 / 572 / 28.3
+customer with indexes:    304 / 589 / 28.9   300 / 606 / 27.9

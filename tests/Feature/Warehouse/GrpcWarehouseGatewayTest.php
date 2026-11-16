@@ -6,11 +6,10 @@ use App\Exceptions\Handler;
 use App\Exceptions\Warehouse\WarehouseRequestException;
 use App\Exceptions\Warehouse\WarehouseTimeoutException;
 use App\Exceptions\Warehouse\WarehouseUnavailableException;
-use App\Grpc\Warehouse\ConfirmResponse;
-use App\Grpc\Warehouse\InitializeStockResponse;
+use App\Grpc\Warehouse\ReleaseResponse;
 use App\Grpc\Warehouse\ReserveResponse;
 use App\Grpc\Warehouse\ResultCode;
-use App\Grpc\Warehouse\SetStockResponse;
+use App\Grpc\Warehouse\WarehouseClient;
 use App\Grpc\Warehouse\StockLevel as GrpcStockLevel;
 use App\Grpc\Warehouse\StockResponse;
 use App\Grpc\Warehouse\StockShortage as GrpcStockShortage;
@@ -25,14 +24,15 @@ class GrpcWarehouseGatewayTest extends TestCase
 {
     private const KEY = '7f3c1a52-6f0e-4f2b-9a51-0d7f6a2b1c34';
 
-    private function gateway(ScriptedWarehouseStub $stub, int $retries = 1): GrpcWarehouseGateway
+    /** read 1000 ms, write 2500 ms, release 1500 ms, connect 500 ms (the defaults). */
+    private function gateway(ScriptedWarehouseStub $stub): GrpcWarehouseGateway
     {
-        return new GrpcWarehouseGateway($stub, 1000, 3000, $retries);
+        return new GrpcWarehouseGateway($stub, 1000, 2500, 1500, 500);
     }
 
-    private function okConfirm(): ConfirmResponse
+    private function okRelease(): ReleaseResponse
     {
-        return (new ConfirmResponse())->setSuccess(true)->setCode(ResultCode::RESULT_OK);
+        return (new ReleaseResponse())->setSuccess(true)->setCode(ResultCode::RESULT_OK);
     }
 
     public function test_get_stock_maps_levels_by_product_id(): void
@@ -85,7 +85,7 @@ class GrpcWarehouseGatewayTest extends TestCase
 
         $this->assertTrue($result->success);
         $this->assertSame(WarehouseResultCode::Ok, $result->code);
-        $this->assertNull($result->shortage);
+        $this->assertSame([], $result->shortages);
 
         $this->assertCount(1, $stub->calls);
         $request = $stub->calls[0]['request'];
@@ -95,75 +95,145 @@ class GrpcWarehouseGatewayTest extends TestCase
             $sent[$item->getProductId()] = $item->getQuantity();
         }
         $this->assertSame([1 => 2, 5 => 3], $sent);
-        $this->assertSame(3_000_000, $stub->calls[0]['options']['timeout']);
+        $this->assertSame(2_500_000, $stub->calls[0]['options']['timeout']);
     }
 
-    public function test_a_refusal_is_a_result_with_shortage_details_not_an_exception(): void
+    public function test_a_refusal_is_a_result_listing_every_shortage_not_an_exception(): void
     {
         $stub = new ScriptedWarehouseStub([[
             (new ReserveResponse())
                 ->setSuccess(false)
                 ->setCode(ResultCode::RESULT_INSUFFICIENT_STOCK)
                 ->setReason('insufficient stock')
-                ->setShortage((new GrpcStockShortage())->setProductId(5)->setRequested(3)->setAvailable(1)),
+                ->setShortages([
+                    (new GrpcStockShortage())->setProductId(5)->setRequested(3)->setAvailable(1)->setTracked(true),
+                    (new GrpcStockShortage())->setProductId(7)->setRequested(2)->setAvailable(0)->setTracked(false),
+                ]),
             \Grpc\STATUS_OK,
         ]]);
 
-        $result = $this->gateway($stub)->reserve(self::KEY, [5 => 3]);
+        $result = $this->gateway($stub)->reserve(self::KEY, [5 => 3, 7 => 2]);
 
         $this->assertFalse($result->success);
         $this->assertSame(WarehouseResultCode::InsufficientStock, $result->code);
-        $this->assertSame(5, $result->shortage->productId);
-        $this->assertSame(3, $result->shortage->requested);
-        $this->assertSame(1, $result->shortage->available);
+        $this->assertCount(2, $result->shortages);
+        $this->assertSame([5, 3, 1, true], [$result->shortages[0]->productId, $result->shortages[0]->requested, $result->shortages[0]->available, $result->shortages[0]->tracked]);
+        $this->assertSame([7, 2, 0, false], [$result->shortages[1]->productId, $result->shortages[1]->requested, $result->shortages[1]->available, $result->shortages[1]->tracked]);
     }
 
-    public function test_writes_retry_once_with_the_same_request_after_a_timeout(): void
+    public function test_a_repeated_release_is_a_success_with_its_own_code(): void
     {
-        $stub = new ScriptedWarehouseStub([
-            [null, \Grpc\STATUS_DEADLINE_EXCEEDED],
-            [$this->okConfirm(), \Grpc\STATUS_OK],
-        ]);
+        $stub = new ScriptedWarehouseStub([[
+            (new ReleaseResponse())->setSuccess(true)->setCode(ResultCode::RESULT_ALREADY_RELEASED),
+            \Grpc\STATUS_OK,
+        ]]);
 
-        $result = $this->gateway($stub)->confirm(self::KEY);
+        $result = $this->gateway($stub)->release(self::KEY);
 
         $this->assertTrue($result->success);
-        $this->assertCount(2, $stub->calls);
-        $this->assertSame(self::KEY, $stub->calls[1]['request']->getReservationKey());
+        $this->assertSame(WarehouseResultCode::AlreadyReleased, $result->code);
+        $this->assertSame('Release', $stub->calls[0]['method']);
     }
 
-    public function test_writes_retry_after_unavailable(): void
+    public function test_a_write_timeout_is_reported_at_once_and_never_retried(): void
     {
-        $stub = new ScriptedWarehouseStub([
-            [null, \Grpc\STATUS_UNAVAILABLE],
-            [$this->okConfirm(), \Grpc\STATUS_OK],
-        ]);
+        $stub = new ScriptedWarehouseStub([[null, \Grpc\STATUS_DEADLINE_EXCEEDED]]);
 
-        $this->assertTrue($this->gateway($stub)->confirm(self::KEY)->success);
+        try {
+            $this->gateway($stub)->reserve(self::KEY, [1 => 1]);
+            $this->fail('Expected a timeout');
+        } catch (WarehouseTimeoutException) {
+            $this->assertCount(1, $stub->calls);
+        }
     }
 
-    public function test_exhausted_retries_report_a_timeout(): void
+    public function test_unavailable_after_connecting_is_reported_at_once_and_never_retried(): void
     {
-        $stub = new ScriptedWarehouseStub([
-            [null, \Grpc\STATUS_DEADLINE_EXCEEDED],
-            [null, \Grpc\STATUS_DEADLINE_EXCEEDED],
-        ]);
+        $stub = new ScriptedWarehouseStub([[null, \Grpc\STATUS_UNAVAILABLE]]);
+
+        try {
+            $this->gateway($stub)->release(self::KEY);
+            $this->fail('Expected unavailable');
+        } catch (WarehouseUnavailableException $e) {
+            $this->assertCount(1, $stub->calls);
+            $this->assertTrue($e->requestSent, 'Failed after sending: the outcome is unknown');
+        }
+    }
+
+    public function test_release_uses_its_own_deadline(): void
+    {
+        $stub = new ScriptedWarehouseStub([[$this->okRelease(), \Grpc\STATUS_OK]]);
+
+        $this->gateway($stub)->release(self::KEY);
+
+        $this->assertSame(1_500_000, $stub->calls[0]['options']['timeout']);
+    }
+
+    public function test_no_connection_is_a_fast_connection_failure_and_nothing_is_sent(): void
+    {
+        $stub = new ScriptedWarehouseStub([]);
+        $stub->ready = false;
+
+        foreach (['getStock' => [[1]], 'reserve' => [self::KEY, [1 => 1]], 'release' => [self::KEY]] as $method => $args) {
+            try {
+                $this->gateway($stub)->{$method}(...$args);
+                $this->fail("Expected {$method} to report unavailable");
+            } catch (WarehouseUnavailableException $e) {
+                // A connection failure (503), not a timeout (504), and known unsent.
+                $this->assertFalse($e->requestSent);
+            }
+        }
+
+        $this->assertSame([], $stub->calls, 'Nothing may be sent without a connection');
+        $this->assertSame([500_000, 500_000, 500_000], $stub->readyWaits);
+    }
+
+    public function test_a_budget_caps_every_call_deadline(): void
+    {
+        $stub = new ScriptedWarehouseStub([[$this->okRelease(), \Grpc\STATUS_OK]]);
+
+        $this->gateway($stub)->withDeadline(800)->release(self::KEY);
+
+        $this->assertLessThanOrEqual(800_000, $stub->readyWaits[0], 'connect wait fits in the budget');
+        $this->assertLessThanOrEqual(800_000, $stub->calls[0]['options']['timeout']);
+        $this->assertGreaterThan(0, $stub->calls[0]['options']['timeout']);
+    }
+
+    public function test_a_spent_budget_is_a_timeout_and_nothing_is_sent(): void
+    {
+        $stub = new ScriptedWarehouseStub([]);
+        $budgeted = $this->gateway($stub)->withDeadline(1);
+        usleep(5_000);
 
         $this->expectException(WarehouseTimeoutException::class);
 
-        $this->gateway($stub)->release(self::KEY);
+        try {
+            $budgeted->release(self::KEY);
+        } finally {
+            $this->assertSame([], $stub->calls);
+            $this->assertSame([], $stub->readyWaits);
+        }
     }
 
-    public function test_exhausted_retries_report_unavailable(): void
+    public function test_a_connect_wait_cut_short_by_the_budget_is_a_timeout_not_unavailable(): void
     {
-        $stub = new ScriptedWarehouseStub([
-            [null, \Grpc\STATUS_UNAVAILABLE],
-            [null, \Grpc\STATUS_UNAVAILABLE],
-        ]);
+        $stub = new ScriptedWarehouseStub([]);
+        $stub->ready = false;
 
-        $this->expectException(WarehouseUnavailableException::class);
+        $this->expectException(WarehouseTimeoutException::class);
 
-        $this->gateway($stub)->returnStock(self::KEY);
+        $this->gateway($stub)->withDeadline(100)->release(self::KEY);
+    }
+
+    public function test_with_deadline_returns_a_copy_and_leaves_the_shared_gateway_unbudgeted(): void
+    {
+        $stub = new ScriptedWarehouseStub([[$this->okRelease(), \Grpc\STATUS_OK]]);
+        $gateway = $this->gateway($stub);
+
+        $this->assertNotSame($gateway, $gateway->withDeadline(1));
+        $gateway->release(self::KEY);
+
+        $this->assertSame(1_500_000, $stub->calls[0]['options']['timeout']);
     }
 
     public function test_invalid_requests_are_not_retried(): void
@@ -171,7 +241,7 @@ class GrpcWarehouseGatewayTest extends TestCase
         $stub = new ScriptedWarehouseStub([[null, \Grpc\STATUS_INVALID_ARGUMENT]]);
 
         try {
-            $this->gateway($stub)->confirm('not-a-uuid');
+            $this->gateway($stub)->release('not-a-uuid');
             $this->fail('Expected an exception');
         } catch (WarehouseRequestException) {
             $this->assertCount(1, $stub->calls);
@@ -183,34 +253,26 @@ class GrpcWarehouseGatewayTest extends TestCase
         $stub = new ScriptedWarehouseStub([[null, \Grpc\STATUS_INTERNAL]]);
 
         try {
-            $this->gateway($stub)->confirm(self::KEY);
+            $this->gateway($stub)->release(self::KEY);
             $this->fail('Expected an exception');
         } catch (WarehouseUnavailableException) {
             $this->assertCount(1, $stub->calls);
         }
     }
 
-    public function test_stock_operations_report_the_stored_quantity(): void
+    public function test_the_gateway_exposes_exactly_the_three_contract_operations(): void
     {
-        $stub = new ScriptedWarehouseStub([
-            [
-                (new InitializeStockResponse())->setSuccess(false)->setCode(ResultCode::RESULT_ALREADY_INITIALIZED)->setQuantity(8),
-                \Grpc\STATUS_OK,
-            ],
-            [
-                (new SetStockResponse())->setSuccess(true)->setCode(ResultCode::RESULT_OK)->setQuantity(50),
-                \Grpc\STATUS_OK,
-            ],
-        ]);
+        $methods = array_map(fn ($m) => $m->getName(), (new \ReflectionClass(WarehouseGateway::class))->getMethods());
+        sort($methods);
+        // withDeadline() only limits time on the client; it is not a remote operation.
+        $this->assertSame(['getStock', 'release', 'reserve', 'withDeadline'], $methods);
 
-        $gateway = $this->gateway($stub);
-
-        $initialized = $gateway->initializeStock(1, 99);
-        $this->assertFalse($initialized->success);
-        $this->assertSame(WarehouseResultCode::AlreadyInitialized, $initialized->code);
-        $this->assertSame(8, $initialized->quantity);
-
-        $this->assertSame(50, $gateway->setStock(1, 50)->quantity);
+        $rpcs = array_values(array_diff(
+            array_map(fn ($m) => $m->getName(), (new \ReflectionClass(WarehouseClient::class))->getMethods(\ReflectionMethod::IS_PUBLIC)),
+            array_map(fn ($m) => $m->getName(), (new \ReflectionClass(\Grpc\BaseStub::class))->getMethods(\ReflectionMethod::IS_PUBLIC)),
+        ));
+        sort($rpcs);
+        $this->assertSame(['GetStock', 'Release', 'Reserve'], $rpcs);
     }
 
     public function test_grpc_details_are_logged_but_never_sent_to_the_user(): void
@@ -220,7 +282,7 @@ class GrpcWarehouseGatewayTest extends TestCase
         $stub = new ScriptedWarehouseStub([[null, \Grpc\STATUS_INTERNAL, $secret]]);
         $gateway = $this->gateway($stub);
 
-        Route::get('/api/warehouse-failure-probe', fn () => $gateway->confirm(self::KEY));
+        Route::get('/api/warehouse-failure-probe', fn () => $gateway->release(self::KEY));
 
         $response = $this->getJson('/api/warehouse-failure-probe');
 
@@ -230,19 +292,16 @@ class GrpcWarehouseGatewayTest extends TestCase
             ->assertJsonPath('message', 'The inventory service is currently unavailable. Please try again later.');
         $this->assertStringNotContainsString('10.0.0.5', $response->getContent());
         Log::shouldHaveReceived('warning')->once()->withArgs(
-            fn ($message, $context) => $context['grpc_details'] === $secret && $context['method'] === 'Confirm'
+            fn ($message, $context) => $context['grpc_details'] === $secret && $context['method'] === 'Release'
         );
     }
 
     public function test_timeouts_render_as_504_in_the_standard_envelope(): void
     {
-        $stub = new ScriptedWarehouseStub([
-            [null, \Grpc\STATUS_DEADLINE_EXCEEDED],
-            [null, \Grpc\STATUS_DEADLINE_EXCEEDED],
-        ]);
+        $stub = new ScriptedWarehouseStub([[null, \Grpc\STATUS_DEADLINE_EXCEEDED]]);
         $gateway = $this->gateway($stub);
 
-        Route::get('/api/warehouse-timeout-probe', fn () => $gateway->confirm(self::KEY));
+        Route::get('/api/warehouse-timeout-probe', fn () => $gateway->release(self::KEY));
 
         $this->getJson('/api/warehouse-timeout-probe')
             ->assertStatus(504)
@@ -264,12 +323,13 @@ class GrpcWarehouseGatewayTest extends TestCase
         fclose($socket);
 
         $gateway = new GrpcWarehouseGateway(
-            new \App\Services\Warehouse\WarehouseStub("127.0.0.1:{$port}", [
+            new WarehouseClient("127.0.0.1:{$port}", [
                 'credentials' => \Grpc\ChannelCredentials::createInsecure(),
             ]),
             5000,
             5000,
-            0,
+            5000,
+            5000,
         );
 
         $started = microtime(true);

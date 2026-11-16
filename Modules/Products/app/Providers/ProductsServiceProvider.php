@@ -2,8 +2,10 @@
 
 namespace Modules\Products\Providers;
 
-use Nwidart\Modules\Support\ModuleServiceProvider;
+use App\Support\ServerTiming;
 use Illuminate\Console\Scheduling\Schedule;
+use Modules\Products\Services\CatalogCache;
+use Nwidart\Modules\Support\ModuleServiceProvider;
 
 class ProductsServiceProvider extends ModuleServiceProvider
 {
@@ -33,6 +35,16 @@ class ProductsServiceProvider extends ModuleServiceProvider
         EventServiceProvider::class,
         RouteServiceProvider::class,
     ];
+
+    public function register(): void
+    {
+        parent::register();
+
+        // One instance per request, so the X-Cache / Server-Timing headers report
+        // what this request's lookups did.
+        $this->app->scoped(ServerTiming::class);
+        $this->app->scoped(CatalogCache::class);
+    }
 
     /**
      * Define module schedules.

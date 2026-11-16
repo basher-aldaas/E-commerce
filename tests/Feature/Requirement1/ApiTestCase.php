@@ -5,6 +5,7 @@ namespace Tests\Feature\Requirement1;
 use App\Services\Warehouse\WarehouseGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Modules\Orders\Models\Order;
 use Modules\Products\Models\Category;
@@ -49,7 +50,7 @@ abstract class ApiTestCase extends TestCase
         }
     }
 
-    protected function makeUser(string $role = 'user', array $attributes = []): User
+    protected function makeUser(string $role = 'customer', array $attributes = []): User
     {
         static $sequence = 0;
         $sequence++;
@@ -129,6 +130,15 @@ abstract class ApiTestCase extends TestCase
             'status' => $status,
             'total_amount' => 10,
         ]);
+    }
+
+    /**
+     * POST /api/v1/orders the way every client must: with an Idempotency-Key. A new
+     * key (a new checkout attempt) unless the test passes its own in $headers.
+     */
+    protected function postOrder(array $payload, array $headers = []): TestResponse
+    {
+        return $this->postJson('/api/v1/orders', $payload, $headers +['Idempotency-Key' => (string) Str::uuid()]);
     }
 
     /** Assert the project's standard success or error JSON envelope. */

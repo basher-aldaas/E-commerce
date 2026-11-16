@@ -21,44 +21,31 @@ class ResultCode
      */
     const RESULT_OK = 1;
     /**
+     * At least one item is short. ReserveResponse.shortages lists all of them.
+     *
      * Generated from protobuf enum <code>RESULT_INSUFFICIENT_STOCK = 2;</code>
      */
     const RESULT_INSUFFICIENT_STOCK = 2;
     /**
-     * Generated from protobuf enum <code>RESULT_PRODUCT_NOT_FOUND = 3;</code>
-     */
-    const RESULT_PRODUCT_NOT_FOUND = 3;
-    /**
-     * Generated from protobuf enum <code>RESULT_RESERVATION_NOT_FOUND = 4;</code>
-     */
-    const RESULT_RESERVATION_NOT_FOUND = 4;
-    /**
+     * The reservation key was already used with different items.
+     *
      * Generated from protobuf enum <code>RESULT_KEY_CONFLICT = 5;</code>
      */
     const RESULT_KEY_CONFLICT = 5;
     /**
+     * Reserve: the key was released, so it can never reserve again.
+     * Release: the key was already released; nothing changed.
+     *
      * Generated from protobuf enum <code>RESULT_ALREADY_RELEASED = 6;</code>
      */
     const RESULT_ALREADY_RELEASED = 6;
-    /**
-     * Generated from protobuf enum <code>RESULT_INVALID_STATE = 7;</code>
-     */
-    const RESULT_INVALID_STATE = 7;
-    /**
-     * Generated from protobuf enum <code>RESULT_ALREADY_INITIALIZED = 8;</code>
-     */
-    const RESULT_ALREADY_INITIALIZED = 8;
 
     private static $valueToName = [
         self::RESULT_UNSPECIFIED => 'RESULT_UNSPECIFIED',
         self::RESULT_OK => 'RESULT_OK',
         self::RESULT_INSUFFICIENT_STOCK => 'RESULT_INSUFFICIENT_STOCK',
-        self::RESULT_PRODUCT_NOT_FOUND => 'RESULT_PRODUCT_NOT_FOUND',
-        self::RESULT_RESERVATION_NOT_FOUND => 'RESULT_RESERVATION_NOT_FOUND',
         self::RESULT_KEY_CONFLICT => 'RESULT_KEY_CONFLICT',
         self::RESULT_ALREADY_RELEASED => 'RESULT_ALREADY_RELEASED',
-        self::RESULT_INVALID_STATE => 'RESULT_INVALID_STATE',
-        self::RESULT_ALREADY_INITIALIZED => 'RESULT_ALREADY_INITIALIZED',
     ];
 
     public static function name($value)

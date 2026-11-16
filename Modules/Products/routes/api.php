@@ -1,9 +1,10 @@
 <?php
 
+use App\Http\Middleware\ConditionalGet;
 use Illuminate\Support\Facades\Route;
+use Modules\Products\Http\Middleware\CatalogCacheHeaders;
 use Modules\Products\Http\Controllers\ProductController;
 use Modules\Products\Http\Controllers\CategoryController;
-use Modules\Products\Http\Controllers\InventoryController;
 use Modules\Products\Http\Controllers\V2\ProductController as ProductControllerV2;
 
 Route::prefix('v1')->middleware('auth:api')->group(function () {
@@ -12,22 +13,26 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
     Route::post('/products', [ProductController::class, 'store'])
         ->middleware('can:create_product');
 
-    Route::get('/products', [ProductController::class, 'index'])
-        ->middleware('can:view_products');
+    // Admin only. No DELETE: order items reference products; hide one with is_active=false.
+    Route::put('/products/{product}', [ProductController::class, 'update'])
+        ->middleware('can:update_product');
 
-    Route::get('/products/{product}', [ProductController::class, 'show'])
-        ->middleware('can:view_products');
+    // Catalog reads: Redis catalog cache (X-Cache, Server-Timing) + ETag/304, and
+    // the only reads allowed on the MySQL read replica (reads.replica).
+    Route::middleware([ConditionalGet::class, CatalogCacheHeaders::class, 'reads.replica'])->group(function () {
+        Route::get('/products', [ProductController::class, 'index'])
+            ->middleware('can:view_products');
+
+        Route::get('/products/{product}', [ProductController::class, 'show'])
+            ->middleware('can:view_products');
+
+        Route::get('/categories', [CategoryController::class, 'index'])
+            ->middleware('can:view_categories');
+    });
 
     // Categories
     Route::post('/categories', [CategoryController::class, 'store'])
         ->middleware('can:create_category');
-
-    Route::get('/categories', [CategoryController::class, 'index'])
-        ->middleware('can:view_categories');
-
-    // Inventory
-    Route::patch('/inventory/{product}', [InventoryController::class, 'update'])
-        ->middleware('can:manage_inventory');
 });
 
 /*
@@ -40,7 +45,7 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
 | v1 above is left unchanged for existing clients.
 |
 */
-Route::prefix('v2')->middleware('auth:api')->group(function () {
+Route::prefix('v2')->middleware(['auth:api', ConditionalGet::class, CatalogCacheHeaders::class, 'reads.replica'])->group(function () {
 
     Route::get('/products', [ProductControllerV2::class, 'index'])
         ->middleware('can:view_products');

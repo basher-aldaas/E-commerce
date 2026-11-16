@@ -1,8 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Modules\Notifications\Http\Controllers\NotificationsController;
-
-Route::middleware(['auth:api'])->prefix('v1')->group(function () {
-    Route::apiResource('notifications', NotificationsController::class)->names('notifications');
-});
+/*
+|--------------------------------------------------------------------------
+| Notifications API Routes
+|--------------------------------------------------------------------------
+|
+| No endpoints yet. The module keeps its migration and mail-related code; the
+| asynchronous notification workflow (RabbitMQ, workers, WebSockets) belongs to
+| Requirement 4. The generated apiResource scaffolding was removed because its
+| controller returned non-JSON views, some of which did not exist (HTTP 500).
+|
+*/

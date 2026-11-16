@@ -33,7 +33,8 @@ class StockItem extends \Google\Protobuf\Internal\Message
      *     @type int $quantity
      * }
      */
-    public function __construct($data = NULL) {
+    public function __construct($data = null)
+    {
         \App\Grpc\Warehouse\Metadata\Warehouse::initOnce();
         parent::__construct($data);
     }

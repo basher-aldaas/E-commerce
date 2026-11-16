@@ -44,6 +44,13 @@ class OrdersServiceProvider extends ModuleServiceProvider
      */
     protected function configureSchedules(Schedule $schedule): void
     {
-        $schedule->command('warehouse:reconcile')->everyMinute()->withoutOverlapping();
+        // withoutOverlapping: skip a run while the previous one is still going (the
+        // lock expires after 10 minutes if a run dies). onOneServer: only one
+        // scheduler may run it per minute, even if several are started later.
+        // Both use the shared cache store's atomic locks.
+        $schedule->command('warehouse:reconcile')
+            ->everyMinute()
+            ->withoutOverlapping(10)
+            ->onOneServer();
     }
 }

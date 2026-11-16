@@ -15,15 +15,15 @@ use Google\Protobuf\RepeatedField;
 class ReserveRequest extends \Google\Protobuf\Internal\Message
 {
     /**
+     * UUID chosen by the caller. Retrying with the same key never reserves twice.
+     *
+     * Generated from protobuf field <code>string reservation_key = 1;</code>
+     */
+    protected $reservation_key = '';
+    /**
      * Generated from protobuf field <code>repeated .StockItem items = 2;</code>
      */
     private $items;
-    /**
-     * UUID chosen by the caller. Retrying with the same key never reserves twice.
-     *
-     * Generated from protobuf field <code>string reservation_key = 3;</code>
-     */
-    protected $reservation_key = '';
 
     /**
      * Constructor.
@@ -31,14 +31,41 @@ class ReserveRequest extends \Google\Protobuf\Internal\Message
      * @param array $data {
      *     Optional. Data for populating the Message object.
      *
-     *     @type \App\Grpc\Warehouse\StockItem[] $items
      *     @type string $reservation_key
      *           UUID chosen by the caller. Retrying with the same key never reserves twice.
+     *     @type \App\Grpc\Warehouse\StockItem[] $items
      * }
      */
-    public function __construct($data = NULL) {
+    public function __construct($data = null)
+    {
         \App\Grpc\Warehouse\Metadata\Warehouse::initOnce();
         parent::__construct($data);
+    }
+
+    /**
+     * UUID chosen by the caller. Retrying with the same key never reserves twice.
+     *
+     * Generated from protobuf field <code>string reservation_key = 1;</code>
+     * @return string
+     */
+    public function getReservationKey()
+    {
+        return $this->reservation_key;
+    }
+
+    /**
+     * UUID chosen by the caller. Retrying with the same key never reserves twice.
+     *
+     * Generated from protobuf field <code>string reservation_key = 1;</code>
+     * @param string $var
+     * @return $this
+     */
+    public function setReservationKey(string $var)
+    {
+        GPBUtil::checkString($var, true);
+        $this->reservation_key = $var;
+
+        return $this;
     }
 
     /**
@@ -59,32 +86,6 @@ class ReserveRequest extends \Google\Protobuf\Internal\Message
     {
         $arr = GPBUtil::checkRepeatedField($var, \Google\Protobuf\Internal\GPBType::MESSAGE, \App\Grpc\Warehouse\StockItem::class);
         $this->items = $arr;
-
-        return $this;
-    }
-
-    /**
-     * UUID chosen by the caller. Retrying with the same key never reserves twice.
-     *
-     * Generated from protobuf field <code>string reservation_key = 3;</code>
-     * @return string
-     */
-    public function getReservationKey()
-    {
-        return $this->reservation_key;
-    }
-
-    /**
-     * UUID chosen by the caller. Retrying with the same key never reserves twice.
-     *
-     * Generated from protobuf field <code>string reservation_key = 3;</code>
-     * @param string $var
-     * @return $this
-     */
-    public function setReservationKey(string $var)
-    {
-        GPBUtil::checkString($var, true);
-        $this->reservation_key = $var;
 
         return $this;
     }

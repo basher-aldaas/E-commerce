@@ -1,0 +1,19 @@
+Setup: DB_READ_HOST=mysql-replica, DB_READ_YOUR_WRITES_SECONDS=60, replica 0 s behind.
+1. Pause the replica's apply thread (simulated lag)
+2. A brand-new customer registers and signs in while the replica lags (reviewer's 401 scenario)
+   register -> 201
+   login -> eyJ0eXAiOiJK…
+   GET /api/v1/orders with the new token -> 200  (JWT user lookup on the primary)
+   GET /api/v2/products with the new token -> 200  (auth + permission check on the primary)
+   new user on the replica: 0 rows
+3. Admin creates 'Lag demo 3' (write -> primary)
+   created id 5017
+4a. Admin (wrote < 60 s ago), cache bypassed -> primary
+   X-Cache: BYPASS -> found
+4b. Customer, cache bypassed -> replica (lagging)
+   X-Cache: BYPASS -> NOT found
+4c. Customer, normal request -> MISS refill reads the primary
+   X-Cache: MISS -> found
+5. Resume replication
+6. Customer, cache bypassed -> replica, caught up
+   X-Cache: BYPASS -> found

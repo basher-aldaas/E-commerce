@@ -10,15 +10,15 @@ use Google\Protobuf\Internal\GPBUtil;
 use Google\Protobuf\RepeatedField;
 
 /**
- * Cancels a reservation that was never confirmed. An unknown key is recorded as
- * released, so a Reserve still in flight cannot take stock afterwards.
+ * An unknown key is recorded as released, so a Reserve still in flight after a
+ * client timeout cannot take stock afterwards.
  *
  * Generated from protobuf message <code>ReleaseRequest</code>
  */
 class ReleaseRequest extends \Google\Protobuf\Internal\Message
 {
     /**
-     * Generated from protobuf field <code>string reservation_key = 2;</code>
+     * Generated from protobuf field <code>string reservation_key = 1;</code>
      */
     protected $reservation_key = '';
 
@@ -31,13 +31,14 @@ class ReleaseRequest extends \Google\Protobuf\Internal\Message
      *     @type string $reservation_key
      * }
      */
-    public function __construct($data = NULL) {
+    public function __construct($data = null)
+    {
         \App\Grpc\Warehouse\Metadata\Warehouse::initOnce();
         parent::__construct($data);
     }
 
     /**
-     * Generated from protobuf field <code>string reservation_key = 2;</code>
+     * Generated from protobuf field <code>string reservation_key = 1;</code>
      * @return string
      */
     public function getReservationKey()
@@ -46,7 +47,7 @@ class ReleaseRequest extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     * Generated from protobuf field <code>string reservation_key = 2;</code>
+     * Generated from protobuf field <code>string reservation_key = 1;</code>
      * @param string $var
      * @return $this
      */

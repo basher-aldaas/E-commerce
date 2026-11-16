@@ -16,7 +16,7 @@ class OrdersTest extends ApiTestCase
         $second = $this->makeProduct(['price' => 5.00]);
         $this->actingAsApi($user);
 
-        $response = $this->postJson('/api/v1/orders', [
+        $response = $this->postOrder([
             'items' => [
                 ['product_id' => $first->id, 'quantity' => 2, 'unit_price' => 0.01],
                 ['product_id' => $second->id, 'quantity' => 1],
@@ -42,7 +42,7 @@ class OrdersTest extends ApiTestCase
         $product = $this->makeProduct();
         $this->actingAsApi($this->makeUser('admin'));
 
-        $response = $this->postJson('/api/v1/orders', [
+        $response = $this->postOrder([
             'items' => [['product_id' => $product->id, 'quantity' => 1]],
         ]);
 
@@ -66,7 +66,7 @@ class OrdersTest extends ApiTestCase
         ];
 
         foreach ($invalidPayloads as $case => $payload) {
-            $response = $this->postJson('/api/v1/orders', $payload);
+            $response = $this->postOrder($payload);
             $this->assertSame(422, $response->status(), "Case: {$case}");
         }
 

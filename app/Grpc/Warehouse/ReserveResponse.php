@@ -19,6 +19,8 @@ class ReserveResponse extends \Google\Protobuf\Internal\Message
      */
     protected $success = false;
     /**
+     * Diagnostic text for logs. Never shown to end users.
+     *
      * Generated from protobuf field <code>string reason = 2;</code>
      */
     protected $reason = '';
@@ -27,11 +29,11 @@ class ReserveResponse extends \Google\Protobuf\Internal\Message
      */
     protected $code = 0;
     /**
-     * Set when code is RESULT_INSUFFICIENT_STOCK or RESULT_PRODUCT_NOT_FOUND.
+     * Every item that could not be reserved, when code is RESULT_INSUFFICIENT_STOCK.
      *
-     * Generated from protobuf field <code>.StockShortage shortage = 4;</code>
+     * Generated from protobuf field <code>repeated .StockShortage shortages = 4;</code>
      */
-    protected $shortage = null;
+    private $shortages;
 
     /**
      * Constructor.
@@ -41,12 +43,14 @@ class ReserveResponse extends \Google\Protobuf\Internal\Message
      *
      *     @type bool $success
      *     @type string $reason
+     *           Diagnostic text for logs. Never shown to end users.
      *     @type int $code
-     *     @type \App\Grpc\Warehouse\StockShortage $shortage
-     *           Set when code is RESULT_INSUFFICIENT_STOCK or RESULT_PRODUCT_NOT_FOUND.
+     *     @type \App\Grpc\Warehouse\StockShortage[] $shortages
+     *           Every item that could not be reserved, when code is RESULT_INSUFFICIENT_STOCK.
      * }
      */
-    public function __construct($data = NULL) {
+    public function __construct($data = null)
+    {
         \App\Grpc\Warehouse\Metadata\Warehouse::initOnce();
         parent::__construct($data);
     }
@@ -73,6 +77,8 @@ class ReserveResponse extends \Google\Protobuf\Internal\Message
     }
 
     /**
+     * Diagnostic text for logs. Never shown to end users.
+     *
      * Generated from protobuf field <code>string reason = 2;</code>
      * @return string
      */
@@ -82,6 +88,8 @@ class ReserveResponse extends \Google\Protobuf\Internal\Message
     }
 
     /**
+     * Diagnostic text for logs. Never shown to end users.
+     *
      * Generated from protobuf field <code>string reason = 2;</code>
      * @param string $var
      * @return $this
@@ -117,36 +125,27 @@ class ReserveResponse extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     * Set when code is RESULT_INSUFFICIENT_STOCK or RESULT_PRODUCT_NOT_FOUND.
+     * Every item that could not be reserved, when code is RESULT_INSUFFICIENT_STOCK.
      *
-     * Generated from protobuf field <code>.StockShortage shortage = 4;</code>
-     * @return \App\Grpc\Warehouse\StockShortage|null
+     * Generated from protobuf field <code>repeated .StockShortage shortages = 4;</code>
+     * @return RepeatedField<\App\Grpc\Warehouse\StockShortage>
      */
-    public function getShortage()
+    public function getShortages()
     {
-        return $this->shortage;
-    }
-
-    public function hasShortage()
-    {
-        return isset($this->shortage);
-    }
-
-    public function clearShortage()
-    {
-        unset($this->shortage);
+        return $this->shortages;
     }
 
     /**
-     * Set when code is RESULT_INSUFFICIENT_STOCK or RESULT_PRODUCT_NOT_FOUND.
+     * Every item that could not be reserved, when code is RESULT_INSUFFICIENT_STOCK.
      *
-     * Generated from protobuf field <code>.StockShortage shortage = 4;</code>
-     * @param \App\Grpc\Warehouse\StockShortage $var
+     * Generated from protobuf field <code>repeated .StockShortage shortages = 4;</code>
+     * @param \App\Grpc\Warehouse\StockShortage[] $var
      * @return $this
      */
-    public function setShortage(\App\Grpc\Warehouse\StockShortage|null $var)
+    public function setShortages(array|RepeatedField $var)
     {
-        $this->shortage = $var;
+        $arr = GPBUtil::checkRepeatedField($var, \Google\Protobuf\Internal\GPBType::MESSAGE, \App\Grpc\Warehouse\StockShortage::class);
+        $this->shortages = $arr;
 
         return $this;
     }

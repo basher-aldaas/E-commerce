@@ -23,7 +23,7 @@ class StockLevel extends \Google\Protobuf\Internal\Message
      */
     protected $quantity = 0;
     /**
-     * False when the Warehouse has no stock row for this product.
+     * False when the Warehouse has no stock row for this product (not stocked yet).
      *
      * Generated from protobuf field <code>bool tracked = 3;</code>
      */
@@ -38,10 +38,11 @@ class StockLevel extends \Google\Protobuf\Internal\Message
      *     @type int $product_id
      *     @type int $quantity
      *     @type bool $tracked
-     *           False when the Warehouse has no stock row for this product.
+     *           False when the Warehouse has no stock row for this product (not stocked yet).
      * }
      */
-    public function __construct($data = NULL) {
+    public function __construct($data = null)
+    {
         \App\Grpc\Warehouse\Metadata\Warehouse::initOnce();
         parent::__construct($data);
     }
@@ -91,7 +92,7 @@ class StockLevel extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     * False when the Warehouse has no stock row for this product.
+     * False when the Warehouse has no stock row for this product (not stocked yet).
      *
      * Generated from protobuf field <code>bool tracked = 3;</code>
      * @return bool
@@ -102,7 +103,7 @@ class StockLevel extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     * False when the Warehouse has no stock row for this product.
+     * False when the Warehouse has no stock row for this product (not stocked yet).
      *
      * Generated from protobuf field <code>bool tracked = 3;</code>
      * @param bool $var

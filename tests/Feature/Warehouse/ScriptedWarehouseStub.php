@@ -2,22 +2,39 @@
 
 namespace Tests\Feature\Warehouse;
 
-use App\Services\Warehouse\WarehouseStub;
+use App\Grpc\Warehouse\ReleaseRequest;
+use App\Grpc\Warehouse\ReserveRequest;
+use App\Grpc\Warehouse\StockRequest;
+use App\Grpc\Warehouse\WarehouseClient;
 use Grpc\UnaryCall;
 use RuntimeException;
 
 /**
- * Replays scripted gRPC replies, without a network, and records each call.
+ * Replays scripted gRPC replies through the generated client's interface, without
+ * a network, and records each call.
  */
-class ScriptedWarehouseStub extends WarehouseStub
+class ScriptedWarehouseStub extends WarehouseClient
 {
     /** @var list<array{method: string, request: mixed, options: array}> */
     public array $calls = [];
+
+    /** Whether waitForReady() finds a connection. */
+    public bool $ready = true;
+
+    /** @var list<int> Microseconds passed to each waitForReady() call. */
+    public array $readyWaits = [];
 
     /** @param list<array{0: mixed, 1: int, 2?: string}> $replies [response, grpc code, details] */
     public function __construct(private array $replies)
     {
         // The real constructor opens a channel, which these tests don't need.
+    }
+
+    public function waitForReady($timeout)
+    {
+        $this->readyWaits[] = $timeout;
+
+        return $this->ready;
     }
 
     private function reply(string $method, $request, array $options): UnaryCall
@@ -45,38 +62,18 @@ class ScriptedWarehouseStub extends WarehouseStub
         };
     }
 
-    public function GetStock($request, array $metadata = [], array $options = []): UnaryCall
+    public function GetStock(StockRequest $argument, $metadata = [], $options = [])
     {
-        return $this->reply('GetStock', $request, $options);
+        return $this->reply('GetStock', $argument, $options);
     }
 
-    public function Reserve($request, array $metadata = [], array $options = []): UnaryCall
+    public function Reserve(ReserveRequest $argument, $metadata = [], $options = [])
     {
-        return $this->reply('Reserve', $request, $options);
+        return $this->reply('Reserve', $argument, $options);
     }
 
-    public function Confirm($request, array $metadata = [], array $options = []): UnaryCall
+    public function Release(ReleaseRequest $argument, $metadata = [], $options = [])
     {
-        return $this->reply('Confirm', $request, $options);
-    }
-
-    public function Release($request, array $metadata = [], array $options = []): UnaryCall
-    {
-        return $this->reply('Release', $request, $options);
-    }
-
-    public function ReturnStock($request, array $metadata = [], array $options = []): UnaryCall
-    {
-        return $this->reply('ReturnStock', $request, $options);
-    }
-
-    public function InitializeStock($request, array $metadata = [], array $options = []): UnaryCall
-    {
-        return $this->reply('InitializeStock', $request, $options);
-    }
-
-    public function SetStock($request, array $metadata = [], array $options = []): UnaryCall
-    {
-        return $this->reply('SetStock', $request, $options);
+        return $this->reply('Release', $argument, $options);
     }
 }

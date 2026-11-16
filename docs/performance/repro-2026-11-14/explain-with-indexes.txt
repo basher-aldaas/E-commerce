@@ -1,0 +1,44 @@
+Orders: 200001 · order items: 499588 · products: 5016 · MySQL 8.0.46
+
+■ Admin orders, page 1
+  select * from `orders` order by `created_at` desc, `id` desc limit 15 offset 0
+  table: orders · type: index · key: orders_created_at_id_index · rows: 15 · filtered: 100 · Extra: Backward index scan
+  -> Limit: 15 row(s)  (cost=0.0152 rows=15) (actual time=0.096..0.134 rows=15 loops=1)
+      -> Index scan on orders using orders_created_at_id_index (reverse)  (cost=0.0152 rows=15) (actual time=0.0945..0.132 rows=15 loops=1)
+  median 0.41 ms over 5 runs
+
+■ Admin orders, total count
+  select count(*) as aggregate from `orders`
+  table: orders · type: index · key: orders_created_at_id_index · rows: 199364 · filtered: 100 · Extra: Using index
+  -> Count rows in orders  (actual time=18.6..18.6 rows=1 loops=1)
+  median 17.12 ms over 5 runs
+
+■ Customer orders, page 1
+  select * from `orders` where `user_id` = 1969 order by `created_at` desc, `id` desc limit 15 offset 0
+  table: orders · type: ref · key: orders_user_id_created_at_id_index · rows: 132 · filtered: 100 · Extra: Backward index scan
+  -> Limit: 15 row(s)  (cost=46.2 rows=15) (actual time=0.173..0.177 rows=15 loops=1)
+      -> Index lookup on orders using orders_user_id_created_at_id_index (user_id=1969) (reverse)  (cost=46.2 rows=132) (actual time=0.119..0.122 rows=15 loops=1)
+  median 0.55 ms over 5 runs
+
+■ Customer orders, total count
+  select count(*) as aggregate from `orders` where `user_id` = 1969
+  table: orders · type: ref · key: orders_user_id_created_at_id_index · rows: 132 · filtered: 100 · Extra: Using index
+  -> Aggregate: count(0)  (cost=26.8 rows=1) (actual time=0.0285..0.0286 rows=1 loops=1)
+      -> Covering index lookup on orders using orders_user_id_created_at_id_index (user_id=1969)  (cost=13.6 rows=132) (actual time=0.0146..0.0224 rows=132 loops=1)
+  median 0.36 ms over 5 runs
+
+■ Items of one order
+  select * from `order_items` where `order_id` in (200001)
+  table: order_items · type: ref · key: order_items_order_id_foreign · rows: 1 · filtered: 100 · Extra: 
+  -> Index lookup on order_items using order_items_order_id_foreign (order_id=200001)  (cost=0.35 rows=1) (actual time=0.0225..0.0233 rows=1 loops=1)
+  median 0.36 ms over 5 runs
+
+■ Products v2, category + price range, page 1
+  select * from `products` where `is_active` = 1 and `category_id` = 1 and `price` >= 10 and `price` <= 200 order by `created_at` desc, `id` desc limit 12 offset 0
+  table: products · type: ref · key: products_category_id_foreign · rows: 670 · filtered: 1.1108889579773 · Extra: Using where; Using filesort
+  -> Limit: 12 row(s)  (cost=73.5 rows=12) (actual time=1.61..1.62 rows=12 loops=1)
+      -> Sort: products.created_at DESC, products.id DESC, limit input to 12 row(s) per chunk  (cost=73.5 rows=670) (actual time=1.61..1.61 rows=12 loops=1)
+          -> Filter: ((products.is_active = 1) and (products.price >= 10.00) and (products.price <= 200.00))  (cost=73.5 rows=670) (actual time=0.0218..1.52 rows=259 loops=1)
+              -> Index lookup on products using products_category_id_foreign (category_id=1)  (cost=73.5 rows=670) (actual time=0.0186..1.39 rows=670 loops=1)
+  median 1.11 ms over 5 runs
+

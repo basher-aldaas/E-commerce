@@ -5,6 +5,7 @@ namespace Modules\Products\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Products\Services\CatalogCache;
 
 // use Modules\Products\Database\Factories\CategoryFactory;
 
@@ -17,6 +18,13 @@ class Category extends Model
      */
     protected $fillable = ['name', 'description'];
 
+
+    /** Category names appear in product responses, so a write flushes the catalog. */
+    protected static function booted(): void
+    {
+        static::saved(fn () => app(CatalogCache::class)->flush());
+        static::deleted(fn () => app(CatalogCache::class)->flush());
+    }
 
     public function products(): HasMany
     {

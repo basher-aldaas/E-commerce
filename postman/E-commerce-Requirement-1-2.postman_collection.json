@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "8431516d-af92-4cbb-97dd-9a25dfdc96b2",
     "name": "E-commerce - Requirement 1 & 2",
-    "description": "Run the whole collection in order with the Collection Runner.\n\nNeeds `docker compose up -d` and a seeded database (admin@system.com / user@system.com, password `password123`). Each run creates its own category, product and orders, so IDs never have to be edited by hand.",
+    "description": "Run the whole collection in order with the Collection Runner.\n\nNeeds `docker compose up -d` and the seeded databases (admin@system.com / user@system.com, password `password123`). Stock lives only in the Warehouse service: there is no stock field on products and no stock endpoint in Laravel. Orders use seeded products that the Warehouse seed stocks (product 15 has 60 units, product 13 has 1, product 16 is not stocked). Every stock check is relative to the live quantity read first, so the collection can run repeatedly. To change stock, use the Warehouse CLI: `docker compose exec warehouse python -m app.cli set-stock <product_id> <quantity>`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -672,7 +672,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"name\": \"Postman Product {{run_id}}\",\n    \"description\": \"Created by the Postman collection\",\n    \"price\": 25.5,\n    \"category_id\": {{category_id}},\n    \"stock\": 20\n}",
+                  "raw": "{\n    \"name\": \"Postman Product {{run_id}}\",\n    \"description\": \"Created by the Postman collection\",\n    \"price\": 25.5,\n    \"category_id\": {{category_id}}\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -689,9 +689,8 @@
                       "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
                       "",
                       "const d = pm.response.json().data;",
-                      "pm.test(\"Starting stock is 20 (stored in the Warehouse)\", () => pm.expect(d.stock).to.eql(20));",
                       "pm.collectionVariables.set(\"product_id\", d.id);",
-                      "pm.collectionVariables.set(\"expected_stock\", 20);"
+                      "pm.test(\"A new product is not stocked yet (stock lives in the Warehouse)\", () => pm.expect(d.stock_status).to.eql(\"not_stocked\"));"
                     ]
                   }
                 }
@@ -734,7 +733,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"name\": \"\",\n    \"price\": -1,\n    \"category_id\": 999999999,\n    \"stock\": -5\n}",
+                  "raw": "{\n    \"name\": \"\",\n    \"price\": -1,\n    \"category_id\": 999999999\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -751,7 +750,7 @@
                       "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));",
                       "",
                       "const e = pm.response.json().data;",
-                      "pm.test(\"Errors on name, price, category_id, stock\", () => pm.expect(e).to.include.keys(\"name\", \"price\", \"category_id\", \"stock\"));"
+                      "pm.test(\"Errors on name, price, category_id\", () => pm.expect(e).to.include.keys(\"name\", \"price\", \"category_id\"));"
                     ]
                   }
                 }
@@ -794,7 +793,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"name\": \"Not allowed\",\n    \"price\": 1,\n    \"category_id\": {{category_id}},\n    \"stock\": 1\n}",
+                  "raw": "{\n    \"name\": \"Not allowed\",\n    \"price\": 1,\n    \"category_id\": {{category_id}}\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1083,7 +1082,359 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "pm.test(\"Has in_stock flag\", () => pm.expect(pm.response.json().data).to.have.property(\"in_stock\"));"
+                      "pm.test(\"Has in_stock flag\", () => pm.expect(pm.response.json().data).to.have.property(\"in_stock\"));",
+                      "pm.test(\"Has stock_status\", () => pm.expect(pm.response.json().data.stock_status).to.be.oneOf([\"in_stock\", \"out_of_stock\", \"not_stocked\", \"unavailable\"]));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update product (admin)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    "{{product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Postman Product {{run_id}} (edited)\",\n    \"description\": \"Edited with PUT\",\n    \"price\": 55,\n    \"category_id\": {{category_id}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Admin only. JSON for the fields; to replace the image send POST with multipart/form-data and _method=PUT. No DELETE exists: set is_active=false to hide a product."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"The edit is saved\", () => { pm.expect(p.name).to.include(\"(edited)\"); pm.expect(p.price).to.eql(\"55.00\"); });",
+                      "pm.test(\"Stock still comes from the Warehouse\", () => pm.expect(p).to.have.property(\"stock_status\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update product - as user (403)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    "{{product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Hijacked\",\n    \"price\": 1,\n    \"category_id\": {{category_id}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update product - validation error (422)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    "{{product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"\",\n    \"price\": -1,\n    \"category_id\": 999999999\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));",
+                      "pm.test(\"Each bad field is named\", () => pm.expect(pm.response.json().data).to.include.keys(\"name\", \"price\", \"category_id\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update product - not found (404)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/999999999",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    "999999999"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Nothing\",\n    \"price\": 1,\n    \"category_id\": {{category_id}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List products (v1, category filter)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products?category_id={{category_id}}&per_page=5&page=1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "category_id",
+                      "value": "{{category_id}}"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "5"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const body = pm.response.json();",
+                      "pm.test(\"Only that category\", () => body.data.forEach((p) => pm.expect(p.category_id).to.eql(Number(pm.collectionVariables.get(\"category_id\")))));",
+                      "pm.test(\"Page size is applied\", () => { pm.expect(body.data.length).to.be.at.most(5); pm.expect(body.pagination.per_page).to.eql(5); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Malformed JSON body (400)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/auth/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"user@system.com\",\n    \"password\": \n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "The body says it is JSON but is not valid JSON: 400, not 422."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"Standard error envelope\", () => { const b = pm.response.json(); pm.expect(b.status).to.eql(0); pm.expect(b.message).to.eql(\"Malformed JSON body.\"); });"
                     ]
                   }
                 }
@@ -1106,6 +1457,10 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
                   }
                 ],
                 "url": {
@@ -1131,7 +1486,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{product_id}}, \"quantity\": 1 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 1 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1149,8 +1504,7 @@
                       "",
                       "const d = pm.response.json().data;",
                       "pm.test(\"Order is pending\", () => pm.expect(d.status).to.eql(\"pending\"));",
-                      "pm.collectionVariables.set(\"order_id\", d.id);",
-                      "pm.collectionVariables.set(\"expected_stock\", Number(pm.collectionVariables.get(\"expected_stock\")) - 1);"
+                      "pm.collectionVariables.set(\"order_id\", d.id);"
                     ]
                   }
                 }
@@ -1168,6 +1522,10 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
                   }
                 ],
                 "url": {
@@ -1697,10 +2055,116 @@
       "name": "Requirement 2 - Warehouse integration (gRPC)",
       "item": [
         {
-          "name": "Inventory (stock lives in the Warehouse)",
+          "name": "Live stock (read from the Warehouse)",
           "item": [
             {
-              "name": "Stock after the Requirement 1 order (19)",
+              "name": "Read live stock (baseline)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    "{{stock_product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"Stock is a live number from the Warehouse\", () => pm.expect(p.stock).to.be.a(\"number\"));",
+                      "pm.test(\"stock_status is in_stock\", () => pm.expect(p.stock_status).to.eql(\"in_stock\"));",
+                      "pm.collectionVariables.set(\"expected_stock\", p.stock);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Not stocked yet (no Warehouse row)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v2/products/{{not_stocked_product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v2",
+                    "products",
+                    "{{not_stocked_product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customer_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"stock is null\", () => pm.expect(p.stock).to.eql(null));",
+                      "pm.test(\"stock_status is not_stocked\", () => pm.expect(p.stock_status).to.eql(\"not_stocked\"));",
+                      "pm.test(\"in_stock is false\", () => pm.expect(p.in_stock).to.eql(false));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "The new Postman product is not stocked yet",
               "request": {
                 "method": "GET",
                 "header": [
@@ -1743,15 +2207,14 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "const p = pm.response.json().data;",
-                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"expected_stock\"), () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
+                      "pm.test(\"stock_status is not_stocked\", () => pm.expect(pm.response.json().data.stock_status).to.eql(\"not_stocked\"));"
                     ]
                   }
                 }
               ]
             },
             {
-              "name": "Set stock to 5 (admin)",
+              "name": "Laravel has no stock endpoint (404)",
               "request": {
                 "method": "PATCH",
                 "header": [
@@ -1765,7 +2228,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/{{product_id}}",
+                  "raw": "{{base_url}}/api/v1/inventory/{{stock_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -1773,7 +2236,7 @@
                     "api",
                     "v1",
                     "inventory",
-                    "{{product_id}}"
+                    "{{stock_product_id}}"
                   ]
                 },
                 "auth": {
@@ -1782,118 +2245,6 @@
                     {
                       "key": "token",
                       "value": "{{admin_token}}",
-                      "type": "string"
-                    }
-                  ]
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n    \"stock\": 5\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "",
-                      "pm.test(\"Stock is 5\", () => pm.expect(pm.response.json().data.stock).to.eql(5));",
-                      "pm.collectionVariables.set(\"expected_stock\", 5);"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Read stock back from the Warehouse (5)",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "products",
-                    "{{product_id}}"
-                  ]
-                },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{admin_token}}",
-                      "type": "string"
-                    }
-                  ]
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "const p = pm.response.json().data;",
-                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"expected_stock\"), () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Set stock - as user (403)",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/{{product_id}}",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "inventory",
-                    "{{product_id}}"
-                  ]
-                },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{user_token}}",
                       "type": "string"
                     }
                   ]
@@ -1906,123 +2257,8 @@
                       "language": "json"
                     }
                   }
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Set stock - negative (422)",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/{{product_id}}",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "inventory",
-                    "{{product_id}}"
-                  ]
                 },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{admin_token}}",
-                      "type": "string"
-                    }
-                  ]
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n    \"stock\": -1\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Set stock - unknown product (404)",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/999999999",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "inventory",
-                    "999999999"
-                  ]
-                },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{admin_token}}",
-                      "type": "string"
-                    }
-                  ]
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n    \"stock\": 1\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
+                "description": "Stock is managed only with the Warehouse CLI (`python -m app.cli set-stock`). The old /inventory endpoint was removed."
               },
               "event": [
                 {
@@ -2113,6 +2349,10 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
                   }
                 ],
                 "url": {
@@ -2138,7 +2378,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{product_id}}, \"quantity\": 2 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 2 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2162,7 +2402,7 @@
               ]
             },
             {
-              "name": "Stock went down by 2 (3)",
+              "name": "Stock went down by 2",
               "request": {
                 "method": "GET",
                 "header": [
@@ -2176,7 +2416,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -2184,7 +2424,7 @@
                     "api",
                     "v1",
                     "products",
-                    "{{product_id}}"
+                    "{{stock_product_id}}"
                   ]
                 },
                 "auth": {
@@ -2224,6 +2464,10 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
                   }
                 ],
                 "url": {
@@ -2249,7 +2493,83 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{product_id}}, \"quantity\": 1000 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": {{too_many}} }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Ask for 10 more than the Warehouse has. The quantity must reach the Warehouse unchanged.",
+                      "pm.collectionVariables.set(\"too_many\", Number(pm.collectionVariables.get(\"expected_stock\")) + 10);"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
+                      "const body = pm.response.json();",
+                      "const item = body.data.items[0];",
+                      "pm.test(\"Insufficient stock message\", () => pm.expect(body.message).to.eql(\"Insufficient stock for the requested product.\"));",
+                      "pm.test(\"Requested quantity is unchanged\", () => pm.expect(item.requested_quantity).to.eql(Number(pm.collectionVariables.get(\"too_many\"))));",
+                      "pm.test(\"Available quantity is the live stock\", () => pm.expect(item.available_quantity).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Order a product that is not stocked yet (409)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customer_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{not_stocked_product_id}}, \"quantity\": 1 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2264,14 +2584,80 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
-                      "pm.test(\"Insufficient stock message\", () => pm.expect(pm.response.json().message.toLowerCase()).to.include(\"stock\"));"
+                      "const item = pm.response.json().data.items[0];",
+                      "pm.test(\"Marked as not stocked\", () => pm.expect(item.stocked).to.eql(false));",
+                      "pm.test(\"Requested 1, available 0\", () => pm.expect([item.requested_quantity, item.available_quantity]).to.eql([1, 0]));"
                     ]
                   }
                 }
               ]
             },
             {
-              "name": "Failed order did not touch stock (3)",
+              "name": "Several short products are all listed (409)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customer_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": {{too_many}} },\n        { \"product_id\": {{not_stocked_product_id}}, \"quantity\": 2 }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
+                      "const items = pm.response.json().data.items;",
+                      "pm.test(\"Both short products are listed\", () => pm.expect(items.map(i => i.product_id)).to.have.members([Number(pm.collectionVariables.get(\"stock_product_id\")), Number(pm.collectionVariables.get(\"not_stocked_product_id\"))]));",
+                      "pm.test(\"Plural message\", () => pm.expect(pm.response.json().message).to.eql(\"Insufficient stock for the requested products.\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Refused orders did not touch stock",
               "request": {
                 "method": "GET",
                 "header": [
@@ -2285,7 +2671,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -2293,7 +2679,7 @@
                     "api",
                     "v1",
                     "products",
-                    "{{product_id}}"
+                    "{{stock_product_id}}"
                   ]
                 },
                 "auth": {
@@ -2367,7 +2753,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{product_id}}, \"quantity\": 1 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 1 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2440,7 +2826,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{product_id}}, \"quantity\": 1 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 1 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2462,7 +2848,7 @@
               ]
             },
             {
-              "name": "Stock went down only once (2)",
+              "name": "Stock went down only once",
               "request": {
                 "method": "GET",
                 "header": [
@@ -2476,7 +2862,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -2484,7 +2870,7 @@
                     "api",
                     "v1",
                     "products",
-                    "{{product_id}}"
+                    "{{stock_product_id}}"
                   ]
                 },
                 "auth": {
@@ -2553,7 +2939,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{product_id}}, \"quantity\": 2 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 2 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2572,11 +2958,70 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "Order without an Idempotency-Key (422)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customer_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 2 }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "The header is required: without it a retry could not be told apart from a new order. Nothing is reserved and no order is created."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));",
+                      "pm.test(\"The missing header is named\", () => pm.expect(pm.response.json().data[\"Idempotency-Key\"][0]).to.eql(\"The Idempotency-Key header is required.\"));"
+                    ]
+                  }
+                }
+              ]
             }
           ]
         },
         {
-          "name": "Cancel returns stock",
+          "name": "Cancel releases the reservation",
           "item": [
             {
               "name": "Cancel the 2-unit order (admin)",
@@ -2641,7 +3086,7 @@
               ]
             },
             {
-              "name": "Stock came back (4)",
+              "name": "Stock came back",
               "request": {
                 "method": "GET",
                 "header": [
@@ -2655,7 +3100,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -2663,7 +3108,7 @@
                     "api",
                     "v1",
                     "products",
-                    "{{product_id}}"
+                    "{{stock_product_id}}"
                   ]
                 },
                 "auth": {
@@ -2692,7 +3137,7 @@
               ]
             },
             {
-              "name": "Cancel it again (no double return)",
+              "name": "Cancel it again (released only once)",
               "request": {
                 "method": "POST",
                 "header": [
@@ -2751,7 +3196,7 @@
               ]
             },
             {
-              "name": "Stock still 4",
+              "name": "Stock unchanged after the second cancel",
               "request": {
                 "method": "GET",
                 "header": [
@@ -2765,7 +3210,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -2773,7 +3218,7 @@
                     "api",
                     "v1",
                     "products",
-                    "{{product_id}}"
+                    "{{stock_product_id}}"
                   ]
                 },
                 "auth": {
@@ -2914,11 +3359,11 @@
           ]
         },
         {
-          "name": "Race condition (product 85)",
-          "description": "Many orders for the same product at the same moment. Run \"0. Setup\" first.\n\nSets the stock of race_product_id to race_stock, sends race_requests orders of 1 unit in parallel, and checks that exactly race_stock succeed and the stock never goes below 0. Then it cancels those orders and restores the original stock.\n\nNote: php artisan serve uses one worker by default and handles requests one by one. For a real race, start it with PHP_CLI_SERVER_WORKERS greater than 1.",
+          "name": "Race condition (last units)",
+          "description": "Many orders for the same product at the same moment. Run \"0. Setup\" first.\n\nReads the live stock S of race_product_id (product 13 starts with 1 unit), sends race_requests orders of 1 unit in parallel, and checks that exactly min(S, race_requests) succeed, the rest get 409, and the stock never goes below 0. Then it cancels those orders, which releases their reservations, so the stock is back to S.\n\nphp artisan serve handles requests one at a time unless PHP_CLI_SERVER_WORKERS is above 1, so this shows correctness, not true parallelism. The real concurrent test is tests/Integration (20 separate PHP processes).",
           "item": [
             {
-              "name": "Save the current stock",
+              "name": "Read the race product's live stock",
               "request": {
                 "method": "GET",
                 "header": [
@@ -2962,69 +3407,8 @@
                     "exec": [
                       "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
                       "const stock = pm.response.json().data.stock;",
-                      "pm.test(\"The Warehouse answered (stock is not null)\", () => pm.expect(stock).to.be.a(\"number\"));",
-                      "pm.collectionVariables.set(\"race_original_stock\", stock);",
-                      "console.log(\"Original stock of product \" + pm.collectionVariables.get(\"race_product_id\") + \": \" + stock);"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Set stock to {{race_stock}} (admin)",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/{{race_product_id}}",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "inventory",
-                    "{{race_product_id}}"
-                  ]
-                },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{admin_token}}",
-                      "type": "string"
-                    }
-                  ]
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n    \"stock\": {{race_stock}}\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"race_stock\"), () =>",
-                      "    pm.expect(pm.response.json().data.stock).to.eql(Number(pm.collectionVariables.get(\"race_stock\"))));"
+                      "pm.test(\"The Warehouse answered (stock is a number)\", () => pm.expect(stock).to.be.a(\"number\"));",
+                      "pm.collectionVariables.set(\"race_start_stock\", stock);"
                     ]
                   }
                 }
@@ -3074,7 +3458,7 @@
                   "script": {
                     "type": "text/javascript",
                     "exec": [
-                      "const base = pm.collectionVariables.get(\"base_url\");",
+                      "const base = pm.variables.get(\"base_url\");",
                       "const token = pm.collectionVariables.get(\"customer_token\");",
                       "const productId = Number(pm.collectionVariables.get(\"race_product_id\"));",
                       "const total = Number(pm.collectionVariables.get(\"race_requests\"));",
@@ -3105,17 +3489,18 @@
                     "type": "text/javascript",
                     "exec": [
                       "const results = JSON.parse(pm.collectionVariables.get(\"race_results\") || \"[]\");",
-                      "const stock = Number(pm.collectionVariables.get(\"race_stock\"));",
+                      "const start = Number(pm.collectionVariables.get(\"race_start_stock\"));",
                       "const total = Number(pm.collectionVariables.get(\"race_requests\"));",
+                      "const winners = Math.min(start, total);",
                       "const ok = results.filter(r => r.code === 201);",
                       "const refused = results.filter(r => r.code === 409);",
                       "const other = results.filter(r => r.code !== 201 && r.code !== 409);",
                       "",
                       "pm.test(\"All \" + total + \" orders got an answer\", () => pm.expect(results.length).to.eql(total));",
-                      "pm.test(\"Exactly \" + stock + \" orders succeeded (201)\", () => pm.expect(ok.length).to.eql(stock));",
-                      "pm.test(\"The other \" + (total - stock) + \" were refused for stock (409)\", () => pm.expect(refused.length).to.eql(total - stock));",
+                      "pm.test(\"Exactly \" + winners + \" orders succeeded (201)\", () => pm.expect(ok.length).to.eql(winners));",
+                      "pm.test(\"The other \" + (total - winners) + \" were refused for stock (409)\", () => pm.expect(refused.length).to.eql(total - winners));",
                       "pm.test(\"No other status codes\", () => pm.expect(other.map(r => r.code)).to.eql([]));",
-                      "pm.test(\"Stock ended at 0, never below\", () => pm.expect(pm.response.json().data.stock).to.eql(0));",
+                      "pm.test(\"Stock went down by exactly the successful orders, never below 0\", () => pm.expect(pm.response.json().data.stock).to.eql(start - winners));",
                       "",
                       "pm.collectionVariables.set(\"race_order_ids\", JSON.stringify(ok.map(r => r.id)));"
                     ]
@@ -3167,7 +3552,7 @@
                   "script": {
                     "type": "text/javascript",
                     "exec": [
-                      "const base = pm.collectionVariables.get(\"base_url\");",
+                      "const base = pm.variables.get(\"base_url\");",
                       "const token = pm.collectionVariables.get(\"admin_token\");",
                       "const ids = JSON.parse(pm.collectionVariables.get(\"race_order_ids\") || \"[]\");",
                       "const codes = [];",
@@ -3193,17 +3578,23 @@
                       "const ids = JSON.parse(pm.collectionVariables.get(\"race_order_ids\") || \"[]\");",
                       "const codes = JSON.parse(pm.collectionVariables.get(\"race_cancel_codes\") || \"[]\");",
                       "pm.test(\"Every race order was cancelled (200)\", () => pm.expect(codes).to.eql(ids.map(() => 200)));",
-                      "pm.test(\"Stock came back to \" + pm.collectionVariables.get(\"race_stock\"), () =>",
-                      "    pm.expect(pm.response.json().data.stock).to.eql(Number(pm.collectionVariables.get(\"race_stock\"))));"
+                      "pm.test(\"Release gave the stock back: \" + pm.collectionVariables.get(\"race_start_stock\"), () =>",
+                      "    pm.expect(pm.response.json().data.stock).to.eql(Number(pm.collectionVariables.get(\"race_start_stock\"))));"
                     ]
                   }
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "name": "Manual - Warehouse stopped (run on its own)",
+          "description": "Run these two requests by hand, not in the Collection Runner.\n\n1. `docker compose stop warehouse`\n2. Send the requests below.\n3. `docker compose start warehouse`\n\nProduct pages stay up with stock_status `unavailable`; an order is refused with 503 and nothing is saved. To see a 504 (timeout) instead, use `docker compose pause warehouse` / `docker compose unpause warehouse`.",
+          "item": [
             {
-              "name": "Restore the original stock (admin)",
+              "name": "Product page while the Warehouse is down (200, unavailable)",
               "request": {
-                "method": "PATCH",
+                "method": "GET",
                 "header": [
                   {
                     "key": "Accept",
@@ -3215,15 +3606,15 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/{{race_product_id}}",
+                  "raw": "{{base_url}}/api/v2/products/{{stock_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
                   "path": [
                     "api",
-                    "v1",
-                    "inventory",
-                    "{{race_product_id}}"
+                    "v2",
+                    "products",
+                    "{{stock_product_id}}"
                   ]
                 },
                 "auth": {
@@ -3231,14 +3622,69 @@
                   "bearer": [
                     {
                       "key": "token",
-                      "value": "{{admin_token}}",
+                      "value": "{{customer_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"stock_status is unavailable\", () => pm.expect(p.stock_status).to.eql(\"unavailable\"));",
+                      "pm.test(\"in_stock is null\", () => pm.expect(p.in_stock).to.eql(null));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Order while the Warehouse is down (503 or 504)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customer_token}}",
                       "type": "string"
                     }
                   ]
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"stock\": {{race_original_stock}}\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 1 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3252,9 +3698,10 @@
                   "script": {
                     "type": "text/javascript",
                     "exec": [
-                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "pm.test(\"Stock is back to the original value\", () =>",
-                      "    pm.expect(pm.response.json().data.stock).to.eql(Number(pm.collectionVariables.get(\"race_original_stock\"))));"
+                      "pm.test(\"Status is 503 (stopped) or 504 (paused)\", () => pm.expect(pm.response.code).to.be.oneOf([503, 504]));",
+                      "const body = pm.response.json();",
+                      "pm.test(\"Standard error envelope\", () => pm.expect(body).to.include.keys(\"status\", \"data\", \"message\", \"status_code\", \"timestamp\"));",
+                      "pm.test(\"status is 0\", () => pm.expect(body.status).to.eql(0));"
                     ]
                   }
                 }
@@ -3263,7 +3710,747 @@
           ]
         }
       ],
-      "description": "Laravel reads and writes all stock through the Python Warehouse service over gRPC. Run after Requirement 1: these requests reuse its product and check the stock at each step. If the Warehouse container is down, stock requests return 503 (unavailable) or 504 (timeout)."
+      "description": "The Warehouse is a separate Python gRPC service with its own database and exactly three operations: GetStock, Reserve and Release. Laravel never stores or changes stock."
+    },
+    {
+      "name": "Requirement 3 - Cache, ETag and comparison",
+      "description": "Catalog reads (v1 and v2 products, categories) are cached in Redis; live stock never is.\n\nEvery catalog response has `X-Cache` (HIT, MISS, BYPASS, SKIP, OFF) and `Server-Timing` (`catalog` = time to get the catalog data from Redis or MySQL, `stock` = live GetStock call). `X-Cache-Bypass: 1` skips the cache for one request (allowed outside production), so the same request can be timed both ways in one run.\n\nBefore/after with the global switch: set `PRODUCT_CACHE_ENABLED=false` for the app in docker-compose.yml, `docker compose up -d app`, run this folder (X-Cache shows OFF), then set it back to true and run it again.\n\n`cache_rounds` (default 20) sets how many requests per endpoint and mode the comparison sends.\n\nThe comparison sends about 300 requests, above the normal limit of 60 requests per minute per user, so run it with `API_RATE_LIMIT_PER_MINUTE=100000 docker compose up -d app` and restore the default afterwards with `docker compose up -d app`.",
+      "item": [
+        {
+          "name": "First read fills the cache (MISS or HIT)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{stock_product_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"X-Cache is reported\", () => pm.expect(pm.response.headers.get(\"X-Cache\")).to.be.oneOf([\"MISS\", \"HIT\", \"OFF\"]));",
+                  "pm.test(\"Server-Timing has catalog and stock\", () => pm.expect(pm.response.headers.get(\"Server-Timing\")).to.match(/catalog;dur=.*stock;dur=/));",
+                  "pm.collectionVariables.set(\"etag\", pm.response.headers.get(\"ETag\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Same read again is a HIT",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{stock_product_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const x = pm.response.headers.get(\"X-Cache\");",
+                  "pm.test(\"X-Cache is HIT (or OFF when the cache is switched off)\", () => pm.expect(x).to.be.oneOf([\"HIT\", \"OFF\"]));",
+                  "pm.test(\"Stock is still live (a number from the Warehouse)\", () => pm.expect(pm.response.json().data.stock).to.be.a(\"number\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Same read with If-None-Match is 304",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "If-None-Match",
+                "value": "{{etag}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{stock_product_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 304 Not Modified\", () => pm.response.to.have.status(304));",
+                  "pm.test(\"No body is sent\", () => pm.expect(pm.response.text()).to.eql(\"\"));",
+                  "pm.test(\"Same ETag\", () => pm.expect(pm.response.headers.get(\"ETag\")).to.eql(pm.collectionVariables.get(\"etag\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bypass header skips the cache (BYPASS)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Cache-Bypass",
+                "value": "1"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{stock_product_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"X-Cache is BYPASS (or OFF)\", () => pm.expect(pm.response.headers.get(\"X-Cache\")).to.be.oneOf([\"BYPASS\", \"OFF\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "v2 in_stock filter is never cached (SKIP)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v2/products?in_stock=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v2",
+                "products?in_stock=1"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"X-Cache is SKIP (or OFF)\", () => pm.expect(pm.response.headers.get(\"X-Cache\")).to.be.oneOf([\"SKIP\", \"OFF\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Warm the category list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"categories_etag\", pm.response.headers.get(\"ETag\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalidation: create a category (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Cache check {{run_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalidation: the category list is read again (MISS) and has changed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "If-None-Match",
+                "value": "{{categories_etag}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 (old ETag no longer matches)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"X-Cache is MISS (or OFF)\", () => pm.expect(pm.response.headers.get(\"X-Cache\")).to.be.oneOf([\"MISS\", \"OFF\"]));",
+                  "pm.test(\"New ETag\", () => pm.expect(pm.response.headers.get(\"ETag\")).to.not.eql(pm.collectionVariables.get(\"categories_etag\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalidation: read the product twice (HIT) and keep its ETag",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{product_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest({ url: pm.variables.replaceIn(\"{{base_url}}/api/v1/products/{{product_id}}\"), header: { Accept: \"application/json\", Authorization: \"Bearer \" + pm.collectionVariables.get(\"user_token\") } });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Served from the cache\", () => pm.expect(pm.response.headers.get(\"X-Cache\")).to.eql(\"HIT\"));",
+                  "pm.collectionVariables.set(\"etag\", pm.response.headers.get(\"ETag\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalidation: edit the product (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{product_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Postman Product {{run_id}} (edited at {{$timestamp}})\",\n    \"price\": 56,\n    \"category_id\": {{category_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"expected_name\", pm.response.json().data.name);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalidation: the edit is visible at once (MISS, new ETag, no 304)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "If-None-Match",
+                "value": "{{etag}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{product_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200, not 304: the old ETag no longer matches\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Read again from the database (MISS)\", () => pm.expect(pm.response.headers.get(\"X-Cache\")).to.eql(\"MISS\"));",
+                  "pm.test(\"Shows the edited name\", () => pm.expect(pm.response.json().data.name).to.eql(pm.collectionVariables.get(\"expected_name\")));",
+                  "pm.test(\"New ETag\", () => pm.expect(pm.response.headers.get(\"ETag\")).to.not.eql(pm.collectionVariables.get(\"etag\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Compare uncached vs cached (same data, same requests)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Sends cache_rounds requests per endpoint and mode, then reports p50/p95/p99 response times and the average catalog lookup time (MySQL vs Redis) from Server-Timing. The figures are the test names and are also logged to the console."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Same data, same requests: each endpoint is called ROUNDS times with the cache",
+                  "// bypassed (X-Cache-Bypass: 1 -> MySQL) and ROUNDS times through the cache",
+                  "// (Redis), alternating so both see the same conditions. Nothing here is a fixed",
+                  "// number: every figure comes from these responses.",
+                  "const base = pm.variables.get(\"base_url\");",
+                  "const token = pm.collectionVariables.get(\"user_token\");",
+                  "const rounds = Number(pm.collectionVariables.get(\"cache_rounds\") || 20);",
+                  "const pid = pm.collectionVariables.get(\"stock_product_id\");",
+                  "const cid = pm.collectionVariables.get(\"category_id\");",
+                  "const endpoints = [",
+                  "    [\"v1 product list\", \"/api/v1/products\"],",
+                  "    [\"v1 product details\", \"/api/v1/products/\" + pid],",
+                  "    [\"v2 product list (filtered)\", \"/api/v2/products?category_id=\" + cid + \"&per_page=15\"],",
+                  "    [\"v2 product details\", \"/api/v2/products/\" + pid],",
+                  "    [\"v1 categories\", \"/api/v1/categories\"],",
+                  "];",
+                  "const jobs = [];",
+                  "endpoints.forEach(([name, path]) => {",
+                  "    jobs.push({ name, path, mode: \"cached\", warmup: true }); // fill the cache first",
+                  "    for (let i = 0; i < rounds; i++) {",
+                  "        jobs.push({ name, path, mode: \"uncached\" });",
+                  "        jobs.push({ name, path, mode: \"cached\" });",
+                  "    }",
+                  "});",
+                  "const samples = [];",
+                  "function next(i) {",
+                  "    if (i >= jobs.length) {",
+                  "        pm.collectionVariables.set(\"cache_samples\", JSON.stringify(samples));",
+                  "        return;",
+                  "    }",
+                  "    const job = jobs[i];",
+                  "    const header = { \"Accept\": \"application/json\", \"Authorization\": \"Bearer \" + token };",
+                  "    if (job.mode === \"uncached\") { header[\"X-Cache-Bypass\"] = \"1\"; }",
+                  "    pm.sendRequest({ url: base + job.path, method: \"GET\", header: header }, (err, res) => {",
+                  "        if (!job.warmup) {",
+                  "            const timing = err ? \"\" : (res.headers.get(\"Server-Timing\") || \"\");",
+                  "            const catalog = (timing.match(/catalog;dur=([\\d.]+)/) || [])[1];",
+                  "            samples.push({",
+                  "                name: job.name, mode: job.mode,",
+                  "                code: err ? \"error\" : res.code,",
+                  "                xcache: err ? null : res.headers.get(\"X-Cache\"),",
+                  "                ms: err ? null : res.responseTime,",
+                  "                catalogMs: catalog === undefined ? null : Number(catalog),",
+                  "            });",
+                  "        }",
+                  "        next(i + 1);",
+                  "    });",
+                  "}",
+                  "next(0);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const samples = JSON.parse(pm.collectionVariables.get(\"cache_samples\") || \"[]\");",
+                  "const pct = (values, p) => {",
+                  "    const v = values.filter(x => x !== null).sort((a, b) => a - b);",
+                  "    if (!v.length) { return null; }",
+                  "    return v[Math.min(v.length - 1, Math.ceil(p / 100 * v.length) - 1)];",
+                  "};",
+                  "const avg = values => { const v = values.filter(x => x !== null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };",
+                  "const f = x => x === null ? \"n/a\" : (Math.round(x * 10) / 10);",
+                  "const names = [...new Set(samples.map(s => s.name))];",
+                  "const table = [];",
+                  "",
+                  "const bad = samples.filter(s => s.code !== 200).map(s => s.code);",
+                  "pm.test(\"Every request answered 200\" + (bad.includes(429) ? \" (429 = API rate limit: start the app with API_RATE_LIMIT_PER_MINUTE=100000 for this comparison)\" : \"\"), () => pm.expect(bad).to.eql([]));",
+                  "",
+                  "names.forEach(name => {",
+                  "    const un = samples.filter(s => s.name === name && s.mode === \"uncached\");",
+                  "    const ca = samples.filter(s => s.name === name && s.mode === \"cached\");",
+                  "    const cacheOff = ca.every(s => s.xcache === \"OFF\");",
+                  "    pm.test(name + \": uncached requests really skipped the cache (X-Cache \" + (cacheOff ? \"OFF\" : \"BYPASS\") + \")\",",
+                  "        () => pm.expect(un.every(s => s.xcache === (cacheOff ? \"OFF\" : \"BYPASS\"))).to.eql(true));",
+                  "    if (!cacheOff) {",
+                  "        pm.test(name + \": cached requests were served from Redis (X-Cache HIT)\", () => pm.expect(ca.every(s => s.xcache === \"HIT\")).to.eql(true));",
+                  "    }",
+                  "    const row = {",
+                  "        endpoint: name,",
+                  "        n: un.length + \"+\" + ca.length,",
+                  "        uncached_p50_ms: f(pct(un.map(s => s.ms), 50)), uncached_p95_ms: f(pct(un.map(s => s.ms), 95)), uncached_p99_ms: f(pct(un.map(s => s.ms), 99)),",
+                  "        cached_p50_ms: f(pct(ca.map(s => s.ms), 50)), cached_p95_ms: f(pct(ca.map(s => s.ms), 95)), cached_p99_ms: f(pct(ca.map(s => s.ms), 99)),",
+                  "        catalog_uncached_avg_ms: f(avg(un.map(s => s.catalogMs))), catalog_cached_avg_ms: f(avg(ca.map(s => s.catalogMs))),",
+                  "    };",
+                  "    table.push(row);",
+                  "    // The measured numbers are shown as test names, so they appear in the runner.",
+                  "    row.cache = cacheOff ? \"OFF (PRODUCT_CACHE_ENABLED=false): both columns read MySQL\" : \"ON: bypass = MySQL, normal = Redis\";",
+                  "    const second = cacheOff ? \"second set (MySQL, cache off) \" : \"cached (Redis) \";",
+                  "    pm.test(name + \" | total p50/p95: uncached (MySQL) \" + row.uncached_p50_ms + \"/\" + row.uncached_p95_ms + \" ms, \" + second",
+                  "        + row.cached_p50_ms + \"/\" + row.cached_p95_ms + \" ms | catalog lookup avg: \" + row.catalog_uncached_avg_ms",
+                  "        + \" ms vs \" + row.catalog_cached_avg_ms + \" ms\", () => pm.expect(un.length).to.be.above(0));",
+                  "});",
+                  "console.log(\"Cache comparison (measured)\", JSON.stringify(table, null, 2));",
+                  "pm.collectionVariables.set(\"cache_comparison\", JSON.stringify(table));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "9. Logout",
@@ -3435,19 +4622,11 @@
     },
     {
       "key": "race_product_id",
-      "value": "85"
-    },
-    {
-      "key": "race_stock",
-      "value": "3"
+      "value": "13"
     },
     {
       "key": "race_requests",
-      "value": "10"
-    },
-    {
-      "key": "race_original_stock",
-      "value": ""
+      "value": "20"
     },
     {
       "key": "race_results",
@@ -3459,6 +4638,46 @@
     },
     {
       "key": "race_cancel_codes",
+      "value": ""
+    },
+    {
+      "key": "stock_product_id",
+      "value": "15"
+    },
+    {
+      "key": "not_stocked_product_id",
+      "value": "16"
+    },
+    {
+      "key": "race_start_stock",
+      "value": ""
+    },
+    {
+      "key": "too_many",
+      "value": ""
+    },
+    {
+      "key": "etag",
+      "value": ""
+    },
+    {
+      "key": "categories_etag",
+      "value": ""
+    },
+    {
+      "key": "cache_rounds",
+      "value": "20"
+    },
+    {
+      "key": "cache_samples",
+      "value": ""
+    },
+    {
+      "key": "cache_comparison",
+      "value": ""
+    },
+    {
+      "key": "expected_name",
       "value": ""
     }
   ]

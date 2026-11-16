@@ -1,0 +1,16 @@
+Second run, 2026-11-14. Scheduler paused. MySQL general log (log_output=TABLE) on only
+during the counted requests; restored afterwards to general_log=OFF, log_output=FILE.
+80 requests = 2 passes over the 40 catalog pages of tests/load/catalog.js, each run after
+one warm-up pass (not counted). "catalog" = statements reading `products` or `categories`.
+
+cached run 1: [80 x 200 HIT]               catalog statements=0   (0.0/request), all statements=401 (5.01/request)
+bypass run 1: [80 x 200 BYPASS]            catalog statements=240 (3.0/request), all statements=641 (8.01/request)
+cached run 2: [40 x 200 HIT, 40 x 200 MISS] catalog statements=120 (1.5/request), all statements=521 (6.51/request)
+bypass run 2: [80 x 200 BYPASS]            catalog statements=240 (3.0/request), all statements=641 (8.01/request)
+
+Cached run 2: the entries had been filled ~5 minutes earlier and their 300 s TTL ran out;
+each of the 40 pages was refilled once (40 x 3 = 120), the second pass was HIT again.
+Headers for one page: HIT -> Server-Timing: catalog;dur=0.8;desc="HIT", stock;dur=13.05
+                      BYPASS -> Server-Timing: catalog;dur=3.31;desc="BYPASS", stock;dur=14.19
+(A first attempt with performance_schema digests counted 0 statements in both modes:
+prepared statements are not in that table. That method was discarded.)

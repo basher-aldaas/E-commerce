@@ -2,6 +2,22 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Orders\Http\Controllers\OrderController;
+use Modules\Orders\Http\Controllers\PerfOrdersController;
+use Modules\Orders\Http\Controllers\ReservationDiagnosticsController;
+
+// Admin diagnostics (read-only), next to the model they read.
+Route::prefix('v1/system')
+    ->middleware(['auth:api', 'can:view_system_status'])
+    ->group(function () {
+        Route::get('/reservations', [ReservationDiagnosticsController::class, 'index']);
+    });
+
+// Performance demonstration (Requirement 3, N+1). Not used by the store.
+Route::prefix('v1/perf')
+    ->middleware(['auth:api', 'can:view_system_status'])
+    ->group(function () {
+        Route::get('/orders', [PerfOrdersController::class, 'index']);
+    });
 
 Route::prefix('v1')
     ->middleware('auth:api')

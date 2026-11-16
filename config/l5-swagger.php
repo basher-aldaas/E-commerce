@@ -5,7 +5,7 @@ return [
     'documentations' => [
         'default' => [
             'api' => [
-                'title' => 'L5 Swagger UI',
+                'title' => 'E-commerce API',
             ],
 
             'routes' => [
@@ -31,25 +31,21 @@ return [
                 'docs_json' => 'api-docs.json',
 
                 /*
-                 * File name of the generated YAML documentation file
+                 * The hand-written OpenAPI document (docs/openapi.yaml). It is read
+                 * as is; nothing generates it.
                  */
-                'docs_yaml' => 'api-docs.yaml',
+                'docs_yaml' => 'openapi.yaml',
 
                 /*
                  * Set this to `json` or `yaml` to determine which documentation file to use in UI
                  */
-                'format_to_use_for_docs' => env('L5_FORMAT_TO_USE_FOR_DOCS', 'json'),
+                'format_to_use_for_docs' => 'yaml',
 
                 /*
                  * Absolute paths to directory containing the swagger annotations are stored.
                  */
-                'annotations' => [
-                    base_path('app'),
-                    base_path('Modules/Users/app/Http/Controllers'),
-                    base_path('Modules/Products/app/Http/Controllers'),
-                    base_path('Modules/Orders/app/Http/Controllers'),
-                    base_path('Modules/Notifications/app/Http/Controllers'),
-                ],
+                // No annotations: the documentation is the static docs/openapi.yaml.
+                'annotations' => [],
             ],
         ],
     ],
@@ -88,9 +84,9 @@ return [
 
         'paths' => [
             /*
-             * Absolute path to location where parsed annotations will be stored
+             * Directory holding the documentation file (docs/openapi.yaml).
              */
-            'docs' => storage_path('api-docs'),
+            'docs' => base_path('docs'),
 
             /*
              * Absolute path to directory where to export views
@@ -290,7 +286,8 @@ return [
          * Set this to `true` in development mode so that docs would be regenerated on each request
          * Set this to `false` to disable swagger generation on production
          */
-        'generate_always' => env('L5_SWAGGER_GENERATE_ALWAYS', false),
+        // Never generate: that would ignore docs/openapi.yaml.
+        'generate_always' => false,
 
         /*
          * Set this to `true` to generate a copy of documentation in yaml format

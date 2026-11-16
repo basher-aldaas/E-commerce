@@ -25,7 +25,11 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
-        <env name="CACHE_STORE" value="array"/>
+        <!-- docker-compose.yml sets CACHE_STORE=redis, MAIL_MAILER=log and
+             QUEUE_CONNECTION=sync for the app; tests must never use the shared
+             Redis (they flush it and travel in time), so force them here too. -->
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <server name="CACHE_STORE" value="array"/>
         <!-- WARNING: tests run on the app's real MySQL database, E-commerce.
              RefreshDatabase drops and recreates every table in it, so all its
              data is lost on each run. Host, port and credentials (DB_HOST,
@@ -43,8 +47,10 @@
         <server name="DB_CONNECTION" value="mysql"/>
         <server name="DB_DATABASE" value="E-commerce"/>
         <server name="DB_URL" value=""/>
-        <env name="MAIL_MAILER" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="MAIL_MAILER" value="array" force="true"/>
+        <server name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <server name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>

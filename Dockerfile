@@ -20,6 +20,27 @@ RUN install-php-extensions grpc
 # adding it doesn't recompile grpc.
 RUN install-php-extensions gd
 
+# phpredis, for the Redis cache store (CACHE_STORE=redis in docker-compose.yml).
+RUN install-php-extensions redis
+
+# OPcache for the CLI SAPI, which is what `php artisan serve` runs under. Off by
+# default, so every request recompiled every PHP file from the bind mount.
+#
+# PHP_OPCACHE_VALIDATE_TIMESTAMPS (read when PHP starts):
+#   1 = check every file's timestamp on each request, so code edits apply at once.
+#       On a Windows bind mount each check costs ~1 ms per file (~1-2 s/request).
+#   0 = never check: stable ~0.25 s requests, but restart the container
+#       (`docker compose restart app`) after changing PHP code.
+ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
+RUN { \
+        echo 'opcache.enable=1'; \
+        echo 'opcache.enable_cli=1'; \
+        echo 'opcache.validate_timestamps=${PHP_OPCACHE_VALIDATE_TIMESTAMPS}'; \
+        echo 'opcache.revalidate_freq=0'; \
+        echo 'opcache.memory_consumption=192'; \
+        echo 'opcache.max_accelerated_files=20000'; \
+    } > /usr/local/etc/php/conf.d/zz-opcache.ini
+
 # Composer from the official image.
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

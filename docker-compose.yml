@@ -3,29 +3,104 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ecommerce-app
     container_name: ecommerce-app
     ports:
       - "8000:8000"
     volumes:
       - .:/var/www/html
-    environment:
+    environment: &app-environment
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: E-commerce
       DB_USERNAME: root
       DB_PASSWORD: ""
+      # MySQL read replica (Requirement 3, Phase 4). Empty = no read/write split.
+      # With the replica running (`docker compose --profile replica up -d`), start
+      # the app with `DB_READ_HOST=mysql-replica docker compose up -d app`: catalog
+      # reads may then use the replica, everything else stays on the primary
+      # (App\Support\Database\ReadRouting). Setup: docs/performance/DEMO.md.
+      DB_READ_HOST: ${DB_READ_HOST:-}
+      # Read-your-writes window: after changing rows, a user reads the primary for
+      # this many seconds. Use e.g. 60 for the live demo (time to click around).
+      DB_READ_YOUR_WRITES_SECONDS: ${DB_READ_YOUR_WRITES_SECONDS:-5}
       WAREHOUSE_GRPC_ENABLED: "true"
       WAREHOUSE_GRPC_TARGET: warehouse:50051
+      # Development only: no queue worker runs yet (RabbitMQ and workers belong
+      # to Requirement 4), so queued mail is handled in the request and written
+      # to storage/logs/laravel.log instead of being delivered.
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: log
+      # `php artisan serve` handles one request at a time unless PHP's built-in
+      # server runs several workers; 8 lets concurrent orders really overlap.
+      PHP_CLI_SERVER_WORKERS: 8
+      # 0 = OPcache never re-checks files: stable timings for demos and the cache
+      # benchmark, but run `docker compose restart app` after editing PHP code.
+      # Set to 1 to pick up code edits immediately (each request then gets
+      # ~1-2 s slower on a Windows bind mount). See the Dockerfile.
+      PHP_OPCACHE_VALIDATE_TIMESTAMPS: 0
+      # Catalog cache for the v1/v2 product endpoints (Requirement 3). Set to
+      # false (`PRODUCT_CACHE_ENABLED=false docker compose up -d app`) to measure the uncached
+      # baseline with the same requests; responses then carry X-Cache: OFF.
+      PRODUCT_CACHE_ENABLED: ${PRODUCT_CACHE_ENABLED:-true}
+      PRODUCT_CACHE_TTL: 300
+      # Per-user API rate limit (requests/minute). Keep 60 normally; for a load
+      # test or the Postman cache comparison start the app with e.g.
+      # `API_RATE_LIMIT_PER_MINUTE=100000 docker compose up -d app`.
+      API_RATE_LIMIT_PER_MINUTE: ${API_RATE_LIMIT_PER_MINUTE:-60}
+      # Shared application cache (catalog cache, rate limiter, scheduler locks).
+      CACHE_STORE: redis
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       warehouse:
         condition: service_healthy
 
+  # Runs Laravel's scheduler: `warehouse:reconcile` every minute, which releases
+  # reservations whose compensation or cancellation could not reach the
+  # Warehouse at the time. Exactly one scheduler container; the task also uses
+  # withoutOverlapping() + onOneServer(), backed by the shared Redis cache
+  # lock, so a run never starts while another is still going.
+  scheduler:
+    image: ecommerce-app
+    container_name: ecommerce-scheduler
+    command: ["php", "artisan", "schedule:work"]
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html
+    environment: *app-environment
+    depends_on:
+      app:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Application cache (Requirement 3). No published port: only the Laravel
+  # containers use it. Data is a cache, so no volume: losing it is harmless.
+  redis:
+    image: redis:7.4-alpine
+    container_name: ecommerce-redis
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   mysql:
     image: mysql:8.0
     container_name: ecommerce-mysql
+    # GTID replication source for the optional read replica below. Binary
+    # logging is already on by default in MySQL 8; server-id 1 is explicit.
+    command: ["--server-id=1", "--gtid-mode=ON", "--enforce-gtid-consistency=ON"]
     ports:
       - "3307:3306"
     environment:
@@ -33,6 +108,28 @@ services:
       MYSQL_DATABASE: E-commerce
     volumes:
       - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Optional MySQL read replica (Requirement 3). Not started by default; only
+  # with `docker compose --profile replica up -d mysql-replica`. It copies the
+  # primary through GTID replication and is read-only. One-time setup (copy the
+  # data, point it at the primary) is in docs/performance/DEMO.md.
+  mysql-replica:
+    image: mysql:8.0
+    container_name: ecommerce-mysql-replica
+    profiles: ["replica"]
+    command: ["--server-id=2", "--gtid-mode=ON", "--enforce-gtid-consistency=ON", "--relay-log=relay-bin"]
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - mysql-replica-data:/var/lib/mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -65,6 +162,11 @@ services:
   warehouse-mysql:
     image: mysql:8.0
     container_name: ecommerce-warehouse-mysql
+    # Bound to 127.0.0.1 only, for the Laravel integration tests run from the
+    # host (tests/Integration). Users still reach stock only through Laravel; the
+    # gRPC service itself publishes no port.
+    ports:
+      - "127.0.0.1:3308:3306"
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_DATABASE: warehouse
@@ -87,7 +189,7 @@ services:
     ports:
       - "8080:80"
     environment:
-      PMA_HOSTS: mysql,warehouse-mysql
+      PMA_HOSTS: mysql,warehouse-mysql,mysql-replica
       PMA_ARBITRARY: 0
     volumes:
       - ./docker/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php:ro
@@ -97,4 +199,5 @@ services:
 
 volumes:
   mysql-data:
+  mysql-replica-data:
   warehouse-mysql-data:

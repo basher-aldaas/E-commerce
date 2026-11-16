@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "bb6b6703-f129-4bf6-88f5-17096ffdc8c3",
-    "name": "E-commerce - Requirement 2",
-    "description": "Run the whole collection in order with the Collection Runner.\n\nNeeds `docker compose up -d` and a seeded database (admin@system.com / user@system.com, password `password123`). Each run creates its own category, product and orders, so IDs never have to be edited by hand.",
+    "_postman_id": "7fc4ad2b-1314-41af-ab10-f8bc8e960a30",
+    "name": "E-commerce R2",
+    "description": "Run the whole collection in order with the Collection Runner.\n\nNeeds `docker compose up -d` and the seeded databases (admin@system.com / user@system.com, password `password123`). Stock lives only in the Warehouse service: there is no stock field on products and no stock endpoint in Laravel. Orders use seeded products that the Warehouse seed stocks (product 15 has 60 units, product 13 has 1, product 16 is not stocked). Every stock check is relative to the live quantity read first, so the collection can run repeatedly. To change stock, use the Warehouse CLI: `docker compose exec warehouse python -m app.cli set-stock <product_id> <quantity>`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -52,7 +52,7 @@
             }
           },
           "response": [],
-          "_postman_id": "c7d09594-b1b3-4e1f-a550-d846afef7de3",
+          "_postman_id": "4d43a01f-3892-46bf-8767-1f6c096f1cef",
           "event": [
             {
               "listen": "test",
@@ -111,7 +111,7 @@
             }
           },
           "response": [],
-          "_postman_id": "30db2414-0c8c-48db-9be1-5f3bb30804f6",
+          "_postman_id": "94a1bd16-966f-45e4-858a-81a84d3ab3f4",
           "event": [
             {
               "listen": "test",
@@ -168,7 +168,7 @@
             }
           },
           "response": [],
-          "_postman_id": "8d9daf19-bb1e-4966-9f1b-b752c6a6a5cc",
+          "_postman_id": "3a6bb795-ad97-453e-8f92-9bb8e7dc1318",
           "event": [
             {
               "listen": "prerequest",
@@ -239,7 +239,7 @@
             }
           },
           "response": [],
-          "_postman_id": "fa0d2c7e-b7bf-43d3-9efd-a8a5a12d25ae",
+          "_postman_id": "147ed7b0-40e1-450e-ae54-8a61bccf9643",
           "event": [
             {
               "listen": "test",
@@ -253,33 +253,31 @@
           ]
         }
       ],
-      "_postman_id": "ab4cd971-e26a-4a85-bdc1-4dae6f13f9f7"
+      "_postman_id": "fe8e7365-8b71-4477-8db9-0c18c6641646"
     },
     {
-      "name": "Requirement 2 - Warehouse integration (gRPC)",
+      "name": "Warehouse gRPC",
       "description": "Laravel reads and writes all stock through the Python Warehouse service over gRPC. Run after Requirement 1: these requests reuse its product and check the stock at each step. If the Warehouse container is down, stock requests return 503 (unavailable) or 504 (timeout).",
       "item": [
         {
-          "name": "Inventory (stock lives in the Warehouse)",
+          "name": "Inventory",
           "item": [
             {
-              "name": "show",
+              "name": "Read live stock (baseline)",
               "request": {
                 "method": "GET",
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/products/85",
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -287,181 +285,7 @@
                     "api",
                     "v1",
                     "products",
-                    "85"
-                  ]
-                },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{user_token}}",
-                      "type": "string"
-                    }
-                  ]
-                }
-              },
-              "response": [],
-              "_postman_id": "f067080d-3c8a-441d-8bd2-1b69cd7621a8",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "const p = pm.response.json().data;",
-                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"expected_stock\"), () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "index",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/products",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "products"
-                  ]
-                },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{user_token}}",
-                      "type": "string"
-                    }
-                  ]
-                }
-              },
-              "response": [],
-              "_postman_id": "409eb67e-b4aa-4453-beb9-ccb396e30e73",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "const p = pm.response.json().data;",
-                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"expected_stock\"), () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Set stock to 5 (admin)",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/85",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "inventory",
-                    "85"
-                  ]
-                },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{admin_token}}",
-                      "type": "string"
-                    }
-                  ]
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n    \"stock\": 5\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "response": [],
-              "_postman_id": "2b3f8c5a-0884-4aa8-a438-0ff43f9d5836",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "",
-                      "pm.test(\"Stock is 5\", () => pm.expect(pm.response.json().data.stock).to.eql(5));",
-                      "pm.collectionVariables.set(\"expected_stock\", 5);"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Read stock back from the Warehouse (5)",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "products",
-                    "{{product_id}}"
+                    "{{stock_product_id}}"
                   ]
                 },
                 "auth": {
@@ -475,8 +299,6 @@
                   ]
                 }
               },
-              "response": [],
-              "_postman_id": "d631e617-572f-47ec-a2d4-49b3385fdbe4",
               "event": [
                 {
                   "listen": "test",
@@ -485,38 +307,38 @@
                     "exec": [
                       "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
                       "const p = pm.response.json().data;",
-                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"expected_stock\"), () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
+                      "pm.test(\"Stock is a live number from the Warehouse\", () => pm.expect(p.stock).to.be.a(\"number\"));",
+                      "pm.test(\"stock_status is in_stock\", () => pm.expect(p.stock_status).to.eql(\"in_stock\"));",
+                      "pm.collectionVariables.set(\"expected_stock\", p.stock);"
                     ]
                   }
                 }
               ]
             },
             {
-              "name": "Set stock - as user (403)",
+              "name": "Not stocked yet (no Warehouse row)",
               "request": {
-                "method": "PATCH",
+                "method": "GET",
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/85",
+                  "raw": "{{base_url}}/api/v2/products/{{not_stocked_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
                   "path": [
                     "api",
-                    "v1",
-                    "inventory",
-                    "85"
+                    "v2",
+                    "products",
+                    "{{not_stocked_product_id}}"
                   ]
                 },
                 "auth": {
@@ -525,6 +347,59 @@
                     {
                       "key": "token",
                       "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"stock is null\", () => pm.expect(p.stock).to.eql(null));",
+                      "pm.test(\"stock_status is not_stocked\", () => pm.expect(p.stock_status).to.eql(\"not_stocked\"));",
+                      "pm.test(\"in_stock is false\", () => pm.expect(p.in_stock).to.eql(false));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Laravel has no stock endpoint (404)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/{{stock_product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "{{stock_product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
                       "type": "string"
                     }
                   ]
@@ -537,134 +412,9 @@
                       "language": "json"
                     }
                   }
-                }
+                },
+                "description": "Stock is managed only with the Warehouse CLI (`python -m app.cli set-stock`). The old /inventory endpoint was removed."
               },
-              "response": [],
-              "_postman_id": "3aa31697-5a4e-4461-b3f4-5cb73b14a548",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Set stock - negative (422)",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/85",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "inventory",
-                    "85"
-                  ]
-                },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{admin_token}}",
-                      "type": "string"
-                    }
-                  ]
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n    \"stock\": -1\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "response": [],
-              "_postman_id": "6950a070-c168-4212-a83e-c500d7487a88",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Set stock - unknown product (404)",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/inventory/999999999",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "inventory",
-                    "999999999"
-                  ]
-                },
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{admin_token}}",
-                      "type": "string"
-                    }
-                  ]
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n    \"stock\": 1\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "response": [],
-              "_postman_id": "cf6d506c-76cd-4ac9-8efb-0ac028995029",
               "event": [
                 {
                   "listen": "test",
@@ -684,13 +434,11 @@
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   }
                 ],
                 "url": {
@@ -725,8 +473,6 @@
                   ]
                 }
               },
-              "response": [],
-              "_postman_id": "5e9d8d3c-5586-4cbb-9c0d-33c2ddc56ac8",
               "event": [
                 {
                   "listen": "test",
@@ -741,11 +487,10 @@
                 }
               ]
             }
-          ],
-          "_postman_id": "43f2d1d9-a238-4a7d-a0d8-017373697c93"
+          ]
         },
         {
-          "name": "Order reserves stock",
+          "name": "Order",
           "item": [
             {
               "name": "Order 2 units",
@@ -754,13 +499,15 @@
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
                   }
                 ],
                 "url": {
@@ -779,14 +526,14 @@
                   "bearer": [
                     {
                       "key": "token",
-                      "value": "{{customer_token}}",
+                      "value": "{{user_token}}",
                       "type": "string"
                     }
                   ]
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": 85, \"quantity\": 2 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 2 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -794,8 +541,6 @@
                   }
                 }
               },
-              "response": [],
-              "_postman_id": "da0b11bc-874b-4f4a-b610-787d52e5ebf1",
               "event": [
                 {
                   "listen": "test",
@@ -812,19 +557,72 @@
               ]
             },
             {
+              "name": "Stock went down by 2",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    "{{stock_product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"expected_stock\"), () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
               "name": "Order more than available (409)",
               "request": {
                 "method": "POST",
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
                   }
                 ],
                 "url": {
@@ -843,14 +641,14 @@
                   "bearer": [
                     {
                       "key": "token",
-                      "value": "{{customer_token}}",
+                      "value": "{{user_token}}",
                       "type": "string"
                     }
                   ]
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": 85, \"quantity\": 1000 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": {{too_many}} }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -858,8 +656,82 @@
                   }
                 }
               },
-              "response": [],
-              "_postman_id": "20f166e1-4fb9-4215-97bc-40ac45da214e",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Ask for 10 more than the Warehouse has. The quantity must reach the Warehouse unchanged.",
+                      "pm.collectionVariables.set(\"too_many\", Number(pm.collectionVariables.get(\"expected_stock\")) + 10);"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
+                      "const body = pm.response.json();",
+                      "const item = body.data.items[0];",
+                      "pm.test(\"Insufficient stock message\", () => pm.expect(body.message).to.eql(\"Insufficient stock for the requested product.\"));",
+                      "pm.test(\"Requested quantity is unchanged\", () => pm.expect(item.requested_quantity).to.eql(Number(pm.collectionVariables.get(\"too_many\"))));",
+                      "pm.test(\"Available quantity is the live stock\", () => pm.expect(item.available_quantity).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Order a product that is not stocked yet (409)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{not_stocked_product_id}}, \"quantity\": 1 }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
               "event": [
                 {
                   "listen": "test",
@@ -867,30 +739,94 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
-                      "pm.test(\"Insufficient stock message\", () => pm.expect(pm.response.json().message.toLowerCase()).to.include(\"stock\"));"
+                      "const item = pm.response.json().data.items[0];",
+                      "pm.test(\"Marked as not stocked\", () => pm.expect(item.stocked).to.eql(false));",
+                      "pm.test(\"Requested 1, available 0\", () => pm.expect([item.requested_quantity, item.available_quantity]).to.eql([1, 0]));"
                     ]
                   }
                 }
               ]
             },
             {
-              "name": "Failed order did not touch stock (3)",
+              "name": "Several short products are all listed (409)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": {{too_many}} },\n        { \"product_id\": {{not_stocked_product_id}}, \"quantity\": 2 }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
+                      "const items = pm.response.json().data.items;",
+                      "pm.test(\"Both short products are listed\", () => pm.expect(items.map(i => i.product_id)).to.have.members([Number(pm.collectionVariables.get(\"stock_product_id\")), Number(pm.collectionVariables.get(\"not_stocked_product_id\"))]));",
+                      "pm.test(\"Plural message\", () => pm.expect(pm.response.json().message).to.eql(\"Insufficient stock for the requested products.\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Refused orders did not touch stock",
               "request": {
                 "method": "GET",
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -898,7 +834,7 @@
                     "api",
                     "v1",
                     "products",
-                    "{{product_id}}"
+                    "{{stock_product_id}}"
                   ]
                 },
                 "auth": {
@@ -912,8 +848,6 @@
                   ]
                 }
               },
-              "response": [],
-              "_postman_id": "00857577-77cb-4f8e-ab93-f5b0f4f9e21f",
               "event": [
                 {
                   "listen": "test",
@@ -928,11 +862,10 @@
                 }
               ]
             }
-          ],
-          "_postman_id": "c53e1d87-de31-45fd-bc40-a7ea1a43b273"
+          ]
         },
         {
-          "name": "Cancel returns stock",
+          "name": "Cancel",
           "item": [
             {
               "name": "Cancel the 2-unit order (admin)",
@@ -941,13 +874,11 @@
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   }
                 ],
                 "url": {
@@ -983,8 +914,6 @@
                   }
                 }
               },
-              "response": [],
-              "_postman_id": "e767b039-ab85-4e54-b07a-fee35a12f8ee",
               "event": [
                 {
                   "listen": "test",
@@ -1001,19 +930,178 @@
               ]
             },
             {
+              "name": "Stock came back",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    "{{stock_product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"expected_stock\"), () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Cancel it again (released only once)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders/{{order2_id}}/status",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders",
+                    "{{order2_id}}",
+                    "status"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"status\": \"cancelled\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Stock unchanged after the second cancel",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    "{{stock_product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"expected_stock\"), () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
               "name": "Reopen a cancelled order (409)",
               "request": {
                 "method": "POST",
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   }
                 ],
                 "url": {
@@ -1049,8 +1137,6 @@
                   }
                 }
               },
-              "response": [],
-              "_postman_id": "7301d8c8-afc9-4bf5-bd99-9ca58adbfda2",
               "event": [
                 {
                   "listen": "test",
@@ -1070,13 +1156,11 @@
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   }
                 ],
                 "url": {
@@ -1097,14 +1181,12 @@
                   "bearer": [
                     {
                       "key": "token",
-                      "value": "{{customer_token}}",
+                      "value": "{{user_token}}",
                       "type": "string"
                     }
                   ]
                 }
               },
-              "response": [],
-              "_postman_id": "0639f33c-72e2-4779-9fd3-8a3099f570f2",
               "event": [
                 {
                   "listen": "test",
@@ -1118,11 +1200,10 @@
                 }
               ]
             }
-          ],
-          "_postman_id": "82b58853-eef4-4de7-9520-ea8d31305347"
+          ]
         },
         {
-          "name": "Idempotency-Key (no double ordering)",
+          "name": "Idempotency",
           "item": [
             {
               "name": "Order 1 unit with a new key",
@@ -1131,18 +1212,15 @@
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Idempotency-Key",
-                    "value": "{{idempotency_key}}",
-                    "type": "text"
+                    "value": "{{idempotency_key}}"
                   }
                 ],
                 "url": {
@@ -1161,14 +1239,14 @@
                   "bearer": [
                     {
                       "key": "token",
-                      "value": "{{customer_token}}",
+                      "value": "{{user_token}}",
                       "type": "string"
                     }
                   ]
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": 86, \"quantity\": 1 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 1 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1176,8 +1254,6 @@
                   }
                 }
               },
-              "response": [],
-              "_postman_id": "b5b8c6b7-4642-4897-8b53-74a7606d10a9",
               "event": [
                 {
                   "listen": "prerequest",
@@ -1209,18 +1285,15 @@
                 "header": [
                   {
                     "key": "Accept",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
+                    "value": "application/json"
                   },
                   {
                     "key": "Idempotency-Key",
-                    "value": "{{idempotency_key}}",
-                    "type": "text"
+                    "value": "{{idempotency_key}}"
                   }
                 ],
                 "url": {
@@ -1239,14 +1312,14 @@
                   "bearer": [
                     {
                       "key": "token",
-                      "value": "{{customer_token}}",
+                      "value": "{{user_token}}",
                       "type": "string"
                     }
                   ]
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"items\": [\n        { \"product_id\": 86, \"quantity\": 1 }\n    ]\n}",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 1 }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1254,8 +1327,6 @@
                   }
                 }
               },
-              "response": [],
-              "_postman_id": "e546e56d-f11c-42b5-95f0-5b78a4532450",
               "event": [
                 {
                   "listen": "test",
@@ -1268,30 +1339,304 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "Stock went down only once",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/{{stock_product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    "{{stock_product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"Stock is \" + pm.collectionVariables.get(\"expected_stock\"), () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"expected_stock\"))));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Same key, different items (422)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{idempotency_key}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 2 }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Order without an Idempotency-Key (422)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 2 }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "The header is required: without it a retry could not be told apart from a new order. Nothing is reserved and no order is created."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));",
+                      "pm.test(\"The missing header is named\", () => pm.expect(pm.response.json().data[\"Idempotency-Key\"][0]).to.eql(\"The Idempotency-Key header is required.\"));"
+                    ]
+                  }
+                }
+              ]
             }
-          ],
-          "_postman_id": "383d611a-eca0-421a-a83a-227a00b91e3c"
-        }
-      ],
-      "_postman_id": "0327bce7-00eb-4e3d-81e9-fe93e1dfdc0d"
-    },
-    {
-      "name": "New Request",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "",
-          "host": [
-            ""
-          ],
-          "path": [
-            ""
+          ]
+        },
+        {
+          "name": "Manual - Warehouse stopped (run on its own)",
+          "description": "Run these two requests by hand, not in the Collection Runner.\n\n1. `docker compose stop warehouse`\n2. Send the requests below.\n3. `docker compose start warehouse`\n\nProduct pages stay up with stock_status `unavailable`; an order is refused with 503 and nothing is saved. To see a 504 (timeout) instead, use `docker compose pause warehouse` / `docker compose unpause warehouse`.",
+          "item": [
+            {
+              "name": "Product page while the Warehouse is down (200, unavailable)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v2/products/{{stock_product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v2",
+                    "products",
+                    "{{stock_product_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "const p = pm.response.json().data;",
+                      "pm.test(\"stock_status is unavailable\", () => pm.expect(p.stock_status).to.eql(\"unavailable\"));",
+                      "pm.test(\"in_stock is null\", () => pm.expect(p.in_stock).to.eql(null));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Order while the Warehouse is down (503 or 504)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        { \"product_id\": {{stock_product_id}}, \"quantity\": 1 }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 503 (stopped) or 504 (paused)\", () => pm.expect(pm.response.code).to.be.oneOf([503, 504]));",
+                      "const body = pm.response.json();",
+                      "pm.test(\"Standard error envelope\", () => pm.expect(body).to.include.keys(\"status\", \"data\", \"message\", \"status_code\", \"timestamp\"));",
+                      "pm.test(\"status is 0\", () => pm.expect(body.status).to.eql(0));"
+                    ]
+                  }
+                }
+              ]
+            }
           ]
         }
-      },
-      "response": [],
-      "_postman_id": "c7a6c542-3a05-4f70-aeed-06cc6b1d591b"
+      ],
+      "_postman_id": "fe6edab9-d97a-4f31-8393-888917518cd0"
     }
   ],
   "variable": [
@@ -1387,9 +1732,19 @@
     },
     {
       "key": "expected_stock",
-      "value": "",
-      "type": "default",
-      "enabled": true
+      "value": ""
+    },
+    {
+      "key": "stock_product_id",
+      "value": "15"
+    },
+    {
+      "key": "not_stocked_product_id",
+      "value": "16"
+    },
+    {
+      "key": "too_many",
+      "value": ""
     }
   ]
 }

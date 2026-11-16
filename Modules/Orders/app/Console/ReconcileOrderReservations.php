@@ -22,7 +22,7 @@ class ReconcileOrderReservations extends Command
 
         $counts = $stock->reconcile((int) $this->option('older-than'));
 
-        $this->info("Settled {$counts['settled']}, still unsettled {$counts['failed']}.");
+        $this->info("Settled {$counts['settled']}, still unsettled {$counts['failed']}, skipped {$counts['skipped']} (changed by another process).");
 
         return SymfonyCommand::SUCCESS;
     }

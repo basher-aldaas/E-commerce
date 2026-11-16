@@ -49,7 +49,7 @@ class DisabledIntegrationTest extends ApiTestCase
         $product = $this->makeProduct();
         $this->actingAsApi($this->makeUser());
 
-        $response = $this->postJson('/api/v1/orders', [
+        $response = $this->postOrder([
             'items' => [['product_id' => $product->id, 'quantity' => 1]],
         ]);
 
@@ -64,24 +64,22 @@ class DisabledIntegrationTest extends ApiTestCase
         $product = $this->makeProduct();
         $this->actingAsApi($this->makeUser());
 
-        $this->postJson('/api/v1/orders', [
+        $this->postOrder([
             'items' => [['product_id' => $product->id, 'quantity' => 1]],
         ])->assertStatus(503);
     }
 
-    public function test_stock_changes_fail_with_503(): void
+    public function test_creating_a_product_does_not_need_the_warehouse(): void
     {
-        $product = $this->makeProduct();
         $this->actingAsApi($this->makeUser('admin'));
 
-        $this->patchJson("/api/v1/inventory/{$product->id}", ['stock' => 5])->assertStatus(503);
-
         $this->postJson('/api/v1/products', [
-            'name' => 'Not created',
+            'name' => 'Created offline',
             'price' => 1,
             'category_id' => $this->makeCategory()->id,
-            'stock' => 1,
-        ])->assertStatus(503);
-        $this->assertDatabaseMissing('products', ['name' => 'Not created']);
+        ])->assertCreated()
+            ->assertJsonPath('data.stock', null)
+            ->assertJsonPath('data.stock_status', 'unavailable');
+        $this->assertDatabaseHas('products', ['name' => 'Created offline']);
     }
 }

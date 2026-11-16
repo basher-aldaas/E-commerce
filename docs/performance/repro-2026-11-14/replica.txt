@@ -1,0 +1,24 @@
+Second run, 2026-11-14.
+
+Catch-up after ~6 h stopped (primary reseeded several times meanwhile):
+  +3 s   Seconds_Behind_Source 21572 ... +134 s orders 200001 = 200001 ... then lag 0,
+  GTID_SUBSET(primary gtid_executed, replica gtid_executed) = 1,
+  orders 200001/200001, order_items 499588/499588, products 5016/5016, users 2022/2022,
+  order_reservations 1/1, super_read_only=1, both order-list indexes present.
+
+Natural lag (replication_applier_status_by_worker, commit on primary -> applied on replica), ms:
+  15 single-row writes: 7.82 8.83 9.84 10.06 10.10 10.11 10.17 10.20 10.61 11.08 11.39 11.55 12.73 104.31 125.72
+  one 50,000-row transaction: 1941.1
+  (temporary schema lag_probe, dropped afterwards on both servers)
+
+Read-your-writes demo, DB_READ_HOST=mysql-replica, DB_READ_YOUR_WRITES_SECONDS=60:
+1. STOP REPLICA SQL_THREAD            -> Replica_SQL_Running: No, Seconds_Behind_Source: NULL
+2. admin creates 'Replica demo 215912' -> 201, id 5017
+3. admin (wrote <60 s ago), bypass    -> found      X-Cache: BYPASS (primary)
+4. customer, bypass                   -> NOT found  X-Cache: BYPASS (replica)
+5. customer, normal                   -> found      X-Cache: MISS (refill from the primary)
+6. replica 0 rows, primary 1 row
+   Retrieved_Gtid_Set ...:334-5943 / Executed_Gtid_Set ...:1-5942 (1 transaction waiting)
+7. START REPLICA SQL_THREAD           -> Seconds_Behind_Source: 0; customer, bypass -> found
+   (10 s from the write to the end)
+Afterwards: app back to DB_READ_HOST empty, replica stopped.

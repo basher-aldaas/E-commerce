@@ -26,6 +26,12 @@ class StockShortage extends \Google\Protobuf\Internal\Message
      * Generated from protobuf field <code>int32 available = 3;</code>
      */
     protected $available = 0;
+    /**
+     * False when the product has no stock row at all.
+     *
+     * Generated from protobuf field <code>bool tracked = 4;</code>
+     */
+    protected $tracked = false;
 
     /**
      * Constructor.
@@ -36,9 +42,12 @@ class StockShortage extends \Google\Protobuf\Internal\Message
      *     @type int $product_id
      *     @type int $requested
      *     @type int $available
+     *     @type bool $tracked
+     *           False when the product has no stock row at all.
      * }
      */
-    public function __construct($data = NULL) {
+    public function __construct($data = null)
+    {
         \App\Grpc\Warehouse\Metadata\Warehouse::initOnce();
         parent::__construct($data);
     }
@@ -105,6 +114,31 @@ class StockShortage extends \Google\Protobuf\Internal\Message
     {
         GPBUtil::checkInt32($var);
         $this->available = $var;
+
+        return $this;
+    }
+
+    /**
+     * False when the product has no stock row at all.
+     *
+     * Generated from protobuf field <code>bool tracked = 4;</code>
+     * @return bool
+     */
+    public function getTracked()
+    {
+        return $this->tracked;
+    }
+
+    /**
+     * False when the product has no stock row at all.
+     *
+     * Generated from protobuf field <code>bool tracked = 4;</code>
+     * @param bool $var
+     * @return $this
+     */
+    public function setTracked(bool $var)
+    {
+        $this->tracked = $var;
 
         return $this;
     }

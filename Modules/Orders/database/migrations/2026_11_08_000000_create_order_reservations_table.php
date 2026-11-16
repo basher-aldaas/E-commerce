@@ -18,10 +18,10 @@ return new class extends Migration
             $table->foreignId('order_id')->nullable()->unique()->constrained('orders')->nullOnDelete();
 
             // SHA-256 of the client's Idempotency-Key header and of its order items.
+            // No quantities are stored here: the Warehouse owns them.
             $table->char('idempotency_key', 64)->nullable();
             $table->char('request_hash', 64);
 
-            $table->json('items');
             $table->string('status')->index();
 
             $table->timestamps();

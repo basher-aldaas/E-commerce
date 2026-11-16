@@ -1,0 +1,23 @@
+Second run, 2026-11-14. GET /api/v1/perf/orders as admin. Switched A -> B -> A by
+editing the comments exactly as in DEMO.md section 2 and `docker compose restart app`
+each time. File hash before and after: 55f5233cb4c8bbf55c9c191664bfd5ce6dad2afffa24915fd10a614aa5c95fa3 (identical).
+The dataset had one extra order (#200001, 1 item) since the seed.
+
+per_page implementation           queries  db_ms   data_sha256 (first 16)
+15       A: eager loading         5        23.42   a5f8f77916debf3c
+15       A: eager loading         5        20.43   a5f8f77916debf3c
+15       A: eager loading         5        20.08   a5f8f77916debf3c
+50       A: eager loading         5        21.98   922da115b345f816
+50       A: eager loading         5        22.87   922da115b345f816
+50       A: eager loading         5        21.85   922da115b345f816
+15       B: lazy loading (N+1)    67       48.07   a5f8f77916debf3c   = 2 + 2x15 + 35 items
+15       B: lazy loading (N+1)    67       45.65   a5f8f77916debf3c
+15       B: lazy loading (N+1)    67       48.60   a5f8f77916debf3c
+50       B: lazy loading (N+1)    219      135.15  922da115b345f816   = 2 + 2x50 + 117 items
+50       B: lazy loading (N+1)    219      108.11  922da115b345f816
+50       B: lazy loading (N+1)    219      114.34  922da115b345f816
+after switching back: A: eager loading, 5 queries
+
+Items on the newest page, read from MySQL:
+  newest 15 orders, with #200001: 35   without it: 38  -> 2+30+38  = 70
+  newest 50 orders, with #200001: 117  without it: 119 -> 2+100+119 = 221

@@ -19,6 +19,11 @@ return [
 
     'default' => env('DB_CONNECTION', 'sqlite'),
 
+    // Read-your-writes: after a successful write, that user's reads use the
+    // primary for this many seconds, even on replica-allowed routes. Keep it
+    // longer than the replica lag you accept.
+    'read_your_writes_seconds' => (int) env('DB_READ_YOUR_WRITES_SECONDS', 5),
+
     /*
     |--------------------------------------------------------------------------
     | Database Connections
@@ -44,7 +49,15 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
-        'mysql' => [
+        // Read replica (Phase 4): set DB_READ_HOST to send reads that are allowed
+        // to use it (catalog only, see App\Support\Database\ReadRouting) to
+        // that host. Unset (the default), there is no read/write split.
+        'mysql' => (env('DB_READ_HOST') ? [
+            'read' => ['host' => [env('DB_READ_HOST')]],
+            'write' => ['host' => [env('DB_HOST', '127.0.0.1')]],
+            // After a write, the rest of the same request reads the primary.
+            'sticky' => true,
+        ] : []) + [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
