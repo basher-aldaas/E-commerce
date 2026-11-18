@@ -1,11 +1,8 @@
 <?php
 
 use App\Exceptions\Handler;
-use App\Http\Middleware\AllowReplicaReads;
-use App\Http\Middleware\PrimaryReadsByDefault;
 use App\Http\Middleware\RejectMalformedJson;
 use App\Http\Middleware\SecurityHeaders;
-use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -30,13 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeaders::class);
         $middleware->throttleApi();
         $middleware->prependToGroup('api', RejectMalformedJson::class);
-
-        // Read replica (Phase 4): primary by default, catalog routes opt in.
-        // `reads.replica` runs after the permission check (Authorize), so only
-        // the controller's catalog queries can reach the replica.
-        $middleware->appendToGroup('api', PrimaryReadsByDefault::class);
-        $middleware->alias(['reads.replica' => AllowReplicaReads::class]);
-        $middleware->appendToPriorityList(Authorize::class, AllowReplicaReads::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         Handler::register($exceptions);

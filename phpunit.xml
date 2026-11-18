@@ -47,6 +47,11 @@
         <server name="DB_CONNECTION" value="mysql"/>
         <server name="DB_DATABASE" value="E-commerce"/>
         <server name="DB_URL" value=""/>
+        <!-- No read replica in tests, even when the app container runs with one:
+             RefreshDatabase wraps each test in a transaction on the default
+             connection, and a second connection would not see that data. -->
+        <env name="DB_READ_HOST" value="" force="true"/>
+        <server name="DB_READ_HOST" value=""/>
         <env name="MAIL_MAILER" value="array" force="true"/>
         <server name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync" force="true"/>

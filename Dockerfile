@@ -23,6 +23,10 @@ RUN install-php-extensions gd
 # phpredis, for the Redis cache store (CACHE_STORE=redis in docker-compose.yml).
 RUN install-php-extensions redis
 
+# sockets, required by php-amqplib (RabbitMQ client for the outbox relay and the
+# email worker, Requirement 4). Its own layer so grpc is not recompiled.
+RUN docker-php-ext-install sockets
+
 # OPcache for the CLI SAPI, which is what `php artisan serve` runs under. Off by
 # default, so every request recompiled every PHP file from the bind mount.
 #

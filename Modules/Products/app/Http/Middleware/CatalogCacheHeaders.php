@@ -8,15 +8,6 @@ use Illuminate\Http\Request;
 use Modules\Products\Services\CatalogCache;
 use Symfony\Component\HttpFoundation\Response;
 
-/**
- * Makes the catalog cache observable on every catalog response:
- *
- *   X-Cache: HIT | MISS | BYPASS | SKIP | OFF | ERROR
- *   Server-Timing: catalog;dur=0.9;desc="HIT", stock;dur=3.2
- *
- * `catalog` is the time spent getting product/category data (from Redis or from
- * MySQL), `stock` the live GetStock call to the Warehouse.
- */
 class CatalogCacheHeaders
 {
     public function __construct(
@@ -24,17 +15,22 @@ class CatalogCacheHeaders
         private readonly ServerTiming $timing,
     ) {}
 
+    //هاد الميدلوير بحطلي معلومات عن الكاش ومكان قراءة الداتا primary,replica  بال هيدر يعني مشابه للريسبونس
     public function handle(Request $request, Closure $next): Response
     {
-        // The services are scoped, but a long-running process (tests, Octane) can
-        // serve several requests with one instance: start each request clean.
+        //هون تصفير حالة الكاش يعني ما بخزن hit دائما بل حسب شو بلاقي بالكاش hit ,miss,babas  وبخزنه بهاد المتغير
+        //بالاحرى انا ما صفرت الكاش بل صفرت اعدادات الكاتالوغ
         $this->cache->reset();
         $this->timing->reset();
 
         $response = $next($request);
 
         if ($this->cache->status() !== null) {
-            $response->headers->set('X-Cache', $this->cache->status());
+            $response->headers->set('X-Cache', $this->cache->status());//hit , miss ,bypass
+        }
+
+        if ($this->cache->source() !== null) {
+            $response->headers->set('X-Read-Source', $this->cache->source());
         }
 
         if (($timing = $this->timing->header()) !== null) {

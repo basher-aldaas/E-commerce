@@ -10,10 +10,6 @@ use Illuminate\Validation\Rule;
 use Modules\Orders\Http\Resources\ReservationDiagnosticResource;
 use Modules\Orders\Models\OrderReservation;
 
-/**
- * Admin diagnostics: Laravel's workflow record of every order attempt, including
- * attempts that never became an order. Read-only.
- */
 class ReservationDiagnosticsController extends Controller
 {
     public function index(Request $request): JsonResponse

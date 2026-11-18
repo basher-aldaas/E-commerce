@@ -211,7 +211,7 @@ const collection = {
   variable: variables
 };
 
-const outPath = 'E-commerce - Requirement 2.postman_collection.json';
+const outPath = 'postman_collection.json';
 fs.writeFileSync(outPath, JSON.stringify(collection, null, 2), 'utf8');
 console.log('Written to: ' + outPath);
 console.log('Top-level items:', collection.item.length);

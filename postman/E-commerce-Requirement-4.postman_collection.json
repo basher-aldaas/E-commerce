@@ -1,0 +1,72 @@
+{
+  "info": {
+    "name": "E-commerce - Requirement 4 (Async email via RabbitMQ)",
+    "description": "Logs in as a customer and places an order. The API must answer 201 at once: it only stores the order and an order.created outbox row. The email is sent later by the email-worker container. Run it N times (Postman Runner iterations, or newman -n 5) to create several orders. baseUrl: http://localhost:8000 from the host, http://app:8000 from a container on the compose network.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "email", "value": "user@system.com" },
+    { "key": "password", "value": "password123" },
+    { "key": "productId", "value": "1" },
+    { "key": "token", "value": "" },
+    { "key": "orderId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Login (customer)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('login 200', () => pm.response.to.have.status(200));",
+              "const d = pm.response.json().data || {};",
+              "pm.collectionVariables.set('token', d.token || d.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"email\":\"{{email}}\",\"password\":\"{{password}}\"}" },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "2. Create order (email goes out asynchronously)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('order created: 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('standard success envelope', () => { pm.expect(body.status).to.eql(1); pm.expect(body.status_code).to.eql(201); pm.expect(body.data.id).to.be.a('number'); });",
+              "pm.test('response does not wait for the email (< 1500 ms)', () => pm.expect(pm.response.responseTime).to.be.below(1500));",
+              "pm.collectionVariables.set('orderId', body.data.id);",
+              "console.log('order', body.data.id, 'in', pm.response.responseTime, 'ms');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Idempotency-Key", "value": "{{$guid}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"items\":[{\"product_id\":{{productId}},\"quantity\":1}]}" },
+        "url": "{{baseUrl}}/api/v1/orders"
+      }
+    }
+  ]
+}

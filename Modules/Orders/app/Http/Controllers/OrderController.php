@@ -43,10 +43,7 @@ class OrderController extends Controller
         );
     }
 
-    public function updateStatus(
-        UpdateOrderStatusRequest $request,
-        int                      $orderId
-    ): JsonResponse
+    public function updateStatus(UpdateOrderStatusRequest $request, int $orderId): JsonResponse
     {
         $order = $this->orderService->updateStatus(
             $orderId,

@@ -1,0 +1,79 @@
+# Scenario 2 - worker stopped, 5 orders, 2026-11-17T10:23:24Z
+$ docker compose stop email-worker
+ Container ecommerce-email-worker  Stopped
+ecommerce-email-worker Exited (0) Less than a second ago
+$ newman run E-commerce-Requirement-4.postman_collection.json -n 5
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 1869ms]
+  Pass  order created: 201
+  1. response does not wait for the email (< 1500 ms)
+  | 'order', 1, 'in', 1869, 'ms'
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 467ms]
+  Pass  order created: 201
+  Pass  response does not wait for the email (< 1500 ms)
+  | 'order', 2, 'in', 467, 'ms'
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 338ms]
+  Pass  order created: 201
+  Pass  response does not wait for the email (< 1500 ms)
+  | 'order', 3, 'in', 338, 'ms'
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 331ms]
+  Pass  order created: 201
+  Pass  response does not wait for the email (< 1500 ms)
+  | 'order', 4, 'in', 331, 'ms'
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 305ms]
+  Pass  order created: 201
+  Pass  response does not wait for the email (< 1500 ms)
+  | 'order', 5, 'in', 305, 'ms'
+|              iterations |                   5 |                   0 |
+|              assertions |                  20 |                   1 |
+ 1.  AssertionError  response does not wait for the email (< 1500 ms)         
+## orders in MySQL
+id	user_id	status	total_amount	created_at
+1	2	pending	18.75	2026-11-17 10:23:30
+2	2	pending	18.75	2026-11-17 10:23:31
+3	2	pending	18.75	2026-11-17 10:23:32
+4	2	pending	18.75	2026-11-17 10:23:33
+5	2	pending	18.75	2026-11-17 10:23:34
+## outbox
+id	order_id	attempts	published_at
+1	1	1	2026-11-17 10:23:31
+2	2	1	2026-11-17 10:23:31
+3	3	1	2026-11-17 10:23:32
+4	4	1	2026-11-17 10:23:33
+5	5	1	2026-11-17 10:23:34
+$ rabbitmqctl list_queues name messages_ready messages_unacknowledged consumers
+name	messages_ready	messages_unacknowledged	consumers
+notifications.order-created.email.dlq	0	0	0
+notifications.order-created.email	5	0	0
+## Management HTTP API (same data as the UI Queues tab): GET /api/queues/%2F/notifications.order-created.email
+{'name': 'notifications.order-created.email', 'type': 'quorum', 'durable': True, 'messages_ready': 5, 'messages_unacknowledged': 0, 'consumers': 0}
+arguments: {'x-dead-letter-exchange': 'ecommerce.events.dlx', 'x-dead-letter-strategy': 'at-least-once', 'x-delivery-limit': 3, 'x-overflow': 'reject-publish', 'x-queue-type': 'quorum'}
+## peek first message without consuming (ackmode reject_requeue_true)
+delivery_mode 2 | message_id e009fd33-5c86-4129-9c18-30b5a6c8d48b | type order.created | redelivered False
+{"data":{"order":{"id":1,"items":[{"name":"Hydrating Face Cream","quantity":1,"product_id":7,"unit_price":"18.75"}],"status":"pending","created_at":"2026-11-17T10:23:30+00:00","total_amount":"18.75"},"customer":{"id":2,"name":"Test Customer","email":"user@system.com"}},"event_id":"e009fd33-5c86-4129
+Note: the peek above requeued message 1, which a quorum queue counts as a failed delivery (it arrives as attempt 2).
+$ docker compose start email-worker   (10:24:04)
+ Container ecommerce-email-worker  Started
+(polling lines removed: the watch loop's grep failed on this shell's locale; it simply waited 3 minutes. Final state below.)
+## worker output
+Email worker consuming notifications.order-created.email (prefetch 1, manual ACK).
+[2026-11-17 10:24:17] message e009fd33-5c86-4129-9c18-30b5a6c8d48b attempt 2 -> acked
+[2026-11-17 10:24:26] message 0693d7b7-d3db-4952-bff3-7f95ea86b5a2 attempt 1 -> retried
+[2026-11-17 10:24:42] message 0693d7b7-d3db-4952-bff3-7f95ea86b5a2 attempt 2 -> acked
+[2026-11-17 10:24:45] message 4815456f-302e-4361-9d26-da695d2f7d3b attempt 1 -> retried
+[2026-11-17 10:24:55] message 4815456f-302e-4361-9d26-da695d2f7d3b attempt 2 -> acked
+[2026-11-17 10:25:05] message b3e4ae04-2e68-4927-839d-b5d33c85afc8 attempt 1 -> retried
+[2026-11-17 10:25:14] message b3e4ae04-2e68-4927-839d-b5d33c85afc8 attempt 2 -> acked
+[2026-11-17 10:25:24] message 3fd80a00-c81f-4e02-99cd-b36d34bc2706 attempt 1 -> acked
+## worker log (new lines)
+[2026-11-17 10:24:17] local.INFO: Order confirmation email sent and acknowledged {"message_id":"e009fd33-5c86-4129-9c18-30b5a6c8d48b","attempt":2,"max_attempts":4,"event_id":"e009fd33-5c86-4129-9c18-30b5a6c8d48b","order_id":1,"to":"user@system.com","email_message_id":"e009fd33-5c86-4129-9c18-30b5a6c8d48b@order-events.dukkan","smtp_reply":"250 2.0.0 Ok: queued"} 
+[2026-11-17 10:24:24] local.ERROR: Order confirmation email failed; returning the message for a retry {"message_id":"0693d7b7-d3db-4952-bff3-7f95ea86b5a2","attempt":1,"max_attempts":4,"event_id":"0693d7b7-d3db-4952-bff3-7f95ea86b5a2","order_id":2,"error_class":"Symfony\\Component\\Mailer\\Exception\\UnexpectedResponseException","error":"Expected response code \"354\" but got code \"550\", with mes
+[2026-11-17 10:24:42] local.INFO: Order confirmation email sent and acknowledged {"message_id":"0693d7b7-d3db-4952-bff3-7f95ea86b5a2","attempt":2,"max_attempts":4,"event_id":"0693d7b7-d3db-4952-bff3-7f95ea86b5a2","order_id":2,"to":"user@system.com","email_message_id":"0693d7b7-d3db-4952-bff3-7f95ea86b5a2@order-events.dukkan","smtp_reply":"250 2.0.0 Ok: queued"} 
+[2026-11-17 10:24:43] local.ERROR: Order confirmation email failed; returning the message for a retry {"message_id":"4815456f-302e-4361-9d26-da695d2f7d3b","attempt":1,"max_attempts":4,"event_id":"4815456f-302e-4361-9d26-da695d2f7d3b","order_id":3,"error_class":"Symfony\\Component\\Mailer\\Exception\\UnexpectedResponseException","error":"Expected response code \"354\" but got code \"550\", with mes
+[2026-11-17 10:24:55] local.INFO: Order confirmation email sent and acknowledged {"message_id":"4815456f-302e-4361-9d26-da695d2f7d3b","attempt":2,"max_attempts":4,"event_id":"4815456f-302e-4361-9d26-da695d2f7d3b","order_id":3,"to":"user@system.com","email_message_id":"4815456f-302e-4361-9d26-da695d2f7d3b@order-events.dukkan","smtp_reply":"250 2.0.0 Ok: queued"} 
+[2026-11-17 10:25:03] local.ERROR: Order confirmation email failed; returning the message for a retry {"message_id":"b3e4ae04-2e68-4927-839d-b5d33c85afc8","attempt":1,"max_attempts":4,"event_id":"b3e4ae04-2e68-4927-839d-b5d33c85afc8","order_id":4,"error_class":"Symfony\\Component\\Mailer\\Exception\\UnexpectedResponseException","error":"Expected response code \"354\" but got code \"550\", with mes
+[2026-11-17 10:25:14] local.INFO: Order confirmation email sent and acknowledged {"message_id":"b3e4ae04-2e68-4927-839d-b5d33c85afc8","attempt":2,"max_attempts":4,"event_id":"b3e4ae04-2e68-4927-839d-b5d33c85afc8","order_id":4,"to":"user@system.com","email_message_id":"b3e4ae04-2e68-4927-839d-b5d33c85afc8@order-events.dukkan","smtp_reply":"250 2.0.0 Ok: queued"} 
+[2026-11-17 10:25:24] local.INFO: Order confirmation email sent and acknowledged {"message_id":"3fd80a00-c81f-4e02-99cd-b36d34bc2706","attempt":1,"max_attempts":4,"event_id":"3fd80a00-c81f-4e02-99cd-b36d34bc2706","order_id":5,"to":"user@system.com","email_message_id":"3fd80a00-c81f-4e02-99cd-b36d34bc2706@order-events.dukkan","smtp_reply":"250 2.0.0 Ok: queued"} 
+## queues after
+name	messages_ready	messages_unacknowledged	consumers
+notifications.order-created.email.dlq	0	0	0
+notifications.order-created.email	0	0	1

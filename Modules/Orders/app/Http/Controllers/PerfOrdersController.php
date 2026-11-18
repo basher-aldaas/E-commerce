@@ -32,6 +32,7 @@ class PerfOrdersController extends Controller
             ->latest()->orderByDesc('id')->paginate($perPage);
         $implementation = 'A: eager loading';
 
+        //جيب الطلبات اولا وبعدها جيب العلاقات لكل طلب من خلال الماب
         //3 lines for N+1 problem
 //         $orders = Order::query()
 //             ->latest()->orderByDesc('id')->paginate($perPage);
@@ -42,7 +43,7 @@ class PerfOrdersController extends Controller
             'status' => $order->status,
             'total_amount' => (string) $order->total_amount,
             'created_at' => $order->created_at?->toIso8601String(),
-            'customer' => ['id' => $order->user->id, 'name' => $order->user->name],
+            'customer' => ['id' => $order->user->id, 'name' => $order->user->name],//هون تبدأ المشكلة بحيث يجيب معلومات الممستخدم لكل طلب لحاله
             'items' => $order->items->map(fn ($item) => [
                 'product_id' => $item->product_id,
                 'product_name' => $item->product->name,

@@ -16,20 +16,20 @@ services:
       DB_DATABASE: E-commerce
       DB_USERNAME: root
       DB_PASSWORD: ""
-      # MySQL read replica (Requirement 3, Phase 4). Empty = no read/write split.
-      # With the replica running (`docker compose --profile replica up -d`), start
-      # the app with `DB_READ_HOST=mysql-replica docker compose up -d app`: catalog
-      # reads may then use the replica, everything else stays on the primary
-      # (App\Support\Database\ReadRouting). Setup: docs/performance/DEMO.md.
+      # MySQL read replica (Requirement 3). Empty = no replica, every read on the
+      # primary. With the replica running (`docker compose --profile replica up -d`),
+      # start the app with `DB_READ_HOST=mysql-replica docker compose up -d app`:
+      # catalog cache misses and bypasses then read the replica, everything else
+      # (writes, auth, orders) stays on the primary
+      # (Modules\Products\Services\CatalogCache). Setup: docs/performance/DEMO.md.
       DB_READ_HOST: ${DB_READ_HOST:-}
-      # Read-your-writes window: after changing rows, a user reads the primary for
-      # this many seconds. Use e.g. 60 for the live demo (time to click around).
-      DB_READ_YOUR_WRITES_SECONDS: ${DB_READ_YOUR_WRITES_SECONDS:-5}
       WAREHOUSE_GRPC_ENABLED: "true"
       WAREHOUSE_GRPC_TARGET: warehouse:50051
-      # Development only: no queue worker runs yet (RabbitMQ and workers belong
-      # to Requirement 4), so queued mail is handled in the request and written
-      # to storage/logs/laravel.log instead of being delivered.
+      # The order confirmation email does NOT go through Laravel's queue: it is an
+      # order.created event in the transactional outbox, published by
+      # outbox-relay and sent by email-worker (Requirement 4). The API never
+      # sends that email itself. The remaining mails (welcome, status change)
+      # still run in the request and are only written to storage/logs/laravel.log.
       QUEUE_CONNECTION: sync
       MAIL_MAILER: log
       # `php artisan serve` handles one request at a time unless PHP's built-in
@@ -54,6 +54,13 @@ services:
       REDIS_CLIENT: phpredis
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      # RabbitMQ (Requirement 4). The API never talks to RabbitMQ: placing an
+      # order only writes an outbox row in MySQL. outbox-relay publishes it.
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-ecommerce}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
     depends_on:
       mysql:
         condition: service_healthy
@@ -94,6 +101,87 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # Message broker (Requirement 4). Official image with the management plugin:
+  # UI at http://localhost:15672 (bound to 127.0.0.1 only). AMQP (5672) is not
+  # published; only the containers on this network use it.
+  # hostname is fixed on purpose: RabbitMQ stores its data under the node name
+  # rabbit@<hostname>, so a recreated container with a random hostname would
+  # start empty even though the volume is still there.
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    container_name: ecommerce-rabbitmq
+    hostname: ecommerce-rabbitmq
+    ports:
+      - "127.0.0.1:15672:15672"
+    environment:
+      # Credentials come from .env (never committed). Compose refuses to start
+      # without a password, so no default password can end up in use.
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-ecommerce}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    volumes:
+      # Durable queues, persistent messages, users and vhosts live here, so they
+      # survive `docker compose down` / container recreation (not `down -v`).
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      # Healthy only once the node is running and accepts AMQP connections.
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+
+  # Transactional outbox relay (Requirement 4). Reads unpublished rows from
+  # outbox_messages (written in the same transaction as the order) and
+  # publishes them to RabbitMQ as persistent messages with publisher confirms.
+  # A row is marked published only after the broker confirmed it, so stopping
+  # this container, RabbitMQ or the app never loses an event: rows just wait.
+  outbox-relay:
+    image: ecommerce-app
+    container_name: ecommerce-outbox-relay
+    command: ["php", "artisan", "outbox:relay"]
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html
+    environment: *app-environment
+    depends_on:
+      app:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # Order confirmation email worker (Requirement 4). Separate from the API: it
+  # only needs RabbitMQ and SMTP, no database. It consumes order.created with
+  # manual ACKs and sends the email through the SMTP server configured by the
+  # MAIL_* variables in .env (e.g. Mailtrap). Stop/start it freely:
+  #   docker compose stop email-worker    /    docker compose start email-worker
+  email-worker:
+    image: ecommerce-app
+    container_name: ecommerce-email-worker
+    command: ["php", "artisan", "notifications:consume-order-created"]
+    restart: unless-stopped
+    # Give an in-flight email time to finish on `docker compose stop`; the
+    # worker stops after the current message (SIGTERM handler).
+    stop_grace_period: 30s
+    volumes:
+      - .:/var/www/html
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-ecommerce}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      PHP_OPCACHE_VALIDATE_TIMESTAMPS: 0
+      # The worker never needs the cache; keep it off Redis and the database.
+      CACHE_STORE: array
+      # MAIL_MAILER, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD,
+      # MAIL_FROM_ADDRESS and MAIL_FROM_NAME are read from .env.
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   mysql:
     image: mysql:8.0
@@ -201,3 +289,4 @@ volumes:
   mysql-data:
   mysql-replica-data:
   warehouse-mysql-data:
+  rabbitmq-data:

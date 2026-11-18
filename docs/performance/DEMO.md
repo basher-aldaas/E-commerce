@@ -14,7 +14,7 @@ of framework time per request), not a production web server.
 | Indexes | the plan (scan of the whole table vs index scan of 15 rows) and the database time per request | a big end-to-end speed-up under concurrent load: on this dev server it is within run-to-run noise |
 | N+1 | the query count (5 vs 70 / 221) and the identical `data_sha256` | — |
 | Redis | how many SQL statements reach MySQL (0 per cache hit vs 3 without the cache) | faster responses |
-| Replica | the routing rules, read-your-writes, and the measured replication lag | any performance gain: it was never load-tested |
+| Replica | `X-Read-Source` (cache misses and bypasses on the replica), the GTID freshness check, the fallback, and the measured replication lag | any performance gain: it was never load-tested |
 
 Commands run from the project root in **Git Bash**. In Windows PowerShell 5.1,
 three patterns are different:
@@ -287,27 +287,35 @@ revalidated request shows as `304*`.
 
 ---
 
-## 5. MySQL read replica with read-your-writes
+## 5. MySQL read replica (cache misses and bypasses)
 
 **What:** an optional second MySQL server (`mysql-replica`, Compose profile
 `replica`) that copies the primary through GTID replication and is read-only.
-Laravel splits reads and writes when `DB_READ_HOST` is set.
+Laravel uses it when `DB_READ_HOST` is set.
 
-**Rules** (`app/Support/Database/ReadRouting.php`):
-- Every database connection reads the **primary** from the moment it is created:
-  sign-in and the JWT user lookup, permission checks, orders, reservations,
-  console commands and the scheduler (`warehouse:reconcile`).
-- Only catalog GET routes (`reads.replica`, applied after the permission check) may read from the replica…
-- …except for a user whose previous request **changed rows** within 5 s
-  (`DB_READ_YOUR_WRITES_SECONDS`): they read the primary, so they see their own change.
-- Catalog-cache refills always read the primary, so lag never reaches Redis.
-- `sticky: true` keeps the rest of a writing request on the primary.
+**Rules** (all in `Modules/Products/app/Services/CatalogCache.php`, connections in `config/database.php`):
 
-**What the replica actually serves:** catalog reads that skip the Redis cache:
-`X-Cache-Bypass: 1`, `PRODUCT_CACHE_ENABLED=false`, and the never-cached
-"in stock only" lists. With the cache on, refills read the primary and hits read
-Redis. This is a consistency demonstration, not a throughput claim: the replica
-was not load-tested.
+| Request | Reads from | `X-Cache` | `X-Read-Source` |
+|---|---|---|---|
+| Catalog, cached entry | Redis, no SQL | `HIT` | (absent) |
+| Catalog, no entry | replica, then stored in Redis for 300 s | `MISS` | `replica` |
+| Catalog with `X-Cache-Bypass: 1`, "in stock only" list, cache switched off | replica | `BYPASS` / `SKIP` / `OFF` | `replica` |
+| Same, but the replica has not applied the latest catalog write yet | primary | as above | `primary` |
+| Same, but the replica is unreachable or its query fails | primary + a `Read replica unavailable` warning in the log | as above | `primary-fallback` |
+| Every write, sign-in, JWT and permission lookups, orders, the scheduler | primary (the default `mysql` connection) | — | — |
+
+- **No stale data from lag.** After a product or category write, the next replica
+  read first takes the primary's GTID set (`@@gtid_executed`, kept in Redis as
+  `catalog:gtid`) and asks the replica `GTID_SUBSET(that set, @@gtid_executed)`:
+  only a replica that already contains the write answers. That also covers the
+  writer reading right after the write, so no per-user "read-your-writes" timer is needed.
+- **No writes on the replica.** `mysql_replica` opens every session `READ ONLY`
+  (and the server is `super_read_only`); a write there fails.
+- **A missing product stays a 404**: only connection or query failures fall back.
+- Without `DB_READ_HOST` everything reads the primary (`X-Read-Source: primary`).
+
+This is a routing and consistency demonstration, not a throughput claim: the
+replica was not load-tested.
 
 ### One-time setup (fresh replica)
 
@@ -337,8 +345,8 @@ docker compose exec mysql-replica mysql -uroot -e "SELECT ROUND(TIMESTAMPDIFF(MI
 
 **Measured** (natural lag, nothing paused): 15 single-row writes -> mostly
 **8–13 ms**, two at 104 and 126 ms; one 50,000-row transaction -> **1,941 ms**.
-A reader of the replica can therefore see data a few milliseconds to a few
-seconds old, which is why everything except catalog reads goes to the primary.
+A replica can therefore be a few milliseconds to a few seconds behind, which is
+why only catalog reads use it, and only after the GTID check.
 
 While the apply thread is stopped (demo step 1) `Seconds_Behind_Source` shows
 **NULL**, not a number. Show the lag there with the GTID sets in
@@ -351,25 +359,49 @@ still waiting.
 | State | Command |
 |---|---|
 | Before: no replica, all reads on one server | `docker compose up -d app` (DB_READ_HOST empty) |
-| After: catalog reads may use the replica | `DB_READ_HOST=mysql-replica docker compose up -d app` |
-| For the live demo below (longer read-your-writes window) | `DB_READ_HOST=mysql-replica DB_READ_YOUR_WRITES_SECONDS=60 docker compose up -d app` |
+| After: catalog misses and bypasses read the replica | `DB_READ_HOST=mysql-replica docker compose up -d app` |
 
-### The live read-your-writes demonstration
+PowerShell: `$env:DB_READ_HOST='mysql-replica'; docker compose up -d app; Remove-Item Env:DB_READ_HOST`.
 
-1. Simulate lag: `docker compose exec mysql-replica mysql -uroot -e "STOP REPLICA SQL_THREAD"`
-2. As **admin**, create a product (web UI → Products → Add product, or Postman).
-3. As the **admin**, within the window (60 s with the demo command above, 5 s
-   by default), search for it with `X-Cache-Bypass: 1` → **found** (primary:
-   read-your-writes). After the window, while the replica still lags, the admin
-   reads the replica too and no longer sees it: the window must be longer than
-   the lag you accept.
-4. As a **customer**, same request → **not found** (the replica lags).
-5. As the customer, the normal (cached) request → **found** (`X-Cache: MISS`: the refill read the primary).
-6. Count on the replica: `docker compose exec mysql-replica mysql -uroot -e "SELECT COUNT(*) FROM \`E-commerce\`.products WHERE name='…'"` → 0.
-7. Resume: `docker compose exec mysql-replica mysql -uroot -e "START REPLICA SQL_THREAD"` → step 4 now finds it.
-8. A customer who just placed an order sees it at `GET /api/v1/orders/{id}` even while the replica lags (orders always read the primary).
+### What to show
 
-**Measured run:** `replica/read-your-writes.txt`: a brand-new customer registers and signs in while the replica lags (all authenticated calls return 200 although the user is not on the replica yet), then steps 1–7 with real responses. Second run on 2026-11-14 (`repro-2026-11-14/replica.txt`): steps 1–7 gave the same results (admin found, customer bypass not found, customer cached found via `MISS`, 0 rows on the replica vs 1 on the primary, found after resuming). Each run leaves its demo product in the database (there is no delete endpoint).
+1. **Where each read went:** the `X-Cache` and `X-Read-Source` headers of any catalog
+   request (Postman, or the browser's network tab).
+2. **Proof inside MySQL:** count the statements each server ran (statistics only,
+   nothing changes). Pause the scheduler first (`docker compose stop scheduler`),
+   then run before and after each request:
+   ```bash
+   for s in mysql mysql-replica; do docker compose exec -T $s mysql -uroot -N -e "SELECT '$s', COUNT_STAR FROM performance_schema.events_statements_summary_global_by_event_name WHERE EVENT_NAME='statement/com/Execute'"; done
+   ```
+3. **Fallback:** `docker compose --profile replica stop mysql-replica`, send a bypass
+   request (`primary-fallback`, still 200), then `docker compose --profile replica start mysql-replica`
+   (replication resumes by itself; check with `SHOW REPLICA STATUS\G`).
+
+**Measured on 2026-11-17** (admin, scheduler paused, Δ = statements on each server during the request):
+
+| Request | Status | `X-Cache` | `X-Read-Source` | Primary Δ | Replica Δ |
+|---|---|---|---|---|---|
+| `GET /api/v1/products?page=9`, first | 200 | MISS | replica | 4 | 4 |
+| same, again | 200 | HIT | — | 3 | **0** |
+| same + `X-Cache-Bypass: 1` | 200 | BYPASS | replica | 3 | 4 |
+| `GET /api/v2/products?in_stock=1` | 200 | SKIP | replica | 3 | 5 |
+| `GET /api/v1/products/999999` | 404 | — | — | 3 | 2 |
+| `PUT /api/v1/products/1` (price change) | 200 | — | — | 8 | **0** |
+| `GET /api/v1/products/1` right after the PUT | 200, new price | MISS | replica | | |
+| bypass request, replica container stopped | 200 (3.2 s first, then ~0.46 s) | BYPASS | primary-fallback | | |
+| sign-in, `GET /api/v1/orders` ×2 | 200 | — | — | | **0** |
+
+The primary's 3 statements on every request are the JWT user lookup and the
+permission checks. The first MISS's 4th primary statement is the one-time
+GTID read; on the replica a MISS is the GTID check + products + count + categories.
+The first request after the replica stopped waited for the DNS lookup of the
+stopped container; later ones fail over at once.
+
+The lag demonstration (`STOP REPLICA SQL_THREAD`, write, read) has not been run
+with this design yet. Expected: while the replica lags, catalog reads show
+`X-Read-Source: primary` with the new data; after `START REPLICA SQL_THREAD`
+they show `replica` again. The earlier runs in `replica/read-your-writes.txt` and
+`repro-2026-11-14/replica.txt` used the previous design (per-user read-your-writes window).
 
 To stop: `docker compose up -d app` (back to one server), then
 `docker compose --profile replica stop mysql-replica` (data kept).
@@ -406,7 +438,7 @@ first: the new order becomes the newest order and shifts the N+1 page
 | `app/Console/Commands/PerfExplain.php` | `php artisan perf:explain` — EXPLAIN + timings |
 | `Modules/Orders/database/migrations/2026_11_14_000000_add_order_listing_indexes.php` | order-list indexes |
 | `Modules/Orders/app/Http/Controllers/PerfOrdersController.php` | N+1 demo endpoint (A/B) |
-| `app/Support/Database/ReadRouting.php`, `app/Http/Middleware/PrimaryReadsByDefault.php`, `app/Http/Middleware/AllowReplicaReads.php` | read replica routing, read-your-writes |
+| `Modules/Products/app/Services/CatalogCache.php`, `config/database.php` (`mysql_replica`, `read_connection`) | read replica routing, GTID check, fallback |
 | `tests/load/catalog.js`, `tests/load/orders.js`, `tests/load/race.js` | k6 scenarios (approved) |
 | `docs/performance/baseline/`, `indexes/`, `n-plus-1/`, `replica/` | raw measurement output |
 | `docs/performance/repro-2026-11-14/` | the second run of every measurement (reproducibility check) |

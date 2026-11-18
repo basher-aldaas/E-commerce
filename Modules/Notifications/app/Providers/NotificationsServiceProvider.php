@@ -2,6 +2,8 @@
 
 namespace Modules\Notifications\Providers;
 
+use Modules\Notifications\Console\ConsumeOrderCreatedEmails;
+use Modules\Notifications\Console\ReplayOrderEmailDeadLetters;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 
@@ -22,7 +24,10 @@ class NotificationsServiceProvider extends ModuleServiceProvider
      *
      * @var string[]
      */
-    // protected array $commands = [];
+    protected array $commands = [
+        ConsumeOrderCreatedEmails::class,
+        ReplayOrderEmailDeadLetters::class,
+    ];
 
     /**
      * Provider classes to register.

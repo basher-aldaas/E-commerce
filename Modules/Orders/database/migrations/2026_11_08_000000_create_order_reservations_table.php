@@ -16,11 +16,8 @@ return new class extends Migration
             $table->uuid('reservation_key')->unique();
             $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('order_id')->nullable()->unique()->constrained('orders')->nullOnDelete();
-
-            // SHA-256 of the client's Idempotency-Key header and of its order items.
-            // No quantities are stored here: the Warehouse owns them.
-            $table->char('idempotency_key', 64)->nullable();
-            $table->char('request_hash', 64);
+            $table->char('idempotency_key', 64)->nullable();// هاش مفتاح السابق يلي اجا مع اليدر اذا ما كان في بكون نل
+            $table->char('request_hash', 64);// هاش الطلب الحالي
 
             $table->string('status')->index();
 

@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
-use Modules\Orders\Mail\OrderConfirmationMail;
 use Modules\Orders\Models\Order;
 use Modules\Orders\Models\OrderItem;
 use Modules\Orders\Models\OrderReservation;
@@ -50,7 +49,8 @@ class OrderPlacementTest extends ApiTestCase
     {
         $this->assertDatabaseCount('orders', 0);
         $this->assertDatabaseCount('order_items', 0);
-        Mail::assertNotQueued(OrderConfirmationMail::class);
+        // No order, so no order.created event either (Requirement 4 outbox).
+        $this->assertDatabaseCount('outbox_messages', 0);
     }
 
     public function test_a_successful_order_reserves_and_saves(): void
@@ -77,7 +77,14 @@ class OrderPlacementTest extends ApiTestCase
         $this->assertSame($response->json('data.id'), $reservation->order_id);
         $this->assertSame('RESERVED', $this->warehouse->reservations[$reservation->reservation_key]['status']);
         $this->assertSame(8, $this->stock());
-        Mail::assertQueued(OrderConfirmationMail::class);
+        // The confirmation email is an outbox event for the worker, not mail
+        // sent in this request (Requirement 4).
+        $this->assertDatabaseHas('outbox_messages', [
+            'type' => 'order.created',
+            'aggregate_id' => (string) $response->json('data.id'),
+            'published_at' => null,
+        ]);
+        Mail::assertNothingOutgoing();
     }
 
     public function test_warehouse_calls_never_happen_inside_a_database_transaction(): void
@@ -343,7 +350,7 @@ class OrderPlacementTest extends ApiTestCase
         $this->assertDatabaseCount('orders', 1);
         $this->assertCount(1, $this->warehouse->callsTo('reserve'));
         $this->assertSame(8, $this->stock());
-        Mail::assertQueuedCount(1);
+        $this->assertDatabaseCount('outbox_messages', 1);
     }
 
     public function test_an_idempotency_key_cannot_be_reused_for_a_different_order(): void

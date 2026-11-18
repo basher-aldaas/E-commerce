@@ -15,15 +15,7 @@ class ProductService
         private readonly CatalogCache $cache,
     ) {}
 
-    /**
-     * API v1 listing, optionally of one category, 15 per page unless per_page says
-     * otherwise. Unlike v2 it includes inactive products (v1's contract). The page
-     * of products (with categories) comes from the catalog cache, one entry per
-     * category, page size and page; live stock is attached afterwards and never
-     * cached.
-     *
-     * @param  array{category_id?: int|string|null, per_page?: int|string|null}  $filters
-     */
+
     public function getAll(array $filters = [], int $page = 1): mixed
     {
         $page = max(1, $page);
@@ -45,7 +37,6 @@ class ProductService
         return $products;
     }
 
-    /** One product for v1 and v2. A missing product is never cached. */
     public function getById(int $productId): Product
     {
         $product = $this->cache->remember(
@@ -60,28 +51,18 @@ class ProductService
         return $product;
     }
 
-    /**
-     * Products listing for API v2: active-only by default, with optional filters.
-     *
-     * Supported filter keys: search, category_id, min_price, max_price,
-     * in_stock, per_page.
-     *
-     * The in_stock filter needs the Warehouse's answer, so it fails with a
-     * Warehouse error, rather than returning a wrong list, when that's unavailable.
-     * For the same reason a list filtered by in_stock is never cached; every
-     * other combination of filters and page has its own cache entry.
-     */
     public function getAllForV2(array $filters, int $page = 1): mixed
     {
         $page = max(1, $page);
 
+        //اذا طلب المنتجات يلي فيها الكمية يلي عم يجيبها من المخزون فهون لا تخزن بالكاش لانو المخزون دايما عم يتغير
         if (filter_var($filters['in_stock'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
             $products = $this->cache->skip(fn () => $this->queryV2($filters, $page, inStockOnly: true));
         } else {
             $key = collect($filters)->except('in_stock')->filter(fn ($v) => $v !== null && $v !== '')->sortKeys()->all();
 
             $products = $this->cache->remember(
-                'v2:products:'.hash('sha256', json_encode([$key, $page])),
+                'v2:products:'.hash('sha256', json_encode([$key, $page])),//لانو الفلاتر ممكن تكون طويلة فعمللها هاش من شان يخزنها بالكاش
                 fn () => $this->queryV2($filters, $page, inStockOnly: false)
             );
         }
@@ -91,6 +72,7 @@ class ProductService
         return $products;
     }
 
+    //تنفيذ الفلاتر
     private function queryV2(array $filters, int $page, bool $inStockOnly): mixed
     {
         $perPage = (int) ($filters['per_page'] ?? 15);
@@ -122,11 +104,7 @@ class ProductService
         return $query->latest()->orderByDesc('id')->paginate($perPage, ['*'], 'page', $page);
     }
 
-    /**
-     * Creates the catalogue entry only. Stock is not set from Laravel: the
-     * Warehouse operator adds it with its CLI, and until then the product reads as
-     * `not_stocked` ("Not stocked yet").
-     */
+
     public function create(array $data): Product
     {
         // Persist an uploaded image to the public disk and store its path.

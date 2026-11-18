@@ -131,3 +131,5 @@ export function teardown(data) {
   console.log(`stock after cancelling the race orders = ${restored}`);
   check(null, { 'stock is back to where it started': () => restored === data.before });
 }
+
+//Get-Content tests/load/race.js | docker run --rm -i --network e-commerce_default grafana/k6:0.54.0 run -

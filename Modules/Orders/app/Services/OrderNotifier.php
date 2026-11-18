@@ -4,7 +4,6 @@ namespace Modules\Orders\Services;
 
 use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
-use Modules\Orders\Mail\OrderConfirmationMail;
 use Modules\Orders\Mail\OrderStatusUpdatedMail;
 use Modules\Orders\Models\Order;
 use Throwable;
@@ -12,14 +11,13 @@ use Throwable;
 /**
  * Emails go out after the order and its stock are settled, so a mail failure is
  * reported for follow-up but must never look like a failed order.
+ *
+ * The order confirmation email is not sent from here: it travels as an
+ * `order.created` event through the transactional outbox and RabbitMQ to the
+ * email worker (Modules\Notifications, Requirement 4).
  */
 class OrderNotifier
 {
-    public function orderPlaced(Order $order, string $email): void
-    {
-        $this->send($email, new OrderConfirmationMail($order));
-    }
-
     public function statusChanged(Order $order): void
     {
         $order->loadMissing('user');

@@ -12,24 +12,8 @@ use Illuminate\Support\Facades\Log;
 use Modules\Orders\Models\Order;
 use Modules\Orders\Models\OrderReservation;
 
-/**
- * Gives reservation stock back through the Warehouse's Release operation, for
- * compensation and for cancellation. Release is idempotent on the Warehouse side,
- * so every step here can be repeated safely; anything interrupted is finished
- * later by reconcile().
- *
- * Several processes can work on the same reservation at once (a stalled order
- * request, its compensation, an admin's cancellation, two reconcile runs), so every
- * status change is conditional: it only applies if the row is still the same
- * attempt (reservation_key) in the state this step expects. A step that loses
- * that race changes nothing.
- *
- * Never call this inside a database transaction: a local rollback can't undo what
- * the Warehouse has done.
- */
 class OrderStockService
 {
-    /** States from which a reservation may be released (it holds stock, has no order). */
     private const RELEASABLE = [OrderReservation::PENDING, OrderReservation::RELEASE_PENDING];
 
     public function __construct(
@@ -37,16 +21,13 @@ class OrderStockService
         private readonly OrderNotifier $notifier,
     ) {}
 
-    /** The gateway with one HTTP request's time budget (warehouse.request_budget_ms). */
+    //تابع يتحق اذا تم الانتهاء من المدة المسوحة للاتصال بالمستنودع
     public function budgeted(): WarehouseGateway
     {
         return $this->warehouse->withDeadline((int) config('warehouse.request_budget_ms'));
     }
 
-    /**
-     * Compensation: gives back stock for an order that won't exist. Never throws on
-     * Warehouse failure. $warehouse lets the caller pass its time-budgeted gateway.
-     */
+    //تابع تحرير الكمية يلي بالحجز
     public function release(OrderReservation $reservation, ?WarehouseGateway $warehouse = null): void
     {
         try {
@@ -64,13 +45,7 @@ class OrderStockService
         $this->settle($reservation, $result, self::RELEASABLE, OrderReservation::RELEASED, 'release');
     }
 
-    /**
-     * Releases the stock of an order being cancelled, marks the order cancelled and
-     * notifies the customer. If another process finishes the same cancellation
-     * first, this one returns the cancelled order without notifying again.
-     *
-     * @throws WarehouseException The order keeps its status and can be retried.
-     */
+    //تابع تحرير الكمية يلي بالحجز  ويلغي الحجز
     public function releaseAndCancel(OrderReservation $reservation, ?WarehouseGateway $warehouse = null): Order
     {
         $result = ($warehouse ?? $this->warehouse)->release($reservation->reservation_key);
@@ -82,7 +57,6 @@ class OrderStockService
         }
 
         [$order, $cancelledNow] = DB::transaction(function () use ($reservation) {
-            // Same lock order as OrderService::updateStatus: the order row first.
             $order = Order::query()->lockForUpdate()->findOrFail($reservation->order_id);
 
             if (! $this->transition($reservation, [OrderReservation::CANCEL_PENDING], OrderReservation::CANCELLED)) {
@@ -95,7 +69,6 @@ class OrderStockService
         });
 
         if (! $cancelledNow && $reservation->status !== OrderReservation::CANCELLED) {
-            // Another process moved it elsewhere (for example to attention).
             throw new WarehouseRequestException();
         }
 
@@ -106,19 +79,7 @@ class OrderStockService
         return $order;
     }
 
-    /**
-     * Finishes reservations left unsettled by a failure or crash.
-     *
-     * release_pending and cancel_pending are retried at once: no request is working
-     * on them any more, and Release is idempotent. A pending record is only touched
-     * once it is older than $olderThanMinutes, because until then its request may
-     * still be running (it gives up within warehouse.request_budget_ms); an old one
-     * belongs to a request that died between Reserve and saving the order, or one
-     * that stalled there. Reconcile claims it (pending -> release_pending) before
-     * calling Release, so a stalled request that wakes up can no longer place it.
-     *
-     * @return array{settled: int, failed: int, skipped: int}
-     */
+    //بجيب عدد الحجز يلي تم تسويتها وعدد يلي فشلوا وعدد يلي تم تخطيها
     public function reconcile(int $olderThanMinutes): array
     {
         $counts = ['settled' => 0, 'failed' => 0, 'skipped' => 0];
@@ -126,8 +87,8 @@ class OrderStockService
 
         OrderReservation::query()
             ->where(fn ($query) => $query
-                ->whereIn('status', [OrderReservation::RELEASE_PENDING, OrderReservation::CANCEL_PENDING])
-                ->orWhere(fn ($pending) => $pending
+                ->whereIn('status', [OrderReservation::RELEASE_PENDING, OrderReservation::CANCEL_PENDING])//جيب الحجوزات يلي بدي الغيها ولسا ما لتغت ويلي بدي رجعها ولسا ما رجعت
+                ->orWhere(fn ($pending) => $pending //وكمان الحجوزات يلي بيندينغ بس الها وقت طويل
                     ->where('status', OrderReservation::PENDING)
                     ->where('updated_at', '<=', $cutoff)))
             ->orderBy('id')
@@ -138,7 +99,7 @@ class OrderStockService
         return $counts;
     }
 
-    /** @return 'settled'|'failed'|'skipped' */
+    //اذا كانت الحالاة ارجاع رجع الكميات للمستودع وال ا اذا كانت الحالة بيندغ وماصرلها زمان مأنشها عمللها سكيب
     private function reconcileOne(OrderReservation $reservation, Carbon $cutoff): string
     {
         if ($reservation->status === OrderReservation::CANCEL_PENDING) {
@@ -152,8 +113,6 @@ class OrderStockService
         }
 
         if ($reservation->status === OrderReservation::PENDING && ! $this->claimStalled($reservation, $cutoff)) {
-            // Its request saved the order (placed) or gave up (released, rejected)
-            // after this run read the row: nothing to release.
             return 'skipped';
         }
 
@@ -162,11 +121,7 @@ class OrderStockService
         return $reservation->status === OrderReservation::RELEASE_PENDING ? 'failed' : 'settled';
     }
 
-    /**
-     * pending -> release_pending in one conditional UPDATE, only if the row is still
-     * the same stalled attempt. The order request's own "pending -> placed" update
-     * (OrderPlacementService::saveOrder) is conditional too, so exactly one wins.
-     */
+    //اذا كان الحجز قديم بما يكفي يتم عمل ريليز له
     private function claimStalled(OrderReservation $reservation, Carbon $cutoff): bool
     {
         $claimed = OrderReservation::query()
@@ -181,13 +136,7 @@ class OrderStockService
         return $claimed === 1;
     }
 
-    /**
-     * Moves the reservation to $to only if it is still this attempt and in one of
-     * $from. Returns false, changing nothing, if another process got there first.
-     * The model is refreshed either way.
-     *
-     * @param  list<string>  $from
-     */
+    //تغيير حالة الحجز للريزرفيشن وليس الطلب
     private function transition(OrderReservation $reservation, array $from, string $to): bool
     {
         $changed = OrderReservation::query()
@@ -201,7 +150,8 @@ class OrderStockService
         return $changed === 1;
     }
 
-    /** @param  list<string>  $from */
+
+   //تحديدي الحالة النهائية للحجز بناءا على نتيجة عملية المستودع
     private function settle(OrderReservation $reservation, WarehouseResult $result, array $from, string $status, string $step): void
     {
         if ($result->success) {

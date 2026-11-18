@@ -38,7 +38,7 @@ class Product extends Model
 
     private string $stockStatus = self::STOCK_UNAVAILABLE;
 
-    /** Attaches the Warehouse's answer. Null means the Warehouse could not be asked. */
+    //تحديد معلومات المخزون وارجاعها مع الطلبات اما موجود او غير موجود او كمية غير كافية
     public function withStockLevel(?StockLevel $level): static
     {
         $this->warehouseStock = $level?->tracked ? $level->quantity : null;

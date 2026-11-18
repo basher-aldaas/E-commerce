@@ -2,52 +2,43 @@
 
 namespace Modules\Products\Services;
 
-use App\Support\Database\ReadRouting;
 use App\Support\ServerTiming;
 use Closure;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use PDOException;
 use Throwable;
 
-/**
- * Read-through cache for catalog data (products and categories). Stock is never
- * part of a cached value: callers attach live Warehouse stock after reading.
- *
- * Keys are "catalog:{version}:{key}". flush() increments the version, so after any
- * product or category write every older entry is simply never read again and
- * expires by its TTL. Scoped per request: status() reports what happened to this
- * request's lookup (HIT, MISS, BYPASS, SKIP, OFF or ERROR) for the X-Cache header.
- */
 class CatalogCache
 {
     //رقم يدل على انو كم مرة حملت الالاصناف او المنتجات عالكاش
+    //يعني وقت بحمل اول مرة المنتجات عالكاش بحط catalog:version 1 وقت بعدل الادمن المنتجات ما بروح بدور عالمفتيح تبع عالمنتجات يلي بالكاش واحذفن مباششرة لانو محتمل يكون عندي الاف المفتيح
+    //للك اعمل نسخة ثانية وcatalog:version 2 والمنتجات وقت بخزنهن عالكاش بصيرو v2  والمفتيح القديمة بينتهو بس يخلص ال ttl
     public const VERSION_KEY = 'catalog:version';
+    // آخر GTID من الـ Primary بعد آخر كتابة على الكتالوج
+    public const GTID_KEY = 'catalog:gtid';
     //متغير بحطه بالبوستمكمان لتجاوز الكاش والاستعلام من القاعدة فورا
     public const BYPASS_HEADER = 'X-Cache-Bypass';
 
     // متغير يحتفظ بنتيجة عملية الكاش hit,miss,bypass,skip,off,error
     private ?string $status = null;
 
+    // مصدر القراءة من القاعدة: replica, primary, primary-fallback (null عند hit)
+    private ?string $source = null;
+
     public function __construct(
         private readonly ServerTiming $timing,  //قياس زمن تنفيذ العمليات
-        private readonly ReadRouting $routing,// لتوجيه القراءة الى قاعدة البيانات المناسبة الاساسية او الريبليكا
     ) {}
 
-    /** Forget the previous request's outcome (the middleware calls this first). */
     public function reset(): void
     {
         $this->status = null;
+        $this->source = null;
     }
 
-    /**
-     * @template T
-     *
-     * @param  Closure(): T  $load
-     * @return T
-     */
     //مسؤل عن قراءة البيانات من الريدس واذا ما لقتها بتجيبها من الداتا
-    //دالة الريميمبر هي اساسية في اللارافلي كاشينغ وبتشوف اذا كان المفتاح موجود وما نتهت صلاحيته جيب من الكاش والا نفذ الاستعلام على الداتا وخزن نتيجته بالكاش
     public function remember(string $key, Closure $load): mixed
     {
         if (! config('products.cache.enabled')) {
@@ -60,21 +51,29 @@ class CatalogCache
 
         $started = hrtime(true);
         $hit = true;
+        $loadFailure = null;
 
         try {
             $value = $this->store()->remember(
                 'catalog:'.$this->version().':'.$key,
                 (int) config('products.cache.ttl'),
-                function () use ($load, &$hit) {
+                function () use ($load, &$hit, &$loadFailure) {
                     $hit = false;
 
-                    // A refill is stored for the whole TTL, so it must read the
-                    // primary: a lagging replica would put stale data in Redis.
-                    return $this->routing->onPrimary($load);
+                    try {
+                        return $this->readDatabase($load);
+                    } catch (Throwable $e) {
+                        $loadFailure = $e;
+
+                        throw $e;
+                    }
                 }
             );
         } catch (Throwable $e) {
-            // A cache outage must never take the catalog down: read the database.
+            if ($e === $loadFailure) {
+                throw $e;
+            }
+
             Log::error('Catalog cache unavailable; reading the database', ['key' => $key, 'error' => $e->getMessage()]);
 
             return $this->uncached('ERROR', $load);
@@ -86,19 +85,18 @@ class CatalogCache
         return $value;
     }
 
-    /** For a read that must not be cached at all (it depends on live stock). */
     public function skip(Closure $load): mixed
     {
         return $this->uncached('SKIP', $load);
     }
 
-    /** Invalidates every catalog entry at once. Called on every product or category write. */
+    //منزيد رقم الاصدار بدل البحث عن المفاتيح وحذغ ال gtid key  يلي موجود عندي لانو صار في تعديل عالداتا الاساية
     public function flush(): void
     {
         try {
+            $this->store()->forget(self::GTID_KEY);
             $this->store()->increment(self::VERSION_KEY);
         } catch (Throwable $e) {
-            // The write itself already succeeded; old entries now live until their TTL.
             Log::error('Catalog cache could not be invalidated', ['error' => $e->getMessage()]);
         }
     }
@@ -108,11 +106,65 @@ class CatalogCache
         return $this->status;
     }
 
+    public function source(): ?string
+    {
+        return $this->source;
+    }
+
+    //في حال كانت الكاش واقفة off or bypass =1  قراء من الداتا بيز
     private function uncached(string $status, Closure $load): mixed
     {
         $this->status = $status;
 
-        return $this->timing->measure('catalog', $load, $status);
+        return $this->timing->measure('catalog', fn () => $this->readDatabase($load), $status);
+    }
+
+    private function readDatabase(Closure $load): mixed
+    {
+        $replica = config('database.read_connection');
+        //اذا كانت اتصال القراءة هوة ريبليكا وكانت الgiid  يلي بالاساسية نفسها بالريبليكا
+        if ($replica !== config('database.default') && ($gtid = $this->latestCatalogWrite()) !== null) {
+            try {
+                //التحقق من انو الريبليكا نفذت جميع الترانزيكشن تبع الاساسية
+                $current = (bool) DB::connection($replica)
+                    ->selectOne('SELECT GTID_SUBSET(?, @@GLOBAL.gtid_executed) AS applied', [$gtid])
+                    ->applied;
+
+                if ($current) {
+                    $value = DB::usingConnection($replica, $load);
+                    $this->source = 'replica';
+
+                    return $value;
+                }
+            } catch (PDOException $e) {
+                Log::warning('Read replica unavailable; reading the primary', ['error' => $e->getMessage()]);
+                $this->source = 'primary-fallback';
+
+                return $load();
+            }
+        }
+
+        // No replica configured, or it has not applied the latest catalog write yet.
+        $this->source = 'primary';
+
+        return $load();
+    }
+
+  //بجيب اخر gtid  تم كتابته في البرايمري وبخزنه بالكاش للتأكد انو primary  ما عليها تعديلات ما موجودة بالريبليكا
+    private function latestCatalogWrite(): ?string
+    {
+        try {
+            return (string) $this->store()->rememberForever(
+                self::GTID_KEY,
+                fn () => DB::connection(config('database.default'))
+                    ->selectOne('SELECT @@GLOBAL.gtid_executed AS gtid')
+                    ->gtid
+            );
+        } catch (Throwable $e) {
+            Log::warning('Latest catalog write unknown; reading the primary', ['error' => $e->getMessage()]);
+
+            return null;
+        }
     }
 
     private function bypassRequested(): bool
@@ -121,6 +173,7 @@ class CatalogCache
             && request()->header(self::BYPASS_HEADER) === '1';
     }
 
+    //بجيب رقم اخر فرجين عندي
     private function version(): int
     {
         $store = $this->store();

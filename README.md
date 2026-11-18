@@ -459,6 +459,14 @@ Remove-Item Env:PRODUCT_CACHE_ENABLED, Env:API_RATE_LIMIT_PER_MINUTE; docker com
 
 `PHP_OPCACHE_VALIDATE_TIMESTAMPS=0` في `docker-compose.yml`: زمن طلب ثابت (~0.25 ثانية)، لكن بعد تعديل كود PHP نفّذ `docker compose restart app`. القيمة 1 تطبّق التعديلات فوراً، لكن كل طلب يصبح أبطأ بـ 1-2 ثانية على Windows bind mount.
 
+## 10.7 RabbitMQ والبريد غير المتزامن (Requirement 4)
+
+إنشاء الطلب يحفظ الطلب وحدث `order.created` في نفس transaction (Transactional Outbox) ويرجع 201 فوراً. حاوية `outbox-relay` تنشر الحدث إلى RabbitMQ، وحاوية `email-worker` المستقلة ترسل بريد التأكيد عبر SMTP (Mailtrap) وتعمل ACK بعد نجاح الإرسال فقط، مع 3 إعادات ثم DLQ.
+
+- واجهة RabbitMQ: http://localhost:15672 (بيانات الدخول `RABBITMQ_USER` / `RABBITMQ_PASSWORD` من `.env`).
+- `docker compose stop email-worker` / `docker compose start email-worker` لا يؤثران على الـ API.
+- الإعداد الكامل (SMTP، المراقبة، DLQ، اختبارات القبول ونتائجها): [`docs/messaging/README.md`](docs/messaging/README.md).
+
 ---
 
 ## 11. Useful Docker Commands

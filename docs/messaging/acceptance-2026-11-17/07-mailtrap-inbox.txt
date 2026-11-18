@@ -1,0 +1,18 @@
+# Delivery check in the external mail service (Mailtrap Email Sandbox), 2026-11-17 ~10:47 UTC
+Checked in the Mailtrap web UI (Sandboxes -> My Project -> My Sandbox).
+
+Mailtrap "Total messages sent": 17   ("Emails sent 17 / 50" on the free plan)
+Real SMTP sends ACKed by the worker:  17
+  - 16 log lines with smtp_reply "250 2.0.0 Ok: queued" (orders 3,2,4 of the first DB run; 1-7, 9-14 after reseed)
+  - 1 earlier send at 10:18:08 (first Postman order) logged before the reply was captured
+  => every ACK corresponds to an email Mailtrap received; no email without an ACK, no ACK without an email.
+
+Inbox (free plan keeps the newest 10): Order #14, #13, #12, #11, #10, #9, #7, #6, #5, #4 confirmation, all to user@system.com.
+Order #8 has no email: its dead letter was deleted when the DLQ was changed from quorum to classic (see 04).
+
+Order #14 raw email (mailtrap-raw-order-14.png):
+  From: E-commerce <orders@dukkan.test>   To: Test Customer <user@system.com>
+  Subject: Order #14 confirmation
+  Message-Id: <ea3bca39-418f-4d47-a473-33f9815757c8@order-events.dukkan>   (= event_id / AMQP message_id)
+  X-Order-Id: 14   X-Event-Id: ea3bca39-418f-4d47-a473-33f9815757c8
+This event went: outbox -> RabbitMQ -> 4 failed attempts (smtp.invalid) -> DLQ -> replay -> worker -> Mailtrap.

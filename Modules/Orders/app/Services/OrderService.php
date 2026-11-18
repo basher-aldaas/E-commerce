@@ -20,6 +20,7 @@ class OrderService
         private readonly ProductStockReader $stockReader,
     ) {}
 
+
     public function viewOrder(int $orderId, User $user): Order
     {
         $order = Order::query()->find($orderId);
@@ -51,13 +52,10 @@ class OrderService
 
         $query = Order::query();
 
-        // الأدمن يشوف جميع الطلبات
         if (!$user->hasRole('admin')) {
-            // المستخدم العادي يشوف طلباته فقط
             $query->where('user_id', $user->id);
         }
 
-        // id breaks ties: rows created in the same second keep a stable order across pages.
         return $query->latest()->orderByDesc('id')->paginate(15);
     }
 
@@ -85,8 +83,6 @@ class OrderService
 
             $this->guardStatusChange($order, $reservation, $status);
 
-            // The stock must be back before the order counts as cancelled, so record
-            // the intent here and call the Warehouse after this transaction.
             if ($status === 'cancelled' && $this->holdsStock($reservation)) {
                 $reservation->update(['status' => OrderReservation::CANCEL_PENDING]);
 
@@ -101,12 +97,9 @@ class OrderService
         });
 
         if ($reservationToRelease !== null) {
-            // Notifies the customer itself, once, even if warehouse:reconcile
-            // finishes the same cancellation at the same time.
             return $this->stock->releaseAndCancel($reservationToRelease, $this->stock->budgeted());
         }
 
-        // Notify the customer once the change is committed.
         $this->notifier->statusChanged($order);
 
         return $order;

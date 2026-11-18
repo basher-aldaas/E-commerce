@@ -5,6 +5,7 @@ namespace Modules\Orders\Services;
 use App\Exceptions\Warehouse\WarehouseException;
 use App\Exceptions\Warehouse\WarehouseRequestException;
 use App\Exceptions\Warehouse\WarehouseUnavailableException;
+use App\Messaging\Outbox\Outbox;
 use App\Services\Warehouse\Data\WarehouseResult;
 use App\Services\Warehouse\Data\WarehouseResultCode;
 use App\Services\Warehouse\DisabledWarehouseGateway;
@@ -17,6 +18,7 @@ use Illuminate\Support\Str;
 use Modules\Orders\Exceptions\IdempotencyKeyConflictException;
 use Modules\Orders\Exceptions\InsufficientStockException;
 use Modules\Orders\Exceptions\OrderInProgressException;
+use Modules\Orders\Messaging\OrderCreatedEvent;
 use Modules\Orders\Models\Order;
 use Modules\Orders\Models\OrderReservation;
 use Modules\Products\Models\Product;
@@ -24,35 +26,17 @@ use Modules\Users\Models\User;
 use RuntimeException;
 use Throwable;
 
-/**
- * Places an order across two databases that share no transaction. This is a
- * workflow with a compensating action, not a distributed transaction:
- *
- * 1. Record the intent locally (pending), so a crash can always be cleaned up.
- * 2. Reserve all the stock in one Warehouse call. The quantities sent are exactly
- *    the ones the customer asked for.
- * 3. Save the order and mark the reservation placed in one local transaction.
- * 4. If that save fails, Release the reservation (compensation). If the release
- *    can't reach the Warehouse either, the record stays release_pending and
- *    `warehouse:reconcile` finishes it.
- *
- * All Warehouse calls of one placement share one time budget
- * (warehouse.request_budget_ms), so the request can never stack timeouts.
- */
 class OrderPlacementService
 {
     public function __construct(
         private readonly WarehouseGateway $warehouse,
         private readonly OrderStockService $stock,
-        private readonly OrderNotifier $notifier,
+        private readonly Outbox $outbox,
     ) {}
 
-    /**
-     * @param  list<array{product_id: int, quantity: int}>  $items
-     */
+
     public function place(User $user, array $items, ?string $idempotencyKey = null): Order
     {
-        // Until the integration is activated, refuse before recording anything.
         if ($this->warehouse instanceof DisabledWarehouseGateway) {
             throw new WarehouseUnavailableException();
         }
@@ -81,23 +65,17 @@ class OrderPlacementService
             throw $e;
         }
 
-        $this->notifier->orderPlaced($order, $user->email);
-
         return $order;
     }
 
-    /**
-     * @return array{0: OrderReservation|null, 1: Order|null} A reservation to work
-     *                                                        on, or the order an
-     *                                                        earlier request made.
-     */
+    //حجز الكمية بجدول الريزرفيشن والتعامل مع ال idempotence_key
     private function begin(User $user, array $quantities, ?string $idempotencyKey): array
     {
         $attributes = [
             'reservation_key' => (string) Str::uuid(),
             'user_id' => $user->id,
-            'idempotency_key' => filled($idempotencyKey) ? hash('sha256', $idempotencyKey) : null,
-            'request_hash' => hash('sha256', json_encode($quantities)),
+            'idempotency_key' => filled($idempotencyKey) ? hash('sha256', $idempotencyKey) : null,//اذا كان المفتاح موجود عملو هاش والا نول
+            'request_hash' => hash('sha256', json_encode($quantities)),// حساب الهاش لمحتويات الطلب نفسه لمقارنته مع الهاش السابق
             'status' => OrderReservation::PENDING,
         ];
 
@@ -112,7 +90,7 @@ class OrderPlacementService
         }
     }
 
-    /** Handles a repeated Idempotency-Key. */
+    //استكمال محاول انشاء طلب له idempotence key
     private function resume(User $user, array $attributes): array
     {
         $existing = OrderReservation::query()
@@ -128,8 +106,6 @@ class OrderPlacementService
             return [null, $existing->order];
         }
 
-        // The earlier attempt failed and holds no stock, so try again. A new key is
-        // needed because the Warehouse permanently refuses a released one.
         $claimed = OrderReservation::query()
             ->whereKey($existing->id)
             ->whereIn('status', [OrderReservation::REJECTED, OrderReservation::RELEASED])
@@ -150,18 +126,15 @@ class OrderPlacementService
         try {
             $result = $warehouse->reserve($reservation->reservation_key, $quantities);
         } catch (WarehouseException $e) {
+            //المستودع لا يستجيب للحجز فما بيحجز وبرجع خطأ
             if ($e instanceof WarehouseUnavailableException && ! $e->requestSent) {
-                // No connection: the Reserve never left Laravel, so the Warehouse
-                // holds nothing for this key and there is nothing to release. The
-                // customer can retry at once, even with the same Idempotency-Key.
                 Log::warning('Reserve not sent: the Warehouse is unreachable', ['reservation_id' => $reservation->id]);
                 $reservation->update(['status' => OrderReservation::REJECTED]);
 
                 throw $e;
             }
 
-            // Sent but unanswered (timeout) or failed mid-call: the Reserve may still
-            // land, so release the key; a late Reserve is then refused.
+            // الطلب نرسل عالمستودع ولكن ما نعرف النتيجة بسجل خطأ وبيعمل ريليز
             Log::warning('Reserve failed; releasing the key so no stock stays held', [
                 'reservation_id' => $reservation->id,
                 'error' => $e::class,
@@ -175,12 +148,14 @@ class OrderPlacementService
             return;
         }
 
+        //الكمية غير كافية فيرجع خطأ
         if ($result->code === WarehouseResultCode::InsufficientStock) {
             $reservation->update(['status' => OrderReservation::REJECTED]);
 
             throw $this->insufficientStock($result);
         }
 
+        //خطأ غير معروف
         Log::error('Warehouse refused a new reservation', [
             'reservation_id' => $reservation->id,
             'code' => $result->code->name,
@@ -191,6 +166,7 @@ class OrderPlacementService
         throw new WarehouseRequestException();
     }
 
+    //الكمية غير متوفرة بجبلي الكميات يلي متوفرة مع الكمية يلي طلبتها
     private function insufficientStock(WarehouseResult $result): InsufficientStockException
     {
         $names = Product::query()
@@ -213,6 +189,7 @@ class OrderPlacementService
         );
     }
 
+    //حفظ الطلب بعد حفظ الحجز
     private function saveOrder(User $user, OrderReservation $reservation, array $quantities): Order
     {
         return DB::transaction(function () use ($user, $reservation, $quantities) {
@@ -228,9 +205,7 @@ class OrderPlacementService
             $total = 0;
 
             foreach ($quantities as $productId => $quantity) {
-                $product = $products->get($productId) ?? throw (new ModelNotFoundException())
-                    ->setModel(Product::class, [$productId]);
-
+                $product = $products->get($productId) ?? throw (new ModelNotFoundException())->setModel(Product::class, [$productId]);
                 // اعتماد السعر المخزن في قاعدة البيانات
                 $price = $product->price;
 
@@ -241,7 +216,6 @@ class OrderPlacementService
                     'unit_price' => $price,
                 ]);
 
-                // تجميع إجمالي الطلب
                 $total += $price * $quantity;
             }
 
@@ -250,10 +224,6 @@ class OrderPlacementService
                 'total_amount' => $total,
             ]);
 
-            // Only a reservation that is still pending can become placed. If this
-            // request stalled long enough for warehouse:reconcile to release it, the
-            // stock is already back in the Warehouse: fail here, so the transaction
-            // rolls back and no order points at stock that nothing holds.
             $placed = OrderReservation::query()
                 ->whereKey($reservation->id)
                 ->where('status', OrderReservation::PENDING)
@@ -268,15 +238,23 @@ class OrderPlacementService
 
             $reservation->forceFill(['order_id' => $order->id, 'status' => OrderReservation::PLACED])->syncOriginal();
 
-            return $order->load('items');
+            $order->load('items');
+
+            // Same transaction as the order: the event exists if and only if the
+            // order was committed, so it can neither be lost nor describe an
+            // order that was rolled back.
+            $this->outbox->record(
+                OrderCreatedEvent::TYPE,
+                'order',
+                $order->id,
+                OrderCreatedEvent::data($order, $user, $products),
+            );
+
+            return $order;
         });
     }
 
-    /**
-     * Compensation. If recording the release fails too, for example because the
-     * database is down, the record stays pending and reconcile() releases the stock
-     * later. The caller's original error is the one worth reporting.
-     */
+    //تحرير الحجز بعد فشل حفظ الطلب
     private function releaseAfterFailedSave(WarehouseGateway $warehouse, OrderReservation $reservation, Throwable $cause): void
     {
         Log::error('Order could not be saved after a successful reservation; releasing it', [
@@ -285,8 +263,6 @@ class OrderPlacementService
         ]);
 
         try {
-            // The failed transaction's changes to this model were rolled back in the
-            // database, but not on the object.
             $reservation->refresh();
             $this->stock->release($reservation, $warehouse);
         } catch (Throwable $e) {

@@ -2,278 +2,210 @@
 
 namespace Tests\Feature\Performance;
 
-use App\Support\Database\ReadRouting;
-use Illuminate\Cache\ArrayStore;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\Products\Models\Product;
 use Modules\Products\Services\CatalogCache;
-use RedisException;
-use ReflectionProperty;
 use Tests\Feature\Requirement1\ApiTestCase;
 
 /**
- * Read/write split with read-your-writes (Phase 4, Requirement 3).
+ * Read replica (Requirement 3).
  *
- * - Every read goes to the primary by default (orders, reservations, auth...).
- * - Catalog GET routes may read from the replica...
- * - ...except for a user who wrote something in the last few seconds.
- * - Catalog-cache refills always read from the primary, so a lagging replica can
- *   never put stale data into Redis.
+ * - Only the catalog cache reads through database.read_connection: on a miss
+ *   and on every uncached catalog read (bypass, in_stock, cache off).
+ * - A hit reads no database.
+ * - The replica answers only once it contains the primary's GTID set taken
+ *   after the latest catalog write; otherwise the primary answers.
+ * - An unreachable replica falls back to the primary; a missing product (404)
+ *   does not.
+ * - Writes and every other read (auth, permissions, orders) use the primary.
+ *
+ * Tests run in one transaction on the default connection (RefreshDatabase), so
+ * "the replica" here shares the primary's PDO: the tests check the routing, not
+ * MySQL replication itself.
  */
 class ReadReplicaRoutingTest extends ApiTestCase
 {
     private Product $product;
 
+    /** @var list<string> connection name of each query that ran */
+    private array $queries = [];
+
     protected function setUp(): void
     {
         parent::setUp();
 
+        config(['products.cache.enabled' => true, 'products.cache.allow_bypass_header' => true]);
+        Cache::flush();
+
         $this->product = $this->makeProduct(['stock' => 10]);
-    }
-
-    private function routing(): ReadRouting
-    {
-        return $this->app->make(ReadRouting::class);
-    }
-
-    private function connectionReadsFromPrimary(): bool
-    {
-        return (new ReflectionProperty(DB::connection(), 'readOnWriteConnection'))->getValue(DB::connection());
-    }
-
-    private function placeOrder(): void
-    {
-        $this->postOrder(['items' => [['product_id' => $this->product->id, 'quantity' => 1]]])->assertStatus(201);
-    }
-
-    public function test_order_reads_use_the_primary(): void
-    {
         $this->actingAsApi($this->makeUser());
-        $this->getJson('/api/v1/orders')->assertOk();
-
-        $this->assertFalse($this->routing()->replicaAllowed());
-        $this->assertTrue($this->connectionReadsFromPrimary());
     }
 
-    public function test_catalog_reads_may_use_the_replica(): void
+    /** Points read_connection at a "replica" that shares the test transaction. */
+    private function useReplica(): void
     {
-        $this->actingAsApi($this->makeUser());
-        $this->getJson('/api/v2/products')->assertOk();
-
-        $this->assertTrue($this->routing()->replicaAllowed());
-        $this->assertFalse($this->connectionReadsFromPrimary());
+        config(['database.read_connection' => 'mysql_replica']);
+        $pdo = DB::connection()->getPdo();
+        DB::connection('mysql_replica')->setPdo($pdo)->setReadPdo($pdo);
     }
 
-    public function test_a_user_who_just_wrote_reads_the_catalog_from_the_primary(): void
+    private function recordQueries(): void
     {
-        $user = $this->makeUser();
-        $this->actingAsApi($user);
-        $this->placeOrder();
-
-        $this->actingAsApi($user);
-        $this->getJson('/api/v2/products')->assertOk();
-
-        $this->assertFalse($this->routing()->replicaAllowed());
-    }
-
-    public function test_someone_elses_write_does_not_affect_other_users(): void
-    {
-        $this->actingAsApi($this->makeUser());
-        $this->placeOrder();
-
-        $this->actingAsApi($this->makeUser());
-        $this->getJson('/api/v2/products')->assertOk();
-
-        $this->assertTrue($this->routing()->replicaAllowed());
-    }
-
-    public function test_the_read_your_writes_window_expires(): void
-    {
-        config(['database.read_your_writes_seconds' => 5]);
-        $user = $this->makeUser();
-        $this->actingAsApi($user);
-        $this->placeOrder();
-
-        $this->travel(6)->seconds();
-        $this->actingAsApi($user);
-        $this->getJson('/api/v2/products')->assertOk();
-
-        $this->assertTrue($this->routing()->replicaAllowed());
-    }
-
-    public function test_a_failed_write_leaves_no_marker(): void
-    {
-        $user = $this->makeUser();
-        $this->actingAsApi($user);
-        $this->postOrder(['items' => []])->assertStatus(422);
-
-        $this->actingAsApi($user);
-        $this->getJson('/api/v2/products')->assertOk();
-
-        $this->assertTrue($this->routing()->replicaAllowed());
-    }
-
-    /**
-     * With a real JWT, the user lookup (auth:api) and the permission checks run
-     * before the controller. They must read the primary; only the controller's
-     * catalog query may use the replica.
-     */
-    public function test_auth_and_permission_lookups_read_the_primary_with_a_real_token(): void
-    {
-        $this->makeUser(attributes: ['email' => 'realtoken@example.test']);
-        $token = $this->postJson('/api/v1/auth/login', ['email' => 'realtoken@example.test', 'password' => 'password123'])
-            ->assertOk()->json('data.access_token');
-        $this->app->make('auth')->forgetGuards();
-
-        $seen = [];
-        DB::listen(function ($query) use (&$seen) {
-            $seen[] = [$query->sql, $this->connectionReadsFromPrimary()];
+        $this->queries = [];
+        DB::listen(function ($query) {
+            if (str_contains($query->sql, 'from `products`')) {
+                $this->queries[] = $query->connectionName;
+            }
         });
-
-        // Bypass the catalog cache: a cache refill would (correctly) read the primary.
-        $this->withToken($token)->withHeader('X-Cache-Bypass', '1')->getJson('/api/v2/products')->assertOk()->assertHeader('X-Cache', 'BYPASS');
-
-        $onPrimary = fn (string $table) => collect($seen)->filter(fn ($q) => str_contains($q[0], "from `{$table}`"));
-        $this->assertNotEmpty($onPrimary('users'), 'the JWT user lookup did not run');
-        foreach (['users', 'model_has_roles', 'roles', 'permissions', 'role_has_permissions', 'model_has_permissions'] as $table) {
-            foreach ($onPrimary($table) as [$sql, $primary]) {
-                $this->assertTrue($primary, "read on the replica: {$sql}");
-            }
-        }
-        $productReads = $onPrimary('products');
-        $this->assertNotEmpty($productReads);
-        $this->assertFalse($productReads->first()[1], 'the catalog query should be allowed on the replica');
     }
 
-    /** Console commands, the scheduler and workers run no HTTP middleware. */
-    public function test_every_new_connection_reads_the_primary_by_default(): void
+    public function test_without_a_replica_catalog_reads_use_the_default_connection(): void
     {
-        config(['database.connections.probe' => config('database.connections.mysql')]);
+        $this->recordQueries();
 
-        $connection = DB::connection('probe');
+        $this->getJson('/api/v1/products')->assertOk()
+            ->assertHeader('X-Cache', 'MISS')
+            ->assertHeader('X-Read-Source', 'primary');
 
-        $this->assertTrue((new ReflectionProperty($connection, 'readOnWriteConnection'))->getValue($connection));
-        DB::purge('probe');
+        $this->assertSame(['mysql'], array_unique($this->queries));
     }
 
-    public function test_signing_in_is_not_a_write(): void
+    public function test_a_miss_reads_the_replica_and_a_hit_reads_no_database(): void
     {
-        $user = $this->makeUser(attributes: ['email' => 'reader@example.test']);
-        $token = $this->postJson('/api/v1/auth/login', ['email' => 'reader@example.test', 'password' => 'password123'])
-            ->assertOk()->json('data.access_token');
+        $this->useReplica();
+        $this->recordQueries();
 
-        $this->withToken($token)->getJson('/api/v2/products')->assertOk();
+        $this->getJson('/api/v1/products')->assertOk()
+            ->assertHeader('X-Cache', 'MISS')
+            ->assertHeader('X-Read-Source', 'replica');
+        $this->assertSame(['mysql_replica'], array_unique($this->queries));
 
-        $this->assertFalse($this->app->make(ReadRouting::class)->hasRecentWrite($user->id));
-        $this->assertTrue($this->routing()->replicaAllowed());
+        $this->queries = [];
+        $this->getJson('/api/v1/products')->assertOk()
+            ->assertHeader('X-Cache', 'HIT')
+            ->assertHeaderMissing('X-Read-Source');
+        $this->assertSame([], $this->queries);
     }
 
-    /** Makes every write of a read-your-writes marker fail, as when Redis goes down. */
-    private function failMarkerWrites(): void
+    public function test_a_bypass_and_the_uncached_in_stock_list_read_the_replica(): void
     {
-        Cache::extend('marker-fails', fn () => Cache::repository(new class extends ArrayStore
-        {
-            public function put($key, $value, $seconds)
-            {
-                if (str_starts_with($key, 'db:recent-write:')) {
-                    throw new RedisException('Connection refused');
-                }
+        $this->useReplica();
+        $this->recordQueries();
 
-                return parent::put($key, $value, $seconds);
-            }
-        }));
-        config(['cache.stores.marker-fails' => ['driver' => 'marker-fails']]);
-        Cache::setDefaultDriver('marker-fails');
+        $this->getJson('/api/v1/products', ['X-Cache-Bypass' => '1'])->assertOk()
+            ->assertHeader('X-Cache', 'BYPASS')
+            ->assertHeader('X-Read-Source', 'replica');
+        $this->getJson('/api/v2/products?in_stock=1')->assertOk()
+            ->assertHeader('X-Cache', 'SKIP')
+            ->assertHeader('X-Read-Source', 'replica');
+
+        $this->assertSame(['mysql_replica'], array_unique($this->queries));
     }
 
-    /**
-     * The order is committed before the marker is written. If Redis fails at that
-     * moment the order still exists, so the customer must get it (201), the failure
-     * must be logged, and a retry with the same key must return the same order.
-     */
-    public function test_a_committed_order_succeeds_when_the_marker_cannot_be_written(): void
+    public function test_a_replica_without_the_latest_catalog_write_is_not_read(): void
+    {
+        $this->useReplica();
+        // A transaction the server has never executed: the replica is "behind".
+        Cache::forever(CatalogCache::GTID_KEY, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa:1');
+        $this->recordQueries();
+
+        $this->getJson('/api/v1/products')->assertOk()
+            ->assertHeader('X-Cache', 'MISS')
+            ->assertHeader('X-Read-Source', 'primary');
+
+        $this->assertSame(['mysql'], array_unique($this->queries));
+    }
+
+    public function test_a_catalog_write_forgets_the_gtid_and_moves_the_version(): void
+    {
+        $this->useReplica();
+        $this->getJson('/api/v1/products')->assertOk();
+        $this->assertNotNull(Cache::get(CatalogCache::GTID_KEY));
+        $version = Cache::get(CatalogCache::VERSION_KEY);
+
+        $this->product->update(['price' => 12.34]);
+
+        $this->assertNull(Cache::get(CatalogCache::GTID_KEY));
+        $this->assertSame($version + 1, (int) Cache::get(CatalogCache::VERSION_KEY));
+        $this->getJson("/api/v1/products/{$this->product->id}")->assertOk()
+            ->assertHeader('X-Cache', 'MISS')
+            ->assertJsonPath('data.price', '12.34');
+    }
+
+    public function test_an_unreachable_replica_falls_back_to_the_primary(): void
     {
         Log::spy();
-        $this->failMarkerWrites();
-        $user = $this->makeUser();
-        $payload = ['items' => [['product_id' => $this->product->id, 'quantity' => 1]]];
-        $headers = ['Idempotency-Key' => 'cart-1'];
+        config([
+            'database.read_connection' => 'mysql_replica',
+            'database.connections.mysql_replica.host' => 'replica.invalid',
+        ]);
+        DB::purge('mysql_replica');
 
-        $this->actingAsApi($user);
-        $first = $this->postOrder($payload, $headers);
+        $this->getJson('/api/v1/products', ['X-Cache-Bypass' => '1'])->assertOk()
+            ->assertHeader('X-Read-Source', 'primary-fallback');
+        $this->getJson('/api/v1/products')->assertOk()
+            ->assertHeader('X-Cache', 'MISS')
+            ->assertHeader('X-Read-Source', 'primary-fallback');
 
-        $this->assertSame(201, $first->status(), $first->getContent());
-        Log::shouldHaveReceived('error')->withArgs(fn (string $message, array $context = []) => str_contains($message, 'read-your-writes marker')
-            && $context['user_id'] === $user->id
-            && $context['exception'] instanceof RedisException)->once();
-
-        $this->actingAsApi($user);
-        $retry = $this->postOrder($payload, $headers);
-
-        $this->assertSame(201, $retry->status(), $retry->getContent());
-        $this->assertSame($first->json('data.id'), $retry->json('data.id'));
-        $this->assertDatabaseCount('orders', 1);
-        $this->assertCount(1, $this->warehouse->callsTo('reserve'));
-        $this->assertSame(9, $this->warehouse->stock[$this->product->id]);
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn (string $message) => str_contains($message, 'Read replica unavailable'))
+            ->twice();
     }
 
-    /**
-     * Before the fix the client got a 500 although the order was committed. That is
-     * the same as a lost reply: the client retries with the same key and gets the
-     * order that exists, never a second one.
-     */
-    public function test_a_retry_after_a_lost_reply_returns_the_existing_order(): void
+    public function test_a_missing_product_is_a_404_not_a_fallback(): void
     {
-        $user = $this->makeUser();
-        $payload = ['items' => [['product_id' => $this->product->id, 'quantity' => 1]]];
-        $headers = ['Idempotency-Key' => 'cart-1'];
-        $this->actingAsApi($user);
-        $orderId = $this->postOrder($payload, $headers)->assertStatus(201)->json('data.id');
+        Log::spy();
+        $this->useReplica();
 
-        foreach (range(1, 3) as $retry) {
-            $this->actingAsApi($user);
-            $this->postOrder($payload, $headers)->assertStatus(201)->assertJsonPath('data.id', $orderId);
-        }
+        $this->getJson('/api/v1/products/999999')->assertNotFound();
 
-        $this->assertDatabaseCount('orders', 1);
-        $this->assertDatabaseCount('order_reservations', 1);
-        $this->assertCount(1, $this->warehouse->callsTo('reserve'));
+        Log::shouldNotHaveReceived('warning');
+        Log::shouldNotHaveReceived('error');
     }
 
-    public function test_cache_refills_always_read_from_the_primary(): void
+    public function test_writes_auth_and_orders_never_use_the_replica(): void
     {
-        config(['products.cache.enabled' => true]);
-        $routing = $this->routing();
-        $routing->allowReplica();
-        $duringLoad = null;
-
-        $this->app->make(CatalogCache::class)->remember('test:key', function () use ($routing, &$duringLoad) {
-            $duringLoad = $routing->replicaAllowed();
-
-            return 'value';
+        $this->useReplica();
+        $used = [];
+        DB::listen(function ($query) use (&$used) {
+            $used[$query->connectionName] = true;
         });
 
-        $this->assertFalse($duringLoad, 'the refill ran on the replica');
-        $this->assertTrue($routing->replicaAllowed(), 'the request did not get the replica back');
+        $this->makeUser(attributes: ['email' => 'reader@example.test']);
+        $token = $this->postJson('/api/v1/auth/login', ['email' => 'reader@example.test', 'password' => 'password123'])
+            ->assertOk()->json('data.access_token');
+        $this->app->make('auth')->forgetGuards();
+        $this->withToken($token);
+        $this->postOrder(['items' => [['product_id' => $this->product->id, 'quantity' => 1]]])->assertStatus(201);
+        $this->getJson('/api/v1/orders')->assertOk();
+
+        $this->assertSame(['mysql'], array_keys($used));
     }
 
-    public function test_without_a_replica_host_there_is_no_read_write_split(): void
+    /** Each replica session is READ ONLY: even pointed at the primary, it can't write. */
+    public function test_the_replica_connection_refuses_writes(): void
     {
-        $config = $this->databaseConfigWith(null);
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('READ ONLY');
 
-        $this->assertArrayNotHasKey('read', $config['connections']['mysql']);
+        try {
+            DB::connection('mysql_replica')->update('update products set name = name where id = -1');
+        } finally {
+            DB::purge('mysql_replica');
+        }
     }
 
-    public function test_a_replica_host_enables_the_split_with_sticky_writes(): void
+    public function test_the_read_connection_follows_db_read_host(): void
     {
+        $this->assertSame(env('DB_CONNECTION', 'sqlite'), $this->databaseConfigWith(null)['read_connection']);
+
         $config = $this->databaseConfigWith('mysql-replica');
-        $mysql = $config['connections']['mysql'];
-
-        $this->assertSame(['host' => ['mysql-replica']], $mysql['read']);
-        $this->assertSame(['host' => [env('DB_HOST', '127.0.0.1')]], $mysql['write']);
-        $this->assertTrue($mysql['sticky']);
+        $this->assertSame('mysql_replica', $config['read_connection']);
+        $this->assertSame('mysql-replica', $config['connections']['mysql_replica']['host']);
+        $this->assertArrayNotHasKey('read', $config['connections']['mysql']);
     }
 
     private function databaseConfigWith(?string $readHost): array
