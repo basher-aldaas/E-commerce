@@ -20,7 +20,7 @@ class AuthTest extends ApiTestCase
         $response->assertJsonPath('status', 1)
             ->assertJsonPath('data.token_type', 'Bearer')
             ->assertJsonPath('data.user.email', 'new@example.test')
-            ->assertJsonPath('data.user.roles', ['user']);
+            ->assertJsonPath('data.user.roles', ['customer']);
         $this->assertNotEmpty($response->json('data.access_token'));
         Mail::assertQueued(WelcomeMail::class);
     }
@@ -108,7 +108,7 @@ class AuthTest extends ApiTestCase
 
     public function test_protected_routes_reject_missing_and_invalid_tokens(): void
     {
-        foreach (['/api/v1/products', '/api/v2/products', '/api/v1/orders', '/api/v1/categories', '/api/v1/notifications'] as $uri) {
+        foreach (['/api/v1/products', '/api/v2/products', '/api/v1/orders', '/api/v1/categories', '/api/v1/orders/1', '/api/v2/products/1'] as $uri) {
             $this->assertEnvelope($this->asGuest()->getJson($uri), 401, success: false);
         }
 

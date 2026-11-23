@@ -28,7 +28,8 @@ class StockRequest extends \Google\Protobuf\Internal\Message
      *     @type int[] $product_ids
      * }
      */
-    public function __construct($data = NULL) {
+    public function __construct($data = null)
+    {
         \App\Grpc\Warehouse\Metadata\Warehouse::initOnce();
         parent::__construct($data);
     }

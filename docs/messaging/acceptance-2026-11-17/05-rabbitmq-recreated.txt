@@ -1,0 +1,96 @@
+# Scenario 5 - RabbitMQ container recreated, volume kept, 2026-11-17T10:33:01Z
+worker: Exited (0) 3 minutes ago
+  POST http://app:8000/api/v1/orders [201 Created, 979B, 409ms]
+  | 'order', 10, 'in', 409, 'ms'
+  POST http://app:8000/api/v1/orders [201 Created, 979B, 305ms]
+  | 'order', 11, 'in', 305, 'ms'
+  POST http://app:8000/api/v1/orders [201 Created, 979B, 347ms]
+  | 'order', 12, 'in', 347, 'ms'
+## before
+container id: 62c6db54738e  volume: e-commerce_rabbitmq-data
+  notifications.order-created.email.dlq (classic, durable=true): ready=1 unacked=0 consumers=0
+  notifications.order-created.email (quorum, durable=true): ready=3 unacked=0 consumers=0
+$ docker compose stop rabbitmq && docker compose rm -f rabbitmq
+ Container ecommerce-rabbitmq  Stopped
+ Container ecommerce-rabbitmq  Removed
+container removed
+e-commerce_rabbitmq-data
+## order placed while RabbitMQ does not exist
+  POST http://app:8000/api/v1/orders [201 Created, 979B, 506ms]
+  | 'order', 13, 'in', 506, 'ms'
+id	order_id	attempts	published_at	last_error
+13	13	1	NULL	PhpAmqpLib\\Exception\\AMQPConnectionClosedException: Connection reset by peer
+[2026-11-17 10:33:18] published=0 failed=1
+Broker/database unavailable, retrying in 1s: PhpAmqpLib\Exception\AMQPConnectionClosedException: Connection reset by peer
+$ docker compose up -d rabbitmq
+ Container ecommerce-rabbitmq  Started
+## after (10:33:35)
+container id: 42af9bd7445f health: healthy
+  notifications.order-created.email.dlq (classic, durable=true): ready=1 unacked=0 consumers=0
+  notifications.order-created.email (quorum, durable=true): ready=4 unacked=0 consumers=0
+id	order_id	attempts	published_at
+13	13	4	2026-11-17 10:33:33
+12	12	1	2026-11-17 10:33:06
+11	11	1	2026-11-17 10:33:05
+10	10	1	2026-11-17 10:33:04
+[2026-11-17 10:33:25] published=0 failed=1
+Broker/database unavailable, retrying in 1s: PhpAmqpLib\Exception\AMQPIOException: stream_socket_client(): Unable to connect to tcp://rabbitmq:5672 (Connection refused)
+[2026-11-17 10:33:33] published=1 failed=0
+$ docker compose start email-worker  (10:33:56)
+ Container ecommerce-email-worker  Started
+## queue at 10:37:52: ready=0 unacked=1 consumers=1
+[2026-11-17 10:34:53] message 402130c2-e2d0-4656-89cf-a43a1399e041 attempt 4 -> retried
+[2026-11-17 10:35:11] message 83d94c8b-272f-4305-b8ab-5e88b9b8edc3 attempt 1 -> retried
+[2026-11-17 10:35:27] message 83d94c8b-272f-4305-b8ab-5e88b9b8edc3 attempt 2 -> retried
+[2026-11-17 10:35:44] message 83d94c8b-272f-4305-b8ab-5e88b9b8edc3 attempt 3 -> retried
+[2026-11-17 10:35:52] message 83d94c8b-272f-4305-b8ab-5e88b9b8edc3 attempt 4 -> retried
+[2026-11-17 10:36:12] message 9b041fc6-54f7-464a-a0e2-caa19939482b attempt 1 -> retried
+[2026-11-17 10:36:28] message 9b041fc6-54f7-464a-a0e2-caa19939482b attempt 2 -> retried
+[2026-11-17 10:36:45] message 9b041fc6-54f7-464a-a0e2-caa19939482b attempt 3 -> retried
+[2026-11-17 10:36:53] message 9b041fc6-54f7-464a-a0e2-caa19939482b attempt 4 -> retried
+[2026-11-17 10:37:10] message c140af8f-052e-4ddd-b62e-04fdaddd0137 attempt 1 -> retried
+[2026-11-17 10:37:27] message c140af8f-052e-4ddd-b62e-04fdaddd0137 attempt 2 -> retried
+[2026-11-17 10:37:44] message c140af8f-052e-4ddd-b62e-04fdaddd0137 attempt 3 -> retried
+[2026-11-17 10:37:53] message c140af8f-052e-4ddd-b62e-04fdaddd0137 attempt 4 -> retried
+2026-11-17 10:34:09 ERROR order 10 attempt 1 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:34:23 ERROR order 10 attempt 2 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:34:38 ERROR order 10 attempt 3 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:34:53 ERROR order 10 attempt 4 / 4 | Order confirmation email failed on the last attempt; the broker dead-letters it to the DLQ
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:35:09 ERROR order 11 attempt 1 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:35:23 ERROR order 11 attempt 2 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:35:38 ERROR order 11 attempt 3 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:35:52 ERROR order 11 attempt 4 / 4 | Order confirmation email failed on the last attempt; the broker dead-letters it to the DLQ
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:36:10 ERROR order 12 attempt 1 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:36:24 ERROR order 12 attempt 2 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:36:39 ERROR order 12 attempt 3 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:36:53 ERROR order 12 attempt 4 / 4 | Order confirmation email failed on the last attempt; the broker dead-letters it to the DLQ
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:37:08 ERROR order 13 attempt 1 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:37:23 ERROR order 13 attempt 2 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:37:38 ERROR order 13 attempt 3 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:37:53 ERROR order 13 attempt 4 / 4 | Order confirmation email failed on the last attempt; the broker dead-letters it to the DLQ
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+
+## Result of the worker run above (honest reading)
+The worker consumed all 4 messages that survived the recreated broker (orders 10, 11, 12 and 13, the last one
+published by the relay after the outage), so the queues and the processing survived. The emails themselves
+failed: Mailtrap answered "535 5.7.0 Too many failed login attempts". Cause: scenario 4 injected the failure
+with a wrong SMTP password, and the repeated bad logins locked the Mailtrap username for a while, so even the
+correct password was refused. The worker behaved as designed (no ACK, 4 attempts each, then DLQ: 0 lost),
+but no email was delivered in this run. Fix for the method: inject SMTP failures with an unreachable host
+(MAIL_HOST=smtp.invalid), never with a wrong password. The 5 dead letters (orders 9-13) are replayed later
+with `php artisan notifications:replay-dead-letters` once the lock expires (see 06-dlq-replay.txt).

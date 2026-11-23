@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\Handler;
+use App\Http\Middleware\RejectMalformedJson;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -25,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->append(SecurityHeaders::class);
         $middleware->throttleApi();
+        $middleware->prependToGroup('api', RejectMalformedJson::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         Handler::register($exceptions);

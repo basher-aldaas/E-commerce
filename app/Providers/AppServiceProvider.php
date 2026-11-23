@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Grpc\Warehouse\WarehouseClient;
+use App\Messaging\Outbox\OutboxPublisher;
+use App\Messaging\RabbitMq\RabbitMqOutboxPublisher;
 use App\Services\Warehouse\DisabledWarehouseGateway;
 use App\Services\Warehouse\GrpcWarehouseGateway;
 use App\Services\Warehouse\WarehouseGateway;
-use App\Services\Warehouse\WarehouseStub;
 use Grpc\ChannelCredentials;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Console\ServeCommand;
@@ -20,18 +22,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Requirement 4: the outbox relay keeps one RabbitMQ connection open.
+        $this->app->singleton(OutboxPublisher::class, RabbitMqOutboxPublisher::class);
+
+        //اذا خدمة المستودع غير مفعلة لا يحاول الاتصال بال grpc
         $this->app->singleton(WarehouseGateway::class, function () {
             if (! config('warehouse.enabled')) {
                 return new DisabledWarehouseGateway();
             }
 
             return new GrpcWarehouseGateway(
-                new WarehouseStub(config('warehouse.target'), [
+                new WarehouseClient(config('warehouse.target'), [
                     'credentials' => ChannelCredentials::createInsecure(),
-                ]),
+                ] + config('warehouse.channel', [])),
                 config('warehouse.read_timeout_ms'),
                 config('warehouse.write_timeout_ms'),
-                config('warehouse.write_retries'),
+                config('warehouse.release_timeout_ms'),
+                config('warehouse.connect_timeout_ms'),
             );
         });
     }

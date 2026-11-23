@@ -11,4 +11,9 @@ use App\Exceptions\ApiException;
  */
 abstract class WarehouseException extends ApiException
 {
+    /**
+     * The gRPC status code when the Warehouse call itself failed (null when it was
+     * never made, e.g. no connection). For diagnostics only, never shown to users.
+     */
+    public ?int $grpcCode = null;
 }

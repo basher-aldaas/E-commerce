@@ -1,0 +1,6 @@
+per_page=15 run=1 | B: lazy loading (N+1) | queries= 70 | expected 2+2x15+items= 70 | db_ms= 55.86 | total_s= 1.661825 | sha= 7be2991c9b71deac
+per_page=15 run=2 | B: lazy loading (N+1) | queries= 70 | expected 2+2x15+items= 70 | db_ms= 64.57 | total_s= 0.453586 | sha= 7be2991c9b71deac
+per_page=15 run=3 | B: lazy loading (N+1) | queries= 70 | expected 2+2x15+items= 70 | db_ms= 64.06 | total_s= 0.498790 | sha= 7be2991c9b71deac
+per_page=50 run=1 | B: lazy loading (N+1) | queries= 221 | expected 2+2x50+items= 221 | db_ms= 117.29 | total_s= 0.481107 | sha= 96cb3717dd5beb22
+per_page=50 run=2 | B: lazy loading (N+1) | queries= 221 | expected 2+2x50+items= 221 | db_ms= 117.71 | total_s= 0.399342 | sha= 96cb3717dd5beb22
+per_page=50 run=3 | B: lazy loading (N+1) | queries= 221 | expected 2+2x50+items= 221 | db_ms= 115.37 | total_s= 0.425331 | sha= 96cb3717dd5beb22

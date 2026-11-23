@@ -8,6 +8,8 @@ use App\Services\Warehouse\Data\WarehouseResult;
 
 /**
  * The application's only way to reach the Warehouse service, which owns all stock.
+ * The contract has exactly three operations; stock levels are managed with the
+ * Warehouse's own CLI, never from Laravel.
  *
  * A business refusal, such as too little stock, comes back as a WarehouseResult.
  * A technical failure throws a WarehouseException. Never call these methods inside
@@ -21,32 +23,31 @@ interface WarehouseGateway
     public const MAX_QUANTITY = 2147483647;
 
     /**
+     * A copy whose calls all share one time budget, so one HTTP request (Reserve
+     * plus any compensating Release) can never spend longer than this in the
+     * Warehouse. A call that would start after the budget is spent throws a
+     * WarehouseTimeoutException without being sent.
+     */
+    public function withDeadline(int $budgetMs): static;
+
+    /**
      * @param  list<int>  $productIds
      * @return array<int, StockLevel> Keyed by product ID.
      */
     public function getStock(array $productIds): array;
 
     /**
-     * Reserves every item or none. Repeating a key never reserves twice.
+     * Reserves every item or none. Repeating a key never reserves twice. A refusal
+     * lists every short item in WarehouseResult::$shortages.
      *
      * @param  array<int, int>  $quantities  Quantity keyed by product ID.
      */
     public function reserve(string $reservationKey, array $quantities): WarehouseResult;
 
-    public function confirm(string $reservationKey): WarehouseResult;
-
     /**
-     * Cancels an unconfirmed reservation. Safe for a key that never arrived: the
-     * key is recorded, so a delayed reserve with that key is refused.
+     * Gives a reservation's stock back: compensation for an order that could not
+     * be saved, or a cancelled order. Repeating it never returns stock twice, and
+     * an unknown key is recorded so that a delayed reserve with it is refused.
      */
     public function release(string $reservationKey): WarehouseResult;
-
-    /** Puts back the stock of a confirmed reservation. */
-    public function returnStock(string $reservationKey): WarehouseResult;
-
-    /** Creates a new product's stock. It never changes existing stock. */
-    public function initializeStock(int $productId, int $quantity): WarehouseResult;
-
-    /** Replaces a product's available quantity. This is a deliberate admin action. */
-    public function setStock(int $productId, int $quantity): WarehouseResult;
 }

@@ -11,9 +11,9 @@
         "google/protobuf": "^5.36",
         "grpc/grpc": "^1.85",
         "laravel/framework": "^12.0",
-        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "nwidart/laravel-modules": "12.0.5",
+        "php-amqplib/php-amqplib": "^3.7",
         "php-open-source-saver/jwt-auth": "^2.9",
         "spatie/laravel-permission": "^8.3"
     },

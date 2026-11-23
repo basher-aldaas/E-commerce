@@ -15,7 +15,9 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'price' => $this->price,
+            // Live from the Warehouse over gRPC; never stored or cached in Laravel.
             'stock' => $this->stock,
+            'stock_status' => $this->stock_status,
             'is_active' => (bool) $this->is_active,
             'image' => $this->image,
             'image_url' => $this->publicImageUrl(),

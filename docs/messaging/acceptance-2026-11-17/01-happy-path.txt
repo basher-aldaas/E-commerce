@@ -1,0 +1,79 @@
+# Scenario 1 - order from Postman (newman), 2026-11-17T10:17:56Z
+newman
+
+E-commerce - Requirement 4 (Async email via RabbitMQ)
+
+Root 1. Login (customer)
+  POST http://app:8000/api/v1/auth/login [200 OK, 1.11kB, 2.2s]
+  Pass  login 200
+
+Root 2. Create order (email goes out asynchronously)
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 1706ms]
+  Pass  order created: 201
+  Pass  standard success envelope
+  1. response does not wait for the email (< 1500 ms)
+  -
+  | 'order', 1, 'in', 1706, 'ms'
+  -
+
+-----------------------------------------------------------------------
+|                         |            executed |              failed |
+--------------------------+---------------------+----------------------
+|              iterations |                   1 |                   0 |
+--------------------------+---------------------+----------------------
+|                requests |                   2 |                   0 |
+--------------------------+---------------------+----------------------
+|            test-scripts |                   2 |                   0 |
+--------------------------+---------------------+----------------------
+|      prerequest-scripts |                   0 |                   0 |
+--------------------------+---------------------+----------------------
+|              assertions |                   4 |                   1 |
+-----------------------------------------------------------------------
+| total run duration: 4s                                              |
+-----------------------------------------------------------------------
+| total data received: 1kB (approx)                                   |
+-----------------------------------------------------------------------
+| average response time: 1957ms [min: 1706ms, max: 2.2s, s.d.: 251ms] |
+-----------------------------------------------------------------------
+
+  #  failure         detail                                                   
+                                                                              
+ 1.  AssertionError  response does not wait for the email (< 1500 ms)         
+                     expected 1706 to be below 1500                           
+                     at assertion:2 in test-script                            
+                     inside "2. Create order (email goes out asynchronously)" 
+
+# Scenario 1 - run 2 (app warm), 2026-11-17T10:19:07Z
+  POST http://app:8000/api/v1/auth/login [200 OK, 1.11kB, 551ms]
+  Pass  login 200
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 340ms]
+  Pass  order created: 201
+  Pass  standard success envelope
+  Pass  response does not wait for the email (< 1500 ms)
+  | 'order', 2, 'in', 340, 'ms'
+  POST http://app:8000/api/v1/auth/login [200 OK, 1.11kB, 568ms]
+  Pass  login 200
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 456ms]
+  Pass  order created: 201
+  Pass  standard success envelope
+  Pass  response does not wait for the email (< 1500 ms)
+  | 'order', 3, 'in', 456, 'ms'
+  POST http://app:8000/api/v1/auth/login [200 OK, 1.11kB, 492ms]
+  Pass  login 200
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 422ms]
+  Pass  order created: 201
+  Pass  standard success envelope
+  Pass  response does not wait for the email (< 1500 ms)
+  | 'order', 4, 'in', 422, 'ms'
+|              iterations |                  3 |                  0 |
+|              assertions |                 12 |                  0 |
+## outbox rows
+id	order_id	attempts	created_at	published_at
+1	1	1	2026-11-17 10:18:02	2026-11-17 10:18:03
+2	2	2	2026-11-17 10:19:10	2026-11-17 10:19:12
+3	3	1	2026-11-17 10:19:11	2026-11-17 10:19:11
+4	4	1	2026-11-17 10:19:12	2026-11-17 10:19:12
+## worker log
+[2026-11-17 10:18:08] local.INFO: Order confirmation email sent and acknowledged {"message_id":"e76615d4-ea07-4ffc-b7b3-89f85bb8e463","attempt":1,"max_attempts":4,"event_id":"e76615d4-ea07-4ffc-b7b3-89f85bb8e463","order_id":1,"to":"user@system.com","smtp_reply":null} 
+[2026-11-17 10:19:20] local.INFO: Order confirmation email sent and acknowledged {"message_id":"2806b4cd-6f46-41f8-87eb-3732d336afc8","attempt":1,"max_attempts":4,"event_id":"2806b4cd-6f46-41f8-87eb-3732d336afc8","order_id":3,"to":"user@system.com","smtp_message_id":"queued","smtp_reply":"250 2.0.0 Ok: queued"} 
+[2026-11-17 10:19:22] local.ERROR: Order confirmation email failed; returning the message for a retry {"message_id":"9bb0eb5c-5dc8-44f4-af18-72756cde5337","attempt":1,"max_attempts":4,"event_id":"9bb0eb5c-5dc8-44f4-af18-72756cde5337","order_id":2,"error_class":"Symfony\\Component\\Mailer\\Exception\\UnexpectedResponseException","error":"Expected response code \"354\" but got code \"550\", with message \"550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing\"."} 

@@ -1,8 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Modules\Notifications\Http\Controllers\NotificationsController;
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('notifications', NotificationsController::class)->names('notifications');
-});
+/*
+|--------------------------------------------------------------------------
+| Notifications Web Routes
+|--------------------------------------------------------------------------
+|
+| No web routes. The generated resource scaffolding was removed because its
+| controller returned views that do not exist.
+|
+*/

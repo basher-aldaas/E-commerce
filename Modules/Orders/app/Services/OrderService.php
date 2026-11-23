@@ -20,6 +20,7 @@ class OrderService
         private readonly ProductStockReader $stockReader,
     ) {}
 
+
     public function viewOrder(int $orderId, User $user): Order
     {
         $order = Order::query()->find($orderId);
@@ -51,13 +52,11 @@ class OrderService
 
         $query = Order::query();
 
-        // الأدمن يشوف جميع الطلبات
         if (!$user->hasRole('admin')) {
-            // المستخدم العادي يشوف طلباته فقط
             $query->where('user_id', $user->id);
         }
 
-        return $query->latest()->paginate(15);
+        return $query->latest()->orderByDesc('id')->paginate(15);
     }
 
     public function updateStatus(int $orderId, string $status): Order
@@ -70,7 +69,7 @@ class OrderService
             );
         }
 
-        [$order, $reservationToReturn] = DB::transaction(function () use ($orderId, $status) {
+        [$order, $reservationToRelease] = DB::transaction(function () use ($orderId, $status) {
             // Lock the order row so two concurrent status updates can't race.
             $order = Order::query()
                 ->lockForUpdate()
@@ -84,10 +83,8 @@ class OrderService
 
             $this->guardStatusChange($order, $reservation, $status);
 
-            // The stock must be back before the order counts as cancelled, so record
-            // the intent here and call the Warehouse after this transaction.
             if ($status === 'cancelled' && $this->holdsStock($reservation)) {
-                $reservation->update(['status' => OrderReservation::RETURN_PENDING]);
+                $reservation->update(['status' => OrderReservation::CANCEL_PENDING]);
 
                 return [$order, $reservation];
             }
@@ -99,11 +96,10 @@ class OrderService
             return [$order->refresh(), null];
         });
 
-        if ($reservationToReturn !== null) {
-            $order = $this->stock->returnAndCancel($reservationToReturn);
+        if ($reservationToRelease !== null) {
+            return $this->stock->releaseAndCancel($reservationToRelease, $this->stock->budgeted());
         }
 
-        // Notify the customer once the change is committed.
         $this->notifier->statusChanged($order);
 
         return $order;
@@ -152,7 +148,7 @@ class OrderService
             );
         }
 
-        if ($reservation?->status === OrderReservation::RETURN_PENDING) {
+        if ($reservation?->status === OrderReservation::CANCEL_PENDING) {
             throw new OrderStatusConflictException(
                 message: 'This order is being cancelled. Retry the cancellation instead.'
             );
@@ -162,9 +158,8 @@ class OrderService
     private function holdsStock(?OrderReservation $reservation): bool
     {
         return in_array($reservation?->status, [
-            OrderReservation::SAVED,
-            OrderReservation::CONFIRMED,
-            OrderReservation::RETURN_PENDING,
+            OrderReservation::PLACED,
+            OrderReservation::CANCEL_PENDING,
         ], true);
     }
 }

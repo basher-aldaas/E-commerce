@@ -3,6 +3,27 @@
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
+// The primary. Used by `mysql` below and, with another host, by `mysql_replica`.
+$mysql = [
+    'driver' => 'mysql',
+    'url' => env('DB_URL'),
+    'host' => env('DB_HOST', '127.0.0.1'),
+    'port' => env('DB_PORT', '3306'),
+    'database' => env('DB_DATABASE', 'laravel'),
+    'username' => env('DB_USERNAME', 'root'),
+    'password' => env('DB_PASSWORD', ''),
+    'unix_socket' => env('DB_SOCKET', ''),
+    'charset' => env('DB_CHARSET', 'utf8mb4'),
+    'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'strict' => true,
+    'engine' => null,
+    'options' => extension_loaded('pdo_mysql') ? array_filter([
+        (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+    ]) : [],
+];
+
 return [
 
     /*
@@ -18,6 +39,13 @@ return [
     */
 
     'default' => env('DB_CONNECTION', 'sqlite'),
+
+    // Read replica (Requirement 3): the connection the catalog cache reads
+    // through on a cache miss or bypass (Modules\Products\Services\CatalogCache).
+    // Everything else, every write included, uses the default connection, the
+    // primary. Without DB_READ_HOST there is no replica: catalog reads use the
+    // default connection too.
+    'read_connection' => env('DB_READ_HOST') ? 'mysql_replica' : env('DB_CONNECTION', 'sqlite'),
 
     /*
     |--------------------------------------------------------------------------
@@ -44,25 +72,23 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
-        'mysql' => [
-            'driver' => 'mysql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'unix_socket' => env('DB_SOCKET', ''),
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
-        ],
+        // The primary: every write and every read outside the catalog cache.
+        'mysql' => $mysql,
+
+        // The read replica (DB_READ_HOST), used only through
+        // database.read_connection. Each session is READ ONLY, so a write sent
+        // here fails even if DB_READ_HOST pointed at the primary; the replica
+        // server is also super_read_only. Without DB_READ_HOST it points at the
+        // primary, so models a replica read left in the cache keep working.
+        // A 2 s connect timeout keeps the fallback to the primary quick.
+        'mysql_replica' => array_replace($mysql, [
+            'url' => null,
+            'host' => env('DB_READ_HOST') ?: env('DB_HOST', '127.0.0.1'),
+            'options' => extension_loaded('pdo_mysql') ? $mysql['options'] + [
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_INIT_COMMAND : PDO::MYSQL_ATTR_INIT_COMMAND) => 'SET SESSION TRANSACTION READ ONLY',
+                PDO::ATTR_TIMEOUT => 2,
+            ] : [],
+        ]),
 
         'mariadb' => [
             'driver' => 'mariadb',

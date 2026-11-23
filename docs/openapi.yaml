@@ -1,0 +1,981 @@
+openapi: 3.0.3
+info:
+  title: E-commerce API
+  version: 1.1.0
+  description: |
+    REST API of the modular E-commerce application (Users, Products, Orders,
+    Notifications). Stock is owned by a separate Python **Warehouse** service that
+    Laravel reaches over gRPC; clients never talk to the Warehouse directly.
+
+    **Authentication**: get a JWT from `POST /api/v1/auth/login` (or `register`)
+    and send it as `Authorization: Bearer <token>`. Click **Authorize** and paste
+    only the token.
+
+    **Roles**: `customer` and `admin`. A customer only sees their own orders;
+    only an admin can create or edit products, create categories or change an
+    order's status.
+
+    **Envelope**: every response has `status` (1 success, 0 error), `data`,
+    `message`, `status_code` and `timestamp`. Product lists add `pagination`.
+
+    **Status codes**: `200` read/updated, `201` created, `400` body sent as
+    JSON that is not valid JSON (any endpoint), `401` no or invalid token, `403`
+    role or ownership refused, `404` not found, `409` stock conflict or order
+    still in progress, `422` invalid fields, `429` rate limit, `503`/`504`
+    Warehouse unreachable / too slow.
+
+    **Versions**: `v1` and `v2` are both supported. `v2` product endpoints add
+    filtering and a different product shape (`in_stock`, compact `category`, no
+    raw `image` path).
+
+    **Live stock**: `stock` and `stock_status` come from the Warehouse on every
+    read and are never stored in Laravel. If the Warehouse can't answer, pages
+    still load with `stock: null` and `stock_status: unavailable`.
+
+    **Rate limiting**: 60 API requests per minute per user (or per IP for
+    guests), and a stricter limit on failed logins. Over the limit: `429`.
+
+    This file is maintained by hand. Do not run `php artisan l5-swagger:generate`,
+    which would overwrite generated files instead of reading this one.
+servers:
+  - url: http://localhost:8000
+    description: Local development (Docker)
+tags:
+  - name: Auth
+    description: Registration, login and logout
+  - name: Products v1
+    description: Product catalogue, version 1
+  - name: Products v2
+    description: Product catalogue, version 2 (filtering, richer shape)
+  - name: Categories
+    description: Product categories
+  - name: Orders
+    description: Customer orders and their stock reservations
+  - name: System
+    description: Admin-only, read-only diagnostics (never cached)
+  - name: Performance demo
+    description: Admin-only endpoints for the Requirement 3 demonstrations. Not used by the store.
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a customer account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation]
+              properties:
+                name: { type: string, maxLength: 255, example: John Doe }
+                email: { type: string, format: email, maxLength: 255, example: john@example.com }
+                password: { type: string, format: password, minLength: 8, example: password123 }
+                password_confirmation: { type: string, format: password, example: password123 }
+      responses:
+        '201':
+          description: Registered and logged in
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthEnvelope' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and obtain a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, example: user@system.com }
+                password: { type: string, format: password, example: password123 }
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthEnvelope' }
+        '401':
+          description: Invalid email or password
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+              example: { status: 0, data: [], message: Invalid email or password, status_code: 401, timestamp: '2026-11-13T12:00:00+00:00' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Invalidate the current JWT
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EmptyEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /api/v1/products:
+    get:
+      tags: [Products v1]
+      summary: List products (newest first), optionally of one category
+      description: Includes inactive products (v2 lists active ones only). Pagination details are in `pagination`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - { name: category_id, in: query, schema: { type: integer }, description: Only products of this category }
+        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 15 } }
+      responses:
+        '200':
+          description: Products with live stock
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Product' } }
+                      pagination: { $ref: '#/components/schemas/Pagination' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    post:
+      tags: [Products v1]
+      summary: Create a product (admin)
+      description: |
+        Creates the catalogue entry only. Laravel never sets stock: the Warehouse
+        operator adds it with `python -m app.cli set-stock <id> <quantity>`, and
+        until then the product reads as `stock_status: not_stocked`.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [name, price, category_id]
+              properties:
+                name: { type: string, maxLength: 255, example: Wireless Mouse }
+                description: { type: string, nullable: true }
+                price: { type: number, format: float, minimum: 0, example: 50.00 }
+                category_id: { type: integer, example: 1 }
+                image: { type: string, format: binary, description: 'JPG, PNG or WebP, at most 2 MB' }
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Product' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /api/v1/products/{product}:
+    get:
+      tags: [Products v1]
+      summary: Get one product with live stock
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: The product
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Product' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Products v1]
+      summary: Update a product (admin)
+      description: |
+        Replaces the product's editable fields (same rules as creating one). Admin
+        only (`update_product`); products have no owner, so the role is the check.
+        There is no DELETE: order items reference products, so hide one with
+        `is_active: false` instead (v2 then leaves it out).
+
+        The change is visible on the next request everywhere: saving the product
+        invalidates the whole catalog cache, and the ETag of every affected
+        response changes (an old `If-None-Match` gets `200`, not `304`). Stock is
+        not editable here; the Warehouse owns it.
+
+        Without `image` the current image is kept. A file cannot be sent with a
+        real PUT, so to replace the image send `POST /api/v1/products/{id}` as
+        multipart/form-data with `_method=PUT`.
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductUpdate' }
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ProductUpdate'
+                - type: object
+                  properties:
+                    _method: { type: string, enum: [PUT], description: Required when sent as POST }
+                    image: { type: string, format: binary, description: 'JPG, PNG or WebP, at most 2 MB' }
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Product' }
+        '400': { $ref: '#/components/responses/MalformedJson' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /api/v2/products:
+    get:
+      tags: [Products v2]
+      summary: List active products with filters
+      parameters:
+        - { name: search, in: query, schema: { type: string, maxLength: 255 }, description: Matches part of the name }
+        - { name: category_id, in: query, schema: { type: integer } }
+        - { name: min_price, in: query, schema: { type: number, minimum: 0 } }
+        - { name: max_price, in: query, schema: { type: number, minimum: 0 } }
+        - { name: in_stock, in: query, schema: { type: boolean }, description: 'Needs the Warehouse: returns 503 or 504 when it cannot answer, instead of a wrong list.' }
+        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 15 } }
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: Matching products with live stock
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/ProductV2' } }
+                      pagination: { $ref: '#/components/schemas/Pagination' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/WarehouseUnavailable' }
+        '504': { $ref: '#/components/responses/WarehouseTimeout' }
+
+  /api/v2/products/{product}:
+    get:
+      tags: [Products v2]
+      summary: Get one product (v2 shape)
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: The product
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ProductV2' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/categories:
+    get:
+      tags: [Categories]
+      summary: List categories (15 per page)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: A Laravel paginator in `data`
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/CategoryPage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Categories]
+      summary: Create a category (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, maxLength: 255, example: Electronics }
+                description: { type: string, nullable: true, example: 'Phones, laptops, etc.' }
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Category' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /api/v1/orders:
+    get:
+      tags: [Orders]
+      summary: List orders
+      description: Admins see every order; a customer sees only their own. 15 per page.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: A Laravel paginator in `data`
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/OrderPage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Orders]
+      summary: Place an order
+      description: |
+        Reserves every item in the Warehouse in one gRPC call (all or nothing),
+        with **exactly the quantities requested**: asking for 20 when 10 are
+        available is refused whole with `409`, nothing is reserved and no order is
+        created. If saving the order fails after a successful reservation, the
+        reservation is released (compensation). Prices come from the database.
+
+        **`Idempotency-Key` is required.** Send a new one for every checkout
+        attempt and reuse it only to retry that same attempt (after a timeout, a
+        5xx or a lost reply): a repeat with the same items returns the original
+        order instead of ordering twice; the same key with different items is a
+        `422`; a key whose earlier attempt is still running or still being
+        released is a `409`; a key whose earlier attempt failed without an order
+        (out of stock, Warehouse unreachable, released) tries again.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 255, example: 6f1c2a4e-3b0d-4b8e-9a77-2f8d1c0e5b91 }
+          description: A unique value per checkout attempt (a UUID). Missing, empty or longer than 255 characters is a `422`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [product_id, quantity]
+                    properties:
+                      product_id: { type: integer, example: 1, description: Must exist; each product only once }
+                      quantity: { type: integer, minimum: 1, maximum: 2147483647, example: 2 }
+      responses:
+        '201':
+          description: Order created and its stock reserved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Order' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: Insufficient stock (lists every short product), or an order with this Idempotency-Key is still in progress
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InsufficientStockEnvelope' }
+              examples:
+                insufficient:
+                  summary: Requested 20, only 10 available
+                  value:
+                    status: 0
+                    data:
+                      items:
+                        - { product_id: 15, name: Organic Olive Oil, requested_quantity: 20, available_quantity: 10, stocked: true }
+                    message: Insufficient stock for the requested product.
+                    status_code: 409
+                    timestamp: '2026-11-13T12:00:00+00:00'
+                notStocked:
+                  summary: A product the Warehouse has not stocked yet
+                  value:
+                    status: 0
+                    data:
+                      items:
+                        - { product_id: 16, name: Arabica Coffee Beans, requested_quantity: 1, available_quantity: 0, stocked: false }
+                    message: Insufficient stock for the requested product.
+                    status_code: 409
+                    timestamp: '2026-11-13T12:00:00+00:00'
+        '422':
+          description: Invalid items, a missing Idempotency-Key header, or a key already used for different items
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationErrorEnvelope' }
+              examples:
+                missingKey:
+                  summary: No Idempotency-Key header
+                  value:
+                    status: 0
+                    data:
+                      Idempotency-Key: [The Idempotency-Key header is required.]
+                    message: Validation failed
+                    status_code: 422
+                    timestamp: '2026-11-14T12:00:00+00:00'
+        '503': { $ref: '#/components/responses/WarehouseUnavailable' }
+        '504': { $ref: '#/components/responses/WarehouseTimeout' }
+
+  /api/v1/orders/{orderId}:
+    get:
+      tags: [Orders]
+      summary: Get one order with its items
+      description: A customer may only view their own orders.
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Order' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/orders/{orderId}/status:
+    post:
+      tags: [Orders]
+      summary: Change an order's status (admin)
+      description: |
+        Cancelling releases the order's reservation in the Warehouse first; if the
+        Warehouse can't be reached the order keeps its status (`503`/`504`) and the
+        cancellation can be retried. A cancelled order cannot be reopened.
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [pending, confirmed, processing, completed, cancelled], example: processing }
+      responses:
+        '200':
+          description: Status changed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Order' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The order cannot move to this status (e.g. reopening a cancelled order)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/WarehouseUnavailable' }
+        '504': { $ref: '#/components/responses/WarehouseTimeout' }
+
+  /api/v1/orders/{orderId}/track:
+    get:
+      tags: [Orders]
+      summary: Track an order's status
+      description: A customer may only track their own orders.
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Current status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          order_id: { type: integer, example: 9 }
+                          status: { type: string, example: processing }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/system/warehouse:
+    get:
+      tags: [System]
+      summary: Probe the Warehouse's health
+      description: |
+        Sends one GetStock for `warehouse.health_probe_product_id` within 1500 ms,
+        with no retry. `healthy` means the Warehouse answered from its database.
+        `unreachable` means Laravel couldn't connect, so nothing was sent. `error`
+        means the Warehouse answered with an error. `unknown` means no conclusion
+        (timeout, connection lost after sending, integration disabled). A failed
+        probe is never reported as "down". Always 200 when the probe ran;
+        `Cache-Control: no-store`.
+      responses:
+        '200':
+          description: Probe result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string, enum: [healthy, unreachable, error, unknown], example: healthy }
+                          reason:
+                            type: string
+                            nullable: true
+                            enum: [connect_failed, deadline_exceeded, grpc_internal, invalid_request, connection_lost, unexpected_reply, integration_disabled]
+                            example: null
+                          latency_ms: { type: integer, nullable: true, example: 38 }
+                          slow: { type: boolean, example: false }
+                          checked_at: { type: string, format: date-time }
+                          probe: { type: string, example: GetStock }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/v1/system/reservations:
+    get:
+      tags: [System]
+      summary: List order reservations (Laravel's workflow record)
+      description: |
+        Every order attempt, including ones that never became an order. `status`
+        is Laravel's workflow state; `warehouse_expectation` is what the Warehouse
+        is expected to hold for it (it isn't read from the Warehouse).
+        `idempotency_fp` is the first 8 hex characters of the stored SHA-256 of the
+        client's Idempotency-Key. Reservation keys and full hashes are never
+        returned. `Cache-Control: no-store`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, rejected, placed, release_pending, released, cancel_pending, cancelled, attention]
+      responses:
+        '200':
+          description: One page of reservations, newest first, plus counts per status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id: { type: integer, example: 57 }
+                                status: { type: string, example: placed }
+                                warehouse_expectation: { type: string, enum: [held, not_held, unsettled, unknown] }
+                                order_id: { type: integer, nullable: true, example: 42 }
+                                user:
+                                  type: object
+                                  properties:
+                                    id: { type: integer }
+                                    name: { type: string }
+                                idempotency_fp: { type: string, nullable: true, example: 3f9a1c07 }
+                                created_at: { type: string, format: date-time }
+                                updated_at: { type: string, format: date-time }
+                          counts:
+                            type: object
+                            additionalProperties: { type: integer }
+                            example: { placed: 3, released: 1 }
+                          pagination:
+                            type: object
+                            properties:
+                              current_page: { type: integer }
+                              per_page: { type: integer }
+                              total: { type: integer }
+                              last_page: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /api/v1/perf/orders:
+    get:
+      tags: [Performance demo]
+      summary: Orders with customer, items and products (N+1 demonstration)
+      description: |
+        Two implementations of the same query live in PerfOrdersController; one is
+        active. A (eager loading) uses 5 queries for any page size. B (lazy
+        loading, commented out by default) uses 2 + 2 per order + 1 per item.
+        `meta.queries` and `meta.db_ms` are measured for this request, and
+        `meta.data_sha256` lets you check both return the same data. Switching
+        steps are in docs/performance/DEMO.md. `Cache-Control: no-store`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 15 }
+      responses:
+        '200':
+          description: One page of orders plus the measurements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: integer, example: 1 }
+                  data:
+                    type: object
+                    properties:
+                      orders:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: { type: integer }
+                            status: { type: string }
+                            total_amount: { type: string, example: '129.97' }
+                            created_at: { type: string, format: date-time }
+                            customer:
+                              type: object
+                              properties:
+                                id: { type: integer }
+                                name: { type: string }
+                            items:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  product_id: { type: integer }
+                                  product_name: { type: string }
+                                  quantity: { type: integer }
+                                  unit_price: { type: string }
+                  meta:
+                    type: object
+                    properties:
+                      implementation: { type: string, example: 'A: eager loading' }
+                      queries: { type: integer, example: 5 }
+                      db_ms: { type: number, example: 3.21 }
+                      page: { type: integer }
+                      per_page: { type: integer }
+                      data_sha256: { type: string }
+                  message: { type: string }
+                  status_code: { type: integer, example: 200 }
+                  timestamp: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT from the login or register endpoint.
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    ProductId:
+      name: product
+      in: path
+      required: true
+      schema: { type: integer, example: 1 }
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: integer, example: 9 }
+
+  responses:
+    Unauthenticated:
+      description: Missing, invalid or expired token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example: { status: 0, data: [], message: Unauthenticated., status_code: 401, timestamp: '2026-11-13T12:00:00+00:00' }
+    Forbidden:
+      description: Authenticated, but the role or ownership check refused it
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example: { status: 0, data: [], message: This action is unauthorized., status_code: 403, timestamp: '2026-11-13T12:00:00+00:00' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example: { status: 0, data: [], message: Resource not found., status_code: 404, timestamp: '2026-11-13T12:00:00+00:00' }
+    MalformedJson:
+      description: 'The body is sent as JSON (Content-Type: application/json) but is not valid JSON. Applies to every endpoint; an empty body is not malformed (it gets 422).'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example:
+            status: 0
+            data: []
+            message: Malformed JSON body.
+            status_code: 400
+            timestamp: '2026-11-14T12:00:00+00:00'
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationErrorEnvelope' }
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    WarehouseUnavailable:
+      description: The Warehouse service is down or unreachable. No order is created.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example: { status: 0, data: [], message: The inventory service is currently unavailable. Please try again later., status_code: 503, timestamp: '2026-11-13T12:00:00+00:00' }
+    WarehouseTimeout:
+      description: The Warehouse did not answer before the gRPC deadline. No order is created, and any reservation is released.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example: { status: 0, data: [], message: The inventory service did not respond in time. Please try again later., status_code: 504, timestamp: '2026-11-13T12:00:00+00:00' }
+
+  schemas:
+    SuccessEnvelope:
+      type: object
+      properties:
+        status: { type: integer, example: 1 }
+        data: {}
+        message: { type: string }
+        status_code: { type: integer, example: 200 }
+        timestamp: { type: string, format: date-time }
+    EmptyEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { type: array, items: {}, example: [] }
+    ErrorEnvelope:
+      type: object
+      properties:
+        status: { type: integer, example: 0 }
+        data: { type: array, items: {}, example: [] }
+        message: { type: string, example: Resource not found. }
+        status_code: { type: integer, example: 404 }
+        timestamp: { type: string, format: date-time }
+    ValidationErrorEnvelope:
+      type: object
+      properties:
+        status: { type: integer, example: 0 }
+        data:
+          type: object
+          additionalProperties: { type: array, items: { type: string } }
+          example: { email: [The email field is required.] }
+        message: { type: string, example: Validation failed }
+        status_code: { type: integer, example: 422 }
+        timestamp: { type: string, format: date-time }
+    InsufficientStockEnvelope:
+      type: object
+      properties:
+        status: { type: integer, example: 0 }
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  product_id: { type: integer }
+                  name: { type: string, nullable: true }
+                  requested_quantity: { type: integer, description: Exactly what the customer asked for }
+                  available_quantity: { type: integer }
+                  stocked: { type: boolean, description: False when the Warehouse has not stocked the product yet }
+        message: { type: string, example: Insufficient stock for the requested product. }
+        status_code: { type: integer, example: 409 }
+        timestamp: { type: string, format: date-time }
+    Pagination:
+      type: object
+      properties:
+        current_page: { type: integer, example: 1 }
+        per_page: { type: integer, example: 15 }
+        total: { type: integer, example: 42 }
+        last_page: { type: integer, example: 3 }
+    AuthEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                access_token: { type: string, example: eyJ0eXAiOiJKV1QiLCJ... }
+                token_type: { type: string, example: Bearer }
+                expires_in: { type: integer, example: 3600 }
+                user:
+                  type: object
+                  properties:
+                    id: { type: integer, example: 2 }
+                    name: { type: string, example: Test Customer }
+                    email: { type: string, example: user@system.com }
+                    roles: { type: array, items: { type: string }, example: [customer] }
+    StockStatus:
+      type: string
+      enum: [in_stock, out_of_stock, not_stocked, unavailable]
+      description: |
+        Live from the Warehouse. `not_stocked`: the Warehouse has no stock row
+        for the product yet ("Not stocked yet"). `unavailable`: the Warehouse
+        could not be asked, so the quantity is unknown.
+    Category:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: Electronics }
+        description: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    CategoryPage:
+      type: object
+      properties:
+        current_page: { type: integer, example: 1 }
+        data: { type: array, items: { $ref: '#/components/schemas/Category' } }
+        last_page: { type: integer, example: 1 }
+        per_page: { type: integer, example: 15 }
+        total: { type: integer, example: 8 }
+    ProductUpdate:
+      type: object
+      required: [name, price, category_id]
+      properties:
+        name: { type: string, maxLength: 255, example: Wireless Mouse }
+        description: { type: string, nullable: true }
+        price: { type: number, format: float, minimum: 0, example: 55.00 }
+        category_id: { type: integer, example: 1 }
+        is_active: { type: boolean, description: Optional; false hides the product from v2 and the store }
+    Product:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        category_id: { type: integer, example: 1 }
+        name: { type: string, example: Wireless Headphones }
+        description: { type: string, nullable: true }
+        price: { type: string, example: '89.99' }
+        stock: { type: integer, nullable: true, example: 25, description: 'Live quantity; null when not stocked or unavailable' }
+        stock_status: { $ref: '#/components/schemas/StockStatus' }
+        is_active: { type: boolean, example: true }
+        image: { type: string, nullable: true, example: products/wireless-headphones.png }
+        image_url: { type: string, nullable: true }
+        category: { allOf: [{ $ref: '#/components/schemas/Category' }], nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ProductV2:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: Wireless Headphones }
+        description: { type: string, nullable: true }
+        price: { type: string, example: '89.99' }
+        stock: { type: integer, nullable: true, example: 25 }
+        stock_status: { $ref: '#/components/schemas/StockStatus' }
+        in_stock: { type: boolean, nullable: true, example: true, description: Null when the Warehouse is unavailable }
+        is_active: { type: boolean, example: true }
+        image_url: { type: string, nullable: true }
+        category:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer, example: 1 }
+            name: { type: string, example: Electronics }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    OrderItem:
+      type: object
+      properties:
+        id: { type: integer, example: 10 }
+        order_id: { type: integer, example: 9 }
+        product_id: { type: integer, example: 1 }
+        quantity: { type: integer, example: 2 }
+        unit_price: { type: string, example: '89.99' }
+        product: { allOf: [{ $ref: '#/components/schemas/Product' }], nullable: true }
+    Order:
+      type: object
+      properties:
+        id: { type: integer, example: 9 }
+        user_id: { type: integer, example: 2 }
+        status: { type: string, enum: [pending, confirmed, processing, completed, cancelled], example: pending }
+        total_amount: { type: string, example: '179.98' }
+        items: { type: array, items: { $ref: '#/components/schemas/OrderItem' } }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    OrderPage:
+      type: object
+      properties:
+        current_page: { type: integer, example: 1 }
+        data: { type: array, items: { $ref: '#/components/schemas/Order' } }
+        last_page: { type: integer, example: 3 }
+        per_page: { type: integer, example: 15 }
+        total: { type: integer, example: 42 }

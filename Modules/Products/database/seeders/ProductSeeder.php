@@ -52,11 +52,14 @@ class ProductSeeder extends Seeder
             foreach ($products as $product) {
                 $imagePath = 'products/'.$product['image'];
 
-                // storage/ is gitignored, so copy the bundled image to the public disk on every run.
-                Storage::disk('public')->put(
-                    $imagePath,
-                    file_get_contents(__DIR__.'/images/products/'.$product['image'])
-                );
+                // storage/ is gitignored, so copy the bundled image to the public disk,
+                // but only when it isn't there yet.
+                if (! Storage::disk('public')->exists($imagePath)) {
+                    Storage::disk('public')->put(
+                        $imagePath,
+                        file_get_contents(__DIR__.'/images/products/'.$product['image'])
+                    );
+                }
 
                 Product::firstOrCreate(
                     ['name' => $product['name']],

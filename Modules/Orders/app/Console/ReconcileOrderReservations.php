@@ -19,10 +19,10 @@ class ReconcileOrderReservations extends Command
 
             return SymfonyCommand::SUCCESS;
         }
-
+        //بجيب عدد الحجز يلي تم تسويتها وعدد يلي فشلوا وعدد يلي تم تخطيها
         $counts = $stock->reconcile((int) $this->option('older-than'));
 
-        $this->info("Settled {$counts['settled']}, still unsettled {$counts['failed']}.");
+        $this->info("Settled {$counts['settled']}, still unsettled {$counts['failed']}, skipped {$counts['skipped']} (changed by another process).");
 
         return SymfonyCommand::SUCCESS;
     }

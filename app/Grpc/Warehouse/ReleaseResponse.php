@@ -15,6 +15,8 @@ use Google\Protobuf\RepeatedField;
 class ReleaseResponse extends \Google\Protobuf\Internal\Message
 {
     /**
+     * True whenever the key ends up released, including when it already was.
+     *
      * Generated from protobuf field <code>bool success = 1;</code>
      */
     protected $success = false;
@@ -34,16 +36,20 @@ class ReleaseResponse extends \Google\Protobuf\Internal\Message
      *     Optional. Data for populating the Message object.
      *
      *     @type bool $success
+     *           True whenever the key ends up released, including when it already was.
      *     @type string $reason
      *     @type int $code
      * }
      */
-    public function __construct($data = NULL) {
+    public function __construct($data = null)
+    {
         \App\Grpc\Warehouse\Metadata\Warehouse::initOnce();
         parent::__construct($data);
     }
 
     /**
+     * True whenever the key ends up released, including when it already was.
+     *
      * Generated from protobuf field <code>bool success = 1;</code>
      * @return bool
      */
@@ -53,6 +59,8 @@ class ReleaseResponse extends \Google\Protobuf\Internal\Message
     }
 
     /**
+     * True whenever the key ends up released, including when it already was.
+     *
      * Generated from protobuf field <code>bool success = 1;</code>
      * @param bool $var
      * @return $this

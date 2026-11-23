@@ -28,7 +28,8 @@ class StockResponse extends \Google\Protobuf\Internal\Message
      *     @type \App\Grpc\Warehouse\StockLevel[] $items
      * }
      */
-    public function __construct($data = NULL) {
+    public function __construct($data = null)
+    {
         \App\Grpc\Warehouse\Metadata\Warehouse::initOnce();
         parent::__construct($data);
     }

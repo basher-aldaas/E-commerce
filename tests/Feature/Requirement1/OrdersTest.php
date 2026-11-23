@@ -3,7 +3,6 @@
 namespace Tests\Feature\Requirement1;
 
 use Illuminate\Support\Facades\Mail;
-use Modules\Orders\Mail\OrderConfirmationMail;
 use Modules\Orders\Mail\OrderStatusUpdatedMail;
 use Modules\Orders\Models\Order;
 
@@ -16,7 +15,7 @@ class OrdersTest extends ApiTestCase
         $second = $this->makeProduct(['price' => 5.00]);
         $this->actingAsApi($user);
 
-        $response = $this->postJson('/api/v1/orders', [
+        $response = $this->postOrder([
             'items' => [
                 ['product_id' => $first->id, 'quantity' => 2, 'unit_price' => 0.01],
                 ['product_id' => $second->id, 'quantity' => 1],
@@ -34,7 +33,11 @@ class OrdersTest extends ApiTestCase
             'quantity' => 2,
             'unit_price' => 10.50,
         ]);
-        Mail::assertQueued(OrderConfirmationMail::class);
+        // Requirement 4: confirmation goes out via the outbox + email worker.
+        $this->assertDatabaseHas('outbox_messages', [
+            'type' => 'order.created',
+            'aggregate_id' => (string) $response->json('data.id'),
+        ]);
     }
 
     public function test_admin_cannot_create_an_order(): void
@@ -42,7 +45,7 @@ class OrdersTest extends ApiTestCase
         $product = $this->makeProduct();
         $this->actingAsApi($this->makeUser('admin'));
 
-        $response = $this->postJson('/api/v1/orders', [
+        $response = $this->postOrder([
             'items' => [['product_id' => $product->id, 'quantity' => 1]],
         ]);
 
@@ -66,7 +69,7 @@ class OrdersTest extends ApiTestCase
         ];
 
         foreach ($invalidPayloads as $case => $payload) {
-            $response = $this->postJson('/api/v1/orders', $payload);
+            $response = $this->postOrder($payload);
             $this->assertSame(422, $response->status(), "Case: {$case}");
         }
 

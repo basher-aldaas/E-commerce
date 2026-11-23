@@ -2,14 +2,9 @@
 
 namespace Modules\Products\Services;
 
-use App\Exceptions\Warehouse\WarehouseException;
-use App\Services\Warehouse\Data\WarehouseResultCode;
 use App\Services\Warehouse\WarehouseGateway;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Modules\Products\Exceptions\ProductStockConflictException;
 use Modules\Products\Models\Product;
 
 class ProductService
@@ -17,14 +12,25 @@ class ProductService
     public function __construct(
         private readonly WarehouseGateway $warehouse,
         private readonly ProductStockReader $stockReader,
+        private readonly CatalogCache $cache,
     ) {}
 
-    public function getAll(): mixed
+
+    public function getAll(array $filters = [], int $page = 1): mixed
     {
-        $products = Product::query()
-            ->with('category')
-            ->latest()
-            ->paginate(15);
+        $page = max(1, $page);
+        $categoryId = isset($filters['category_id']) ? (int) $filters['category_id'] : null;
+        $perPage = isset($filters['per_page']) ? (int) $filters['per_page'] : 15;
+
+        $products = $this->cache->remember(
+            "v1:products:category:{$categoryId}:per_page:{$perPage}:page:{$page}",
+            fn () => Product::query()
+                ->with('category')
+                ->when($categoryId !== null, fn ($query) => $query->where('category_id', $categoryId))
+                ->latest()
+                ->orderByDesc('id') // stable order across pages for same-second rows
+                ->paginate($perPage, ['*'], 'page', $page)
+        );
 
         $this->stockReader->attach($products->getCollection());
 
@@ -33,25 +39,41 @@ class ProductService
 
     public function getById(int $productId): Product
     {
-        $product = Product::query()
-            ->with('category')
-            ->findOrFail($productId);
+        $product = $this->cache->remember(
+            "product:{$productId}",
+            fn () => Product::query()
+                ->with('category')
+                ->findOrFail($productId)
+        );
 
         $this->stockReader->attach([$product]);
 
         return $product;
     }
 
-    /**
-     * Products listing for API v2: active-only by default, with optional filters.
-     *
-     * Supported filter keys: search, category_id, min_price, max_price,
-     * in_stock, per_page.
-     *
-     * The in_stock filter needs the Warehouse's answer, so it fails with a
-     * Warehouse error, rather than returning a wrong list, when that's unavailable.
-     */
-    public function getAllForV2(array $filters): mixed
+    public function getAllForV2(array $filters, int $page = 1): mixed
+    {
+        $page = max(1, $page);
+
+        //اذا طلب المنتجات يلي فيها الكمية يلي عم يجيبها من المخزون فهون لا تخزن بالكاش لانو المخزون دايما عم يتغير
+        if (filter_var($filters['in_stock'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            $products = $this->cache->skip(fn () => $this->queryV2($filters, $page, inStockOnly: true));
+        } else {
+            $key = collect($filters)->except('in_stock')->filter(fn ($v) => $v !== null && $v !== '')->sortKeys()->all();
+
+            $products = $this->cache->remember(
+                'v2:products:'.hash('sha256', json_encode([$key, $page])),//لانو الفلاتر ممكن تكون طويلة فعمللها هاش من شان يخزنها بالكاش
+                fn () => $this->queryV2($filters, $page, inStockOnly: false)
+            );
+        }
+
+        $this->stockReader->attach($products->getCollection());
+
+        return $products;
+    }
+
+    //تنفيذ الفلاتر
+    private function queryV2(array $filters, int $page, bool $inStockOnly): mixed
     {
         $perPage = (int) ($filters['per_page'] ?? 15);
 
@@ -75,55 +97,51 @@ class ProductService
                 fn ($query) => $query->where('price', '<=', $filters['max_price'])
             );
 
-        if (filter_var($filters['in_stock'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+        if ($inStockOnly) {
             $query->whereIn('id', $this->idsInStock($query));
         }
 
-        $products = $query->latest()->paginate($perPage);
-
-        $this->stockReader->attach($products->getCollection());
-
-        return $products;
+        return $query->latest()->orderByDesc('id')->paginate($perPage, ['*'], 'page', $page);
     }
+
 
     public function create(array $data): Product
     {
-        $quantity = (int) $data['stock'];
-        unset($data['stock']);
-
         // Persist an uploaded image to the public disk and store its path.
         if (($data['image'] ?? null) instanceof UploadedFile) {
             $data['image'] = $data['image']->store('products', 'public');
         }
 
         // refresh() so DB defaults (e.g. is_active) are reflected in the response.
-        $product = Product::create($data)->refresh();
+        $product = Product::create($data)->refresh()->load('category');
 
-        try {
-            $result = $this->warehouse->initializeStock($product->id, $quantity);
-        } catch (WarehouseException $e) {
-            $this->discard($product);
+        $this->stockReader->attach([$product]);
 
-            throw $e;
+        return $product;
+    }
+
+    /**
+     * Replaces the product's editable fields. Saving the model flushes the catalog
+     * cache (Product::booted), so every list and detail page shows the change on
+     * the next request. An image is only replaced when a new one is sent; the old
+     * file stays on the disk.
+     */
+    public function update(int $productId, array $data): Product
+    {
+        $product = Product::query()->findOrFail($productId);
+
+        if (($data['image'] ?? null) instanceof UploadedFile) {
+            $data['image'] = $data['image']->store('products', 'public');
+        } else {
+            unset($data['image']);
         }
 
-        // A retry after a lost reply finds the row its first attempt created, with
-        // the same quantity. A different quantity belongs to something else.
-        $alreadyCreated = $result->code === WarehouseResultCode::AlreadyInitialized
-            && $result->quantity === $quantity;
+        $product->update($data);
+        $product->refresh()->load('category');
 
-        if (! $result->success && ! $alreadyCreated) {
-            Log::error('Warehouse refused to initialize new product stock', [
-                'product_id' => $product->id,
-                'code' => $result->code->name,
-                'reason' => $result->reason,
-            ]);
-            $this->discard($product);
+        $this->stockReader->attach([$product]);
 
-            throw new ProductStockConflictException();
-        }
-
-        return $product->withStockLevel($result->quantity);
+        return $product;
     }
 
     /** @return list<int> */
@@ -135,15 +153,5 @@ class ProductService
             ->filter(fn ($level) => $level->quantity > 0)
             ->keys()
             ->all();
-    }
-
-    /** A new product without stock in the Warehouse could never be sold, so remove it. */
-    private function discard(Product $product): void
-    {
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
-
-        $product->delete();
     }
 }

@@ -23,6 +23,7 @@ class OrderStatusUpdatedMail extends Mailable implements ShouldQueue
         public Order $order
     ) {}
 
+    //تحديد معلومات غلاف الايميل
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -30,6 +31,7 @@ class OrderStatusUpdatedMail extends Mailable implements ShouldQueue
         );
     }
 
+    //تحديد محتوى الايميل
     public function content(): Content
     {
         return new Content(

@@ -1,0 +1,101 @@
+# Scenario 4 - SMTP failure, retries, DLQ, 2026-11-17T10:29:01Z
+$ docker compose stop email-worker
+ Container ecommerce-email-worker  Stopped
+$ docker compose run -d --name ecommerce-email-worker-broken -e MAIL_PASSWORD=wrong-password -e ORDER_EMAIL_MIN_INTERVAL_MS=0 email-worker
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 350ms]
+  Pass  order created: 201
+  | 'order', 8, 'in', 350, 'ms'
+## queues (10:29:42)
+notifications.order-created.email.dlq: ready=1 unacked=0 consumers=0
+notifications.order-created.email: ready=0 unacked=0 consumers=1
+## broken worker output
+Email worker consuming notifications.order-created.email (prefetch 1, manual ACK).
+[2026-11-17 10:29:19] message 02b36a2e-e29c-477e-a605-27786da32903 attempt 1 -> retried
+[2026-11-17 10:29:28] message 02b36a2e-e29c-477e-a605-27786da32903 attempt 2 -> retried
+[2026-11-17 10:29:37] message 02b36a2e-e29c-477e-a605-27786da32903 attempt 3 -> retried
+[2026-11-17 10:29:40] message 02b36a2e-e29c-477e-a605-27786da32903 attempt 4 -> retried
+## worker log: one line per attempt, with the error
+2026-11-17 10:29:17 ERROR order 8 attempt 1 / 4 | Order confirmation email failed; returning the message for a retry | Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM
+2026-11-17 10:29:24 ERROR order 8 attempt 2 / 4 | Order confirmation email failed; returning the message for a retry | Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM
+2026-11-17 10:29:31 ERROR order 8 attempt 3 / 4 | Order confirmation email failed; returning the message for a retry | Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM
+2026-11-17 10:29:40 ERROR order 8 attempt 4 / 4 | Order confirmation email failed on the last attempt; the broker dead-l | Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM
+
+## DLQ message (run 1, quorum DLQ) - read once via management API
+message_id 02b36a2e-e29c-477e-a605-27786da32903 | delivery_mode 2
+  x-first-death-reason = delivery_limit
+  x-first-death-queue = notifications.order-created.email
+  x-first-death-exchange = ecommerce.events
+  x-last-death-reason = delivery_limit
+  x-delivery-count = None
+  x-death: {'reason': 'delivery_limit', 'queue': 'notifications.order-created.email', 'count': 1, 'exchange': 'ecommerce.events', 'routing-keys': ['order.created']}
+  payload order id: 8
+Finding: this DLQ was a quorum queue, and RabbitMQ 4.x gives quorum queues delivery_limit=20 by default, so ~20 'Get messages (requeue)' clicks in the UI could drop a dead letter. Changed the DLQ to a classic durable queue (no delivery limit), deleted and re-declared it (the order-8 test message above was deleted with it), and re-ran the scenario below.
+
+# Scenario 4 - run 2 (classic DLQ), 2026-11-17T10:31:30Z
+ Container ecommerce-outbox-relay  Started
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 300ms]
+  Pass  order created: 201
+  | 'order', 9, 'in', 300, 'ms'
+## queues (10:32:07)
+notifications.order-created.email.dlq (classic): ready=1 unacked=0 consumers=0
+notifications.order-created.email (quorum): ready=0 unacked=1 consumers=1
+## broken worker output
+[2026-11-17 10:31:47] message f0114be6-8e6c-4f1a-a461-375d61c63391 attempt 1 -> retried
+[2026-11-17 10:31:54] message f0114be6-8e6c-4f1a-a461-375d61c63391 attempt 2 -> retried
+[2026-11-17 10:32:03] message f0114be6-8e6c-4f1a-a461-375d61c63391 attempt 3 -> retried
+[2026-11-17 10:32:06] message f0114be6-8e6c-4f1a-a461-375d61c63391 attempt 4 -> retried
+## worker log, one line per attempt
+  File "<string>", line 6
+    c=json.loads(m.group(4)); print(m.group(1), m.group(2), 'order', c.get('order_id'), 'attempt', c.get('attempt'),'/',c.get('max_attempts'), '|', c.get('error_class','').split('\')[-1], '|', c.get('error','')[:150])
+                                                                                                                                                                                                                ^
+SyntaxError: unterminated string literal (detected at line 6)
+## DLQ peek #1 (Get messages, requeue)
+message_id f0114be6-8e6c-4f1a-a461-375d61c63391 | delivery_mode 2 | first death delivery_limit from notifications.order-created.email
+  x-death: {'reason': 'delivery_limit', 'queue': 'notifications.order-created.email', 'count': 1, 'exchange': 'ecommerce.events', 'routing-keys': ['order.created'], 'time': 1794911526}
+  payload: {"data":{"order":{"id":9,"items":[{"name":"Hydrating Face Cream","quantity":1,"product_id":7,"unit_price":"18.75"}],"status":"pending","created_at":"2026-11-17T
+## DLQ peek #2 (Get messages, requeue)
+message_id f0114be6-8e6c-4f1a-a461-375d61c63391 | delivery_mode 2 | first death delivery_limit from notifications.order-created.email
+  x-death: {'reason': 'delivery_limit', 'queue': 'notifications.order-created.email', 'count': 1, 'exchange': 'ecommerce.events', 'routing-keys': ['order.created'], 'time': 1794911526}
+  payload: {"data":{"order":{"id":9,"items":[{"name":"Hydrating Face Cream","quantity":1,"product_id":7,"unit_price":"18.75"}],"status":"pending","created_at":"2026-11-17T
+## queues after two peeks
+notifications.order-created.email.dlq (classic): ready=1 unacked=0 consumers=0
+notifications.order-created.email (quorum): ready=0 unacked=1 consumers=1
+(the python formatter above failed on a quoting error; the same log lines, re-read:)
+## queues re-checked at 10:32:34 (the unacked=1/consumers=1 above was a snapshot taken while the removed worker's connection was still closing)
+name	type	messages_ready	messages_unacknowledged	consumers
+notifications.order-created.email.dlq	classic	1	0	0
+notifications.order-created.email	quorum	0	0	0
+2026-11-17 10:31:45 ERROR order 9 attempt 1 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:31:50 ERROR order 9 attempt 2 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:31:57 ERROR order 9 attempt 3 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+2026-11-17 10:32:06 ERROR order 9 attempt 4 / 4 | Order confirmation email failed on the last attempt; the broker dead-letters it to the DLQ
+     TransportException : Failed to authenticate on SMTP server with username "<mailtrap-username>" using the following authenticators: "CRAM-MD5", "LOGIN", "PLAIN". Authenticator "CRAM-MD5" returned "
+
+# Scenario 4 - run 3: failure injected with an unreachable SMTP host (no login to Mailtrap), 2026-11-17T10:42:11Z
+## before
+  notifications.order-created.email.dlq (classic): ready=5 unacked=0 consumers=0
+  notifications.order-created.email (quorum): ready=0 unacked=0 consumers=0
+$ docker compose run -d --no-deps --name ecommerce-email-worker-broken -e MAIL_HOST=smtp.invalid -e ORDER_EMAIL_MIN_INTERVAL_MS=0 email-worker
+  POST http://app:8000/api/v1/orders [201 Created, 979B, 302ms]
+  Pass  order created: 201
+  | 'order', 14, 'in', 302, 'ms'
+## broken worker output
+[2026-11-17 10:42:25] message ea3bca39-418f-4d47-a473-33f9815757c8 attempt 1 -> retried
+[2026-11-17 10:42:29] message ea3bca39-418f-4d47-a473-33f9815757c8 attempt 2 -> retried
+[2026-11-17 10:42:36] message ea3bca39-418f-4d47-a473-33f9815757c8 attempt 3 -> retried
+[2026-11-17 10:42:36] message ea3bca39-418f-4d47-a473-33f9815757c8 attempt 4 -> retried
+## log for order 14
+2026-11-17 10:42:23 ERROR order 14 attempt 1 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Connection could not be established with host "smtp.invalid:2525": stream_socket_client(): php_network_getaddresses: getaddrinfo for smtp.invalid failed: Name or service 
+2026-11-17 10:42:25 ERROR order 14 attempt 2 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Connection could not be established with host "smtp.invalid:2525": stream_socket_client(): php_network_getaddresses: getaddrinfo for smtp.invalid failed: Name or service 
+2026-11-17 10:42:30 ERROR order 14 attempt 3 / 4 | Order confirmation email failed; returning the message for a retry
+     TransportException : Connection could not be established with host "smtp.invalid:2525": stream_socket_client(): php_network_getaddresses: getaddrinfo for smtp.invalid failed: Name or service 
+2026-11-17 10:42:36 ERROR order 14 attempt 4 / 4 | Order confirmation email failed on the last attempt; the broker dead-letters it to the DLQ
+     TransportException : Connection could not be established with host "smtp.invalid:2525": stream_socket_client(): php_network_getaddresses: getaddrinfo for smtp.invalid failed: Name or service 
+## after
+  notifications.order-created.email.dlq (classic): ready=6 unacked=0 consumers=0
+  notifications.order-created.email (quorum): ready=0 unacked=0 consumers=0

@@ -1,8 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Modules\Users\Http\Controllers\UsersController;
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('users', UsersController::class)->names('users');
-});
+/*
+|--------------------------------------------------------------------------
+| Users Web Routes
+|--------------------------------------------------------------------------
+|
+| This module is API-only; its endpoints live in routes/api.php. The generated
+| resource scaffolding was removed because its controller returned views that
+| do not exist.
+|
+*/

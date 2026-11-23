@@ -12,12 +12,13 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * An in-memory Warehouse following the same rules as the Python service.
- * tests/Integration checks those rules against the real service.
+ * An in-memory Warehouse following the same rules as the Python service
+ * (GetStock, Reserve, Release). tests/Integration checks those rules against the
+ * real service.
  */
 class FakeWarehouseGateway implements WarehouseGateway
 {
-    /** @var array<int, int> Quantity keyed by product ID. */
+    /** @var array<int, int> Quantity keyed by product ID. A missing ID is "not stocked". */
     public array $stock = [];
 
     /** @var array<string, array{status: string, items: array<int, int>}> */
@@ -47,6 +48,43 @@ class FakeWarehouseGateway implements WarehouseGateway
         return $this;
     }
 
+    /** @var array<string, list<Closure>> */
+    private array $afterHooks = [];
+
+    /** @var array<string, list<mixed>> */
+    private array $replies = [];
+
+    /**
+     * Runs $hook with the call's arguments right after the next successful call to
+     * this method, before the caller sees the result (simulates something happening
+     * between two steps of a workflow).
+     */
+    public function afterNext(string $method, Closure $hook): static
+    {
+        $this->afterHooks[$method][] = $hook;
+
+        return $this;
+    }
+
+    /** Makes the next call to this method return $reply instead of its normal result. */
+    public function replyNext(string $method, mixed $reply): static
+    {
+        $this->replies[$method][] = $reply;
+
+        return $this;
+    }
+
+    /** @var list<int> Budgets requested through withDeadline(). */
+    public array $deadlines = [];
+
+    /** Same instance, so tests see every call; the budget is only recorded. */
+    public function withDeadline(int $budgetMs): static
+    {
+        $this->deadlines[] = $budgetMs;
+
+        return $this;
+    }
+
     public function callsTo(string $method): array
     {
         return array_values(array_filter($this->calls, fn ($call) => $call['method'] === $method));
@@ -72,19 +110,22 @@ class FakeWarehouseGateway implements WarehouseGateway
             if ($existing !== null) {
                 return match (true) {
                     $existing['status'] === 'RELEASED' => new WarehouseResult(false, Code::AlreadyReleased, 'released'),
-                    $existing['status'] === 'RETURNED' => new WarehouseResult(false, Code::InvalidState, 'returned'),
                     $existing['items'] != $quantities => new WarehouseResult(false, Code::KeyConflict, 'conflict'),
                     default => new WarehouseResult(true, Code::Ok, 'already reserved'),
                 };
             }
 
+            ksort($quantities);
+            $shortages = [];
             foreach ($quantities as $id => $quantity) {
-                if (! isset($this->stock[$id])) {
-                    return new WarehouseResult(false, Code::ProductNotFound, 'internal: not found', new StockShortage($id, $quantity, 0));
+                $available = $this->stock[$id] ?? 0;
+                if (! isset($this->stock[$id]) || $available < $quantity) {
+                    $shortages[] = new StockShortage($id, $quantity, $available, isset($this->stock[$id]));
                 }
-                if ($this->stock[$id] < $quantity) {
-                    return new WarehouseResult(false, Code::InsufficientStock, 'internal: short', new StockShortage($id, $quantity, $this->stock[$id]));
-                }
+            }
+
+            if ($shortages !== []) {
+                return new WarehouseResult(false, Code::InsufficientStock, 'internal: short', $shortages);
             }
 
             foreach ($quantities as $id => $quantity) {
@@ -93,24 +134,6 @@ class FakeWarehouseGateway implements WarehouseGateway
             $this->reservations[$reservationKey] = ['status' => 'RESERVED', 'items' => $quantities];
 
             return new WarehouseResult(true, Code::Ok);
-        });
-    }
-
-    public function confirm(string $reservationKey): WarehouseResult
-    {
-        return $this->handle(__FUNCTION__, func_get_args(), function () use ($reservationKey) {
-            $status = $this->reservations[$reservationKey]['status'] ?? null;
-
-            if ($status === 'RESERVED') {
-                $this->reservations[$reservationKey]['status'] = 'CONFIRMED';
-            }
-
-            return match ($status) {
-                null => new WarehouseResult(false, Code::ReservationNotFound, 'not found'),
-                'RELEASED' => new WarehouseResult(false, Code::AlreadyReleased, 'released'),
-                'RETURNED' => new WarehouseResult(false, Code::InvalidState, 'returned'),
-                default => new WarehouseResult(true, Code::Ok),
-            };
         });
     }
 
@@ -126,71 +149,16 @@ class FakeWarehouseGateway implements WarehouseGateway
             }
 
             if ($reservation['status'] === 'RELEASED') {
-                return new WarehouseResult(true, Code::Ok, 'already released');
+                return new WarehouseResult(true, Code::AlreadyReleased, 'already released');
             }
 
-            if ($reservation['status'] !== 'RESERVED') {
-                return new WarehouseResult(false, Code::InvalidState, 'cannot release');
+            foreach ($reservation['items'] as $id => $quantity) {
+                $this->stock[$id] += $quantity;
             }
-
-            $this->restore($reservation['items']);
             $this->reservations[$reservationKey]['status'] = 'RELEASED';
 
             return new WarehouseResult(true, Code::Ok);
         });
-    }
-
-    public function returnStock(string $reservationKey): WarehouseResult
-    {
-        return $this->handle(__FUNCTION__, func_get_args(), function () use ($reservationKey) {
-            $reservation = $this->reservations[$reservationKey] ?? null;
-
-            if ($reservation === null) {
-                return new WarehouseResult(false, Code::ReservationNotFound, 'not found');
-            }
-
-            if ($reservation['status'] === 'RETURNED') {
-                return new WarehouseResult(true, Code::Ok, 'already returned');
-            }
-
-            if ($reservation['status'] !== 'CONFIRMED') {
-                return new WarehouseResult(false, Code::InvalidState, 'cannot return');
-            }
-
-            $this->restore($reservation['items']);
-            $this->reservations[$reservationKey]['status'] = 'RETURNED';
-
-            return new WarehouseResult(true, Code::Ok);
-        });
-    }
-
-    public function initializeStock(int $productId, int $quantity): WarehouseResult
-    {
-        return $this->handle(__FUNCTION__, func_get_args(), function () use ($productId, $quantity) {
-            if (isset($this->stock[$productId])) {
-                return new WarehouseResult(false, Code::AlreadyInitialized, 'exists', quantity: $this->stock[$productId]);
-            }
-
-            $this->stock[$productId] = $quantity;
-
-            return new WarehouseResult(true, Code::Ok, quantity: $quantity);
-        });
-    }
-
-    public function setStock(int $productId, int $quantity): WarehouseResult
-    {
-        return $this->handle(__FUNCTION__, func_get_args(), function () use ($productId, $quantity) {
-            $this->stock[$productId] = $quantity;
-
-            return new WarehouseResult(true, Code::Ok, quantity: $quantity);
-        });
-    }
-
-    private function restore(array $items): void
-    {
-        foreach ($items as $id => $quantity) {
-            $this->stock[$id] += $quantity;
-        }
     }
 
     private function handle(string $method, array $args, Closure $work): mixed
@@ -203,10 +171,14 @@ class FakeWarehouseGateway implements WarehouseGateway
             throw $failure['error'];
         }
 
-        $result = $work();
+        $result = empty($this->replies[$method]) ? $work() : array_shift($this->replies[$method]);
 
         if ($failure !== null) {
             throw $failure['error'];
+        }
+
+        if (($hook = isset($this->afterHooks[$method]) ? array_shift($this->afterHooks[$method]) : null) !== null) {
+            $hook(...$args);
         }
 
         return $result;

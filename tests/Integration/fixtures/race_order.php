@@ -2,13 +2,15 @@
 
 /**
  * One racer in the concurrency tests, run as its own PHP process by
- * OrderFlowIntegrationTest. It only runs against a temporary SQLite file.
+ * OrderFlowIntegrationTest: an order request (`place`), a stalled order request
+ * (`stall`, then `wake`) or a `warehouse:reconcile` run (`reconcile`), always
+ * against the real Warehouse. It works on the application's MySQL database
+ * E-commerce (the only Laravel database), commits its own rows so that the other
+ * processes can see them, and `cleanup` removes exactly those rows again.
  */
 
-$database = (string) getenv('DB_DATABASE');
-
-if (getenv('DB_CONNECTION') !== 'sqlite' || ! str_starts_with(realpath($database) ?: '', realpath(sys_get_temp_dir()))) {
-    fwrite(STDERR, "Refusing to run: this script needs a temporary SQLite database.\n");
+if (getenv('DB_CONNECTION') !== 'mysql' || getenv('DB_DATABASE') !== 'E-commerce') {
+    fwrite(STDERR, "Refusing to run: this fixture only works on the MySQL database E-commerce.\n");
     exit(1);
 }
 
@@ -18,8 +20,9 @@ $app = require __DIR__.'/../../../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use App\Exceptions\ApiException;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Modules\Orders\Models\Order;
+use Modules\Orders\Models\OrderReservation;
 use Modules\Orders\Services\OrderPlacementService;
 use Modules\Products\Models\Category;
 use Modules\Products\Models\Product;
@@ -27,24 +30,23 @@ use Modules\Users\Models\User;
 
 switch ($argv[1]) {
     case 'setup':
-        Artisan::call('migrate', ['--force' => true]);
-
-        $category = Category::create(['name' => 'Race']);
-        $product = Product::create(['category_id' => $category->id, 'name' => 'Last unit', 'price' => 5, 'is_active' => true]);
+        $run = bin2hex(random_bytes(4));
+        $category = Category::create(['name' => "Race {$run}"]);
+        $product = Product::create(['category_id' => $category->id, 'name' => "Last unit {$run}", 'price' => 5, 'is_active' => true]);
 
         $userIds = [];
         for ($i = 0; $i < (int) $argv[2]; $i++) {
-            $userIds[] = User::create(['name' => "Racer {$i}", 'email' => "racer{$i}@example.test", 'password' => 'password123'])->id;
+            $userIds[] = User::create(['name' => "Racer {$i}", 'email' => "racer{$i}-{$run}@example.test", 'password' => 'password123'])->id;
         }
 
-        echo json_encode(['product_id' => $product->id, 'user_ids' => $userIds]);
+        echo json_encode(['product_id' => $product->id, 'category_id' => $category->id, 'user_ids' => $userIds]);
         break;
 
     case 'place':
         [, , $userId, $productId, $quantity, $wakeAt, $key] = $argv;
 
-        // Sharing a key only means something for one user, so racers use the first.
-        $user = User::findOrFail($key === 'shared' ? User::min('id') : $userId);
+        // With a shared key the parent passes the same user to every racer.
+        $user = User::findOrFail((int) $userId);
         $service = $app->make(OrderPlacementService::class);
 
         time_sleep_until((float) $wakeAt);
@@ -59,7 +61,76 @@ switch ($argv[1]) {
         }
         break;
 
+    // A request that reserved stock in the real Warehouse and then stalled before
+    // saving its order: a pending reservation, idle for 10 minutes.
+    case 'stall':
+        [, , $userId, $productId, $quantity] = $argv;
+        $key = (string) Illuminate\Support\Str::uuid();
+        $result = $app->make(App\Services\Warehouse\WarehouseGateway::class)->reserve($key, [(int) $productId => (int) $quantity]);
+        if (! $result->success) {
+            fwrite(STDERR, "Reserve refused: {$result->code->name}\n");
+            exit(1);
+        }
+        $reservation = OrderReservation::create([
+            'reservation_key' => $key,
+            'user_id' => (int) $userId,
+            'request_hash' => hash('sha256', json_encode([(int) $productId => (int) $quantity])),
+            'status' => OrderReservation::PENDING,
+        ]);
+        DB::table('order_reservations')->where('id', $reservation->id)->update(['updated_at' => now()->subMinutes(10)]);
+        echo json_encode(['reservation_id' => $reservation->id]);
+        break;
+
+    case 'reconcile':
+        // Load the console commands before the start line, so the run itself starts on time.
+        Illuminate\Support\Facades\Artisan::all();
+        time_sleep_until((float) $argv[2]);
+        $started = microtime(true);
+        $code = Illuminate\Support\Facades\Artisan::call('warehouse:reconcile', ['--older-than' => 2]);
+        echo json_encode(['exit' => $code, 'output' => trim(Illuminate\Support\Facades\Artisan::output()), 'started' => $started, 'finished' => microtime(true)]);
+        break;
+
+    // The stalled request wakes up and finishes exactly as OrderPlacementService::place()
+    // does after Reserve: save the order, or release the reservation if that fails.
+    case 'wake':
+        [, , $reservationId, $productId, $quantity, $wakeAt] = $argv;
+        $service = $app->make(OrderPlacementService::class);
+        $reservation = OrderReservation::findOrFail((int) $reservationId);
+        $user = User::findOrFail($reservation->user_id);
+        time_sleep_until((float) $wakeAt);
+        $started = microtime(true);
+        try {
+            (new ReflectionMethod($service, 'saveOrder'))->invoke($service, $user, $reservation, [(int) $productId => (int) $quantity]);
+            echo json_encode(['saved' => true, 'at' => $started]);
+        } catch (Throwable $e) {
+            (new ReflectionMethod($service, 'releaseAfterFailedSave'))->invoke($service, $app->make(App\Services\Warehouse\WarehouseGateway::class), $reservation, $e);
+            echo json_encode(['saved' => false, 'error' => $e->getMessage(), 'at' => $started]);
+        }
+        break;
+
+    case 'reservations':
+        echo OrderReservation::query()->whereIn('user_id', json_decode($argv[2], true))->orderBy('id')
+            ->get(['id', 'reservation_key', 'status', 'order_id'])->toJson();
+        break;
+
     case 'orders':
-        echo Order::count();
+        echo Order::query()->whereHas('items', fn ($q) => $q->where('product_id', (int) $argv[2]))->count();
+        break;
+
+    case 'order-ids':
+        echo Order::query()->whereHas('items', fn ($q) => $q->where('product_id', (int) $argv[2]))->pluck('id')->toJson();
+        break;
+
+    case 'cleanup':
+        $ids = json_decode($argv[2], true, flags: JSON_THROW_ON_ERROR);
+        DB::transaction(function () use ($ids) {
+            $orderIds = Order::query()->whereIn('user_id', $ids['user_ids'])->pluck('id');
+            OrderReservation::query()->whereIn('user_id', $ids['user_ids'])->delete();
+            DB::table('order_items')->whereIn('order_id', $orderIds)->delete();
+            Order::query()->whereIn('id', $orderIds)->delete();
+            Product::query()->whereKey($ids['product_id'])->delete();
+            Category::query()->whereKey($ids['category_id'])->delete();
+            User::query()->whereIn('id', $ids['user_ids'])->delete();
+        });
         break;
 }

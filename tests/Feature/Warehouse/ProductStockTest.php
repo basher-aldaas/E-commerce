@@ -4,37 +4,27 @@ namespace Tests\Feature\Warehouse;
 
 use App\Exceptions\Warehouse\WarehouseTimeoutException;
 use App\Exceptions\Warehouse\WarehouseUnavailableException;
-use App\Services\Warehouse\Data\WarehouseResult;
-use App\Services\Warehouse\Data\WarehouseResultCode;
-use App\Services\Warehouse\WarehouseGateway;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Modules\Products\Models\Product;
 use Tests\Feature\Requirement1\ApiTestCase;
-use Tests\Support\FakeWarehouseGateway;
 
 class ProductStockTest extends ApiTestCase
 {
-    public function test_a_stale_laravel_column_is_never_shown(): void
-    {
-        $product = $this->makeProduct(['stock' => 3]);
-        DB::table('products')->where('id', $product->id)->update(['stock' => 999]);
-        $this->actingAsApi($this->makeUser());
-
-        $this->getJson("/api/v1/products/{$product->id}")->assertJsonPath('data.stock', 3);
-        $this->getJson("/api/v2/products/{$product->id}")->assertJsonPath('data.stock', 3);
-    }
-
-    public function test_a_product_the_warehouse_does_not_track_shows_as_sold_out(): void
+    public function test_a_product_the_warehouse_has_not_stocked_reads_as_not_stocked(): void
     {
         $product = $this->makeProduct();
         unset($this->warehouse->stock[$product->id]);
         $this->actingAsApi($this->makeUser());
 
+        $this->getJson("/api/v1/products/{$product->id}")
+            ->assertOk()
+            ->assertJsonPath('data.stock', null)
+            ->assertJsonPath('data.stock_status', 'not_stocked');
         $this->getJson("/api/v2/products/{$product->id}")
             ->assertOk()
-            ->assertJsonPath('data.stock', 0)
+            ->assertJsonPath('data.stock', null)
+            ->assertJsonPath('data.stock_status', 'not_stocked')
             ->assertJsonPath('data.in_stock', false);
     }
 
@@ -73,12 +63,16 @@ class ProductStockTest extends ApiTestCase
         $this->warehouse->failNext('getStock', new $failure());
         $v1 = $this->getJson("/api/v1/products/{$product->id}");
         $this->assertEnvelope($v1, 200);
-        $v1->assertJsonPath('data.name', 'Still visible')->assertJsonPath('data.stock', null);
+        $v1->assertJsonPath('data.name', 'Still visible')
+            ->assertJsonPath('data.stock', null)
+            ->assertJsonPath('data.stock_status', 'unavailable');
 
         $this->warehouse->failNext('getStock', new $failure());
         $v2 = $this->getJson("/api/v2/products/{$product->id}");
         $this->assertEnvelope($v2, 200);
-        $v2->assertJsonPath('data.stock', null)->assertJsonPath('data.in_stock', null);
+        $v2->assertJsonPath('data.stock', null)
+            ->assertJsonPath('data.stock_status', 'unavailable')
+            ->assertJsonPath('data.in_stock', null);
     }
 
     /** @dataProvider warehouseFailures */
@@ -145,7 +139,7 @@ class ProductStockTest extends ApiTestCase
         $user = $this->makeUser();
         $product = $this->makeProduct(['stock' => 10]);
         $this->actingAsApi($user);
-        $id = $this->postJson('/api/v1/orders', [
+        $id = $this->postOrder([
             'items' => [['product_id' => $product->id, 'quantity' => 4]],
         ])->json('data.id');
 
@@ -160,7 +154,7 @@ class ProductStockTest extends ApiTestCase
         $user = $this->makeUser();
         $product = $this->makeProduct();
         $this->actingAsApi($user);
-        $id = $this->postJson('/api/v1/orders', [
+        $id = $this->postOrder([
             'items' => [['product_id' => $product->id, 'quantity' => 1]],
         ])->json('data.id');
         $this->warehouse->failNext('getStock', new WarehouseTimeoutException());
@@ -171,180 +165,49 @@ class ProductStockTest extends ApiTestCase
             ->assertJsonPath('data.items.0.product.stock', null);
     }
 
-    private function productPayload(array $overrides = []): array
+    public function test_creating_a_product_never_writes_to_the_warehouse(): void
     {
-        return $overrides + [
+        $this->actingAsApi($this->makeUser('admin'));
+
+        $response = $this->postJson('/api/v1/products', [
             'name' => 'New product',
             'price' => 5,
             'category_id' => $this->makeCategory()->id,
-            'stock' => 12,
-        ];
-    }
-
-    public function test_creating_a_product_initializes_its_stock_and_not_set_stock(): void
-    {
-        $this->actingAsApi($this->makeUser('admin'));
-
-        $response = $this->postJson('/api/v1/products', $this->productPayload());
+        ]);
 
         $this->assertEnvelope($response, 201);
-        $this->assertCount(1, $this->warehouse->callsTo('initializeStock'));
-        $this->assertSame([], $this->warehouse->callsTo('setStock'));
-        $this->assertSame([$response->json('data.id'), 12], $this->warehouse->callsTo('initializeStock')[0]['args']);
+        $response->assertJsonPath('data.stock_status', 'not_stocked');
+        $this->assertSame([], $this->warehouse->callsTo('reserve'));
+        $this->assertSame([], $this->warehouse->callsTo('release'));
     }
 
-    /** @dataProvider warehouseFailuresWithStatus */
-    #[\PHPUnit\Framework\Attributes\DataProvider('warehouseFailuresWithStatus')]
-    public function test_a_warehouse_failure_removes_the_new_product_and_its_image(string $failure, int $status): void
+    /** @dataProvider warehouseFailures */
+    #[\PHPUnit\Framework\Attributes\DataProvider('warehouseFailures')]
+    public function test_creating_a_product_works_while_the_warehouse_is_down(string $failure): void
     {
         Storage::fake('public');
-        $this->warehouse->failNext('initializeStock', new $failure());
+        $this->warehouse->failNext('getStock', new $failure());
         $this->actingAsApi($this->makeUser('admin'));
 
-        $response = $this->post('/api/v1/products', $this->productPayload([
+        $response = $this->post('/api/v1/products', [
+            'name' => 'Offline product',
+            'price' => 5,
+            'category_id' => $this->makeCategory()->id,
             'image' => UploadedFile::fake()->image('new.png'),
-        ]), ['Accept' => 'application/json']);
-
-        $this->assertEnvelope($response, $status, success: false);
-        $this->assertDatabaseCount('products', 0);
-        $this->assertSame([], Storage::disk('public')->allFiles('products'));
-    }
-
-    /** @return array<string, array{0: class-string, 1: int}> */
-    public static function warehouseFailuresWithStatus(): array
-    {
-        return [
-            'timeout' => [WarehouseTimeoutException::class, 504],
-            'unavailable' => [WarehouseUnavailableException::class, 503],
-        ];
-    }
-
-    /**
-     * The id MySQL will give the next product. Not "max id + 1": rolled-back
-     * inserts from earlier tests still advance AUTO_INCREMENT. Stats expiry 0
-     * makes information_schema read the live counter instead of a cached value.
-     */
-    private function nextProductId(): int
-    {
-        DB::statement('SET SESSION information_schema_stats_expiry = 0');
-
-        return (int) DB::scalar(
-            'SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?',
-            ['products']
-        );
-    }
-
-    public function test_existing_warehouse_stock_is_never_overwritten_by_a_new_product(): void
-    {
-        $nextId = $this->nextProductId();
-        $this->warehouse->stock[$nextId] = 8;
-        $category = $this->makeCategory();
-        $this->actingAsApi($this->makeUser('admin'));
-
-        $response = $this->postJson('/api/v1/products', $this->productPayload(['category_id' => $category->id]));
-
-        $this->assertEnvelope($response, 409, success: false);
-        $this->assertSame(8, $this->warehouse->stock[$nextId]);
-        $this->assertDatabaseCount('products', 0);
-    }
-
-    public function test_a_retry_that_finds_its_own_first_attempt_succeeds(): void
-    {
-        $nextId = $this->nextProductId();
-        $this->warehouse->stock[$nextId] = 12;
-        $category = $this->makeCategory();
-        $this->actingAsApi($this->makeUser('admin'));
-
-        $response = $this->postJson('/api/v1/products', $this->productPayload(['category_id' => $category->id]));
+        ], ['Accept' => 'application/json']);
 
         $this->assertEnvelope($response, 201);
-        // The id check proves the product hit the pre-existing row, so this
-        // exercises the AlreadyInitialized path rather than a fresh insert.
-        $response->assertJsonPath('data.id', $nextId);
-        $response->assertJsonPath('data.stock', 12);
+        $response->assertJsonPath('data.stock_status', 'unavailable');
+        $this->assertDatabaseHas('products', ['name' => 'Offline product']);
+        $this->assertCount(1, Storage::disk('public')->allFiles('products'));
     }
 
-    public function test_product_stock_has_an_int32_limit(): void
-    {
-        $this->actingAsApi($this->makeUser('admin'));
-
-        $this->assertEnvelope(
-            $this->postJson('/api/v1/products', $this->productPayload(['stock' => WarehouseGateway::MAX_QUANTITY + 1])),
-            422,
-            success: false
-        );
-        $this->assertDatabaseCount('products', 0);
-
-        $this->assertEnvelope(
-            $this->postJson('/api/v1/products', $this->productPayload(['stock' => WarehouseGateway::MAX_QUANTITY])),
-            201
-        );
-    }
-
-    public function test_inventory_updates_have_an_int32_limit(): void
-    {
-        $product = $this->makeProduct();
-        $this->actingAsApi($this->makeUser('admin'));
-
-        $this->assertEnvelope(
-            $this->patchJson("/api/v1/inventory/{$product->id}", ['stock' => WarehouseGateway::MAX_QUANTITY + 1]),
-            422,
-            success: false
-        );
-        $this->assertSame([], $this->warehouse->callsTo('setStock'));
-
-        $this->assertEnvelope(
-            $this->patchJson("/api/v1/inventory/{$product->id}", ['stock' => WarehouseGateway::MAX_QUANTITY]),
-            200
-        );
-    }
-
-    public function test_inventory_update_for_an_unknown_product_never_reaches_the_warehouse(): void
-    {
-        $this->actingAsApi($this->makeUser('admin'));
-
-        $this->assertEnvelope($this->patchJson('/api/v1/inventory/999999', ['stock' => 5]), 404, success: false);
-
-        $this->assertSame([], $this->warehouse->callsTo('setStock'));
-    }
-
-    /** @dataProvider warehouseFailuresWithStatus */
-    #[\PHPUnit\Framework\Attributes\DataProvider('warehouseFailuresWithStatus')]
-    public function test_inventory_update_reports_warehouse_failures(string $failure, int $status): void
-    {
-        $product = $this->makeProduct(['stock' => 5]);
-        $this->warehouse->failNext('setStock', new $failure());
-        $this->actingAsApi($this->makeUser('admin'));
-
-        $this->assertEnvelope($this->patchJson("/api/v1/inventory/{$product->id}", ['stock' => 9]), $status, success: false);
-
-        $this->assertSame(5, $this->warehouse->stock[$product->id]);
-    }
-
-    public function test_a_refused_inventory_update_returns_a_generic_500(): void
-    {
-        $product = $this->makeProduct();
-        $refusing = new class extends FakeWarehouseGateway
-        {
-            public function setStock(int $productId, int $quantity): WarehouseResult
-            {
-                return new WarehouseResult(false, WarehouseResultCode::InvalidState, 'secret reason');
-            }
-        };
-        $this->app->instance(WarehouseGateway::class, $refusing);
-        $this->actingAsApi($this->makeUser('admin'));
-
-        $response = $this->patchJson("/api/v1/inventory/{$product->id}", ['stock' => 9]);
-
-        $this->assertEnvelope($response, 500, success: false);
-        $this->assertStringNotContainsString('secret reason', $response->getContent());
-    }
-
-    public function test_the_stock_column_cannot_be_mass_assigned(): void
+    public function test_the_stock_attribute_cannot_be_mass_assigned(): void
     {
         $product = new Product(['stock' => 500]);
 
         $this->assertNull($product->stock);
+        $this->assertSame(Product::STOCK_UNAVAILABLE, $product->stock_status);
         $this->assertArrayNotHasKey('stock', $product->getAttributes());
     }
 }

@@ -27,10 +27,10 @@ mkdir -p \
 # 4. Run migrations (MySQL is already healthy thanks to depends_on).
 php artisan migrate --force
 
-# 5. Run all database seeders via the default DatabaseSeeder chain (roles,
-#    permissions, users, categories and products). Idempotent (firstOrCreate/
-#    findOrCreate), so it is safe on every boot.
-php artisan db:seed --force
+# 5. Seed the demo data (roles, permissions, users, categories, products) only
+#    on a fresh database. Restarts never add data or copy images again; reseed
+#    on purpose with `php artisan migrate:fresh --seed`.
+php artisan app:seed-if-empty
 
 # 6. Start the dev server. --no-reload makes it pass the container's environment
 #    (docker-compose.yml) to the PHP server process. Without it, artisan serve

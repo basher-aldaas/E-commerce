@@ -8,6 +8,9 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * There is no stock column on purpose: the Warehouse service owns every
+     * quantity, and Laravel reads it over gRPC when a page needs it.
      */
     public function up(): void
     {
@@ -20,8 +23,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
-            $table->string('image');
-            $table->unsignedInteger('stock')->default(0);
+            $table->string('image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

@@ -16,8 +16,8 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $guard = 'api';
 
-        // 2. Define User Permissions
-        $userPermissions = [
+        // 2. Define Customer Permissions
+        $customerPermissions = [
             'view_notifications',
             'view_products',
             'view_categories',
@@ -29,18 +29,19 @@ class RolesAndPermissionsSeeder extends Seeder
         // 3. Define Admin Permissions
         $adminPermissions = [
             'create_product',
+            'update_product',
             'view_products',
             'create_category',
             'view_categories',
             'view_orders',
             'update_order_status',
             'track_order_status',
-            'manage_inventory',
+            'view_system_status',
         ];
 
         // 4. Create all permissions
         $allPermissions = array_unique(
-            array_merge($userPermissions, $adminPermissions)
+            array_merge($customerPermissions, $adminPermissions)
         );
 
         foreach ($allPermissions as $permissionName) {
@@ -48,12 +49,12 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         // 5. Create Roles
-        $user = Role::findOrCreate('user', $guard);
+        $customer = Role::findOrCreate('customer', $guard);
 
         $admin = Role::findOrCreate('admin', $guard);
 
         // 6. Assign permissions to roles
-        $user->syncPermissions($userPermissions);
+        $customer->syncPermissions($customerPermissions);
         $admin->syncPermissions($adminPermissions);
 
         // 7. Clear cache again

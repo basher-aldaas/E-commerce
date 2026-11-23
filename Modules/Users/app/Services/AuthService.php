@@ -18,7 +18,7 @@ class AuthService
             'password' => Hash::make($data['password']),
         ]);
 
-        $user->assignRole('user');
+        $user->assignRole('customer');
 
         // Queue a welcome email (non-blocking; sent by a queue worker).
         Mail::to($user->email)->send(new WelcomeMail($user));

@@ -4,7 +4,7 @@ namespace Tests\Integration;
 
 use App\Exceptions\Warehouse\WarehouseException;
 use App\Services\Warehouse\GrpcWarehouseGateway;
-use App\Services\Warehouse\WarehouseStub;
+use App\Grpc\Warehouse\WarehouseClient;
 use Grpc\ChannelCredentials;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
@@ -13,14 +13,19 @@ use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
- * Starts a real Python gRPC server on a free port, using the warehouse_test
- * database only. Tests delete all its rows, so any name not ending in _test is
- * refused. Reports a visible skip when the service or database isn't available.
+ * Starts a real Python gRPC server on a free port, on the Warehouse's own MySQL
+ * database (warehouse-mysql, published only on 127.0.0.1:3308 by
+ * docker-compose.yml). There is no separate test database: the tests delete every
+ * row in that database, so they only run when WAREHOUSE_TESTS_DATABASE names it
+ * exactly. Reseed afterwards with `docker compose exec warehouse python -m app.cli seed`.
+ * Reports a visible skip when the service or database isn't available.
+ *
+ * Stop the scheduler first (`docker compose stop scheduler`, then `start` it
+ * again): its every-minute warehouse:reconcile works on the same two databases
+ * and would release the stalled reservations the concurrency tests set up.
  */
 trait UsesWarehouseTestServer
 {
-    private static string $testDatabase = 'warehouse_test';
-
     private static ?Process $server = null;
 
     private static int $port = 0;
@@ -29,22 +34,39 @@ trait UsesWarehouseTestServer
 
     private Connection $database;
 
+    /** @return array{host: string, port: string, username: string, password: string, database: string} */
+    private static function warehouseDatabase(): array
+    {
+        return [
+            'host' => (string) env('WAREHOUSE_TEST_DB_HOST', '127.0.0.1'),
+            'port' => (string) env('WAREHOUSE_TEST_DB_PORT', '3308'),
+            'username' => (string) env('WAREHOUSE_TEST_DB_USER', 'warehouse'),
+            'password' => (string) env('WAREHOUSE_TEST_DB_PASSWORD', 'warehouse'),
+            'database' => (string) env('WAREHOUSE_TEST_DB_NAME', 'warehouse'),
+        ];
+    }
+
     protected function prepareWarehouseTestServer(): void
     {
-        if (! str_ends_with(self::$testDatabase, '_test')) {
-            throw new RuntimeException('Refusing to run: this test deletes all rows in its database.');
+        $target = self::warehouseDatabase();
+
+        if (env('WAREHOUSE_TESTS_DATABASE') !== $target['database']) {
+            $this->markTestSkipped(
+                "These tests delete every row in the Warehouse database '{$target['database']}'. "
+                ."Set WAREHOUSE_TESTS_DATABASE={$target['database']} to run them."
+            );
         }
 
         config(['database.connections.warehouse_integration' => array_merge(
             config('database.connections.mysql'),
-            ['database' => self::$testDatabase]
+            $target
         )]);
 
         try {
             $this->database = DB::connection('warehouse_integration');
             $this->database->getPdo();
         } catch (Throwable $e) {
-            $this->markTestSkipped('MySQL or '.self::$testDatabase.' is not available: '.$e->getMessage());
+            $this->markTestSkipped("The Warehouse database {$target['host']}:{$target['port']}/{$target['database']} is not available: ".$e->getMessage());
         }
 
         $this->startServerOnce();
@@ -82,14 +104,14 @@ trait UsesWarehouseTestServer
         }
 
         self::$port = $this->freePort();
-        $mysql = config('database.connections.mysql');
+        $mysql = self::warehouseDatabase();
 
         self::$server = new Process([$python, '-m', 'app.grpc_server'], $servicePath, [
             'WAREHOUSE_DB_HOST' => $mysql['host'],
-            'WAREHOUSE_DB_PORT' => (string) $mysql['port'],
+            'WAREHOUSE_DB_PORT' => $mysql['port'],
             'WAREHOUSE_DB_USER' => $mysql['username'],
-            'WAREHOUSE_DB_PASSWORD' => (string) $mysql['password'],
-            'WAREHOUSE_DB_NAME' => self::$testDatabase,
+            'WAREHOUSE_DB_PASSWORD' => $mysql['password'],
+            'WAREHOUSE_DB_NAME' => $mysql['database'],
             'WAREHOUSE_GRPC_HOST' => '127.0.0.1',
             'WAREHOUSE_GRPC_PORT' => (string) self::$port,
         ]);
@@ -129,14 +151,16 @@ trait UsesWarehouseTestServer
     private function realGateway(
         int $readTimeoutMs = 2000,
         int $writeTimeoutMs = 8000,
-        int $retries = 1,
+        int $releaseTimeoutMs = 8000,
+        int $connectTimeoutMs = 2000,
         ?int $port = null,
     ): GrpcWarehouseGateway {
         return new GrpcWarehouseGateway(
-            new WarehouseStub('127.0.0.1:'.($port ?? self::$port), ['credentials' => ChannelCredentials::createInsecure()]),
+            new WarehouseClient('127.0.0.1:'.($port ?? self::$port), ['credentials' => ChannelCredentials::createInsecure()] + config('warehouse.channel', [])),
             $readTimeoutMs,
             $writeTimeoutMs,
-            $retries,
+            $releaseTimeoutMs,
+            $connectTimeoutMs,
         );
     }
 

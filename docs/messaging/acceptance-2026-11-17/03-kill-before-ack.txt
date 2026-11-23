@@ -1,0 +1,28 @@
+# Scenario 3 - worker killed before ACK, 2026-11-17T10:27:43Z
+ Container ecommerce-email-worker  Stopped
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 454ms]
+  | 'order', 6, 'in', 454, 'ms'
+  POST http://app:8000/api/v1/orders [201 Created, 976B, 408ms]
+  | 'order', 7, 'in', 408, 'ms'
+queue: ready=2 unacked=0 consumers=0
+$ docker compose start email-worker  (10:27:51)
+ Container ecommerce-email-worker  Started
+10:28:12 queue: ready=0 unacked=1 consumers=1  <- message 1 acked, message 2 delivered and NOT acked yet
+Email worker stopped.
+Email worker consuming notifications.order-created.email (prefetch 1, manual ACK).
+[2026-11-17 10:28:09] message 2ebc9ccb-a365-4443-b359-4469ab3f0d46 attempt 1 -> acked
+$ docker kill -s KILL ecommerce-email-worker  (10:28:13)
+ecommerce-email-worker Exited (137) Less than a second ago
+after kill: queue: ready=1 unacked=0 consumers=0
+$ docker compose start email-worker  (10:28:17)
+ Container ecommerce-email-worker  Started
+10:28:38 queue: ready=0 unacked=0 consumers=1
+## worker output since restart
+Email worker consuming notifications.order-created.email (prefetch 1, manual ACK).
+[2026-11-17 10:28:09] message 2ebc9ccb-a365-4443-b359-4469ab3f0d46 attempt 1 -> acked
+Email worker consuming notifications.order-created.email (prefetch 1, manual ACK).
+[2026-11-17 10:28:35] message 5b8ca89d-f577-435c-999d-fe45faa74723 attempt 2 -> acked
+## worker log
+[2026-11-17 10:25:24] local.INFO: Order confirmation email sent and acknowledged {"message_id":"3fd80a00-c81f-4e02-99cd-b36d34bc2706","attempt":1,"max_attempts":4,"event_id":"3fd80a00-c81f-4e02-99cd-b36d34bc2706","order_id":5,"to":"user@system.com","email_message_id":"3fd80a00-c81f-4e02-99cd-b36d34bc2706@order-events.dukkan","sm
+[2026-11-17 10:28:09] local.INFO: Order confirmation email sent and acknowledged {"message_id":"2ebc9ccb-a365-4443-b359-4469ab3f0d46","attempt":1,"max_attempts":4,"event_id":"2ebc9ccb-a365-4443-b359-4469ab3f0d46","order_id":6,"to":"user@system.com","email_message_id":"2ebc9ccb-a365-4443-b359-4469ab3f0d46@order-events.dukkan","sm
+[2026-11-17 10:28:34] local.INFO: Order confirmation email sent and acknowledged {"message_id":"5b8ca89d-f577-435c-999d-fe45faa74723","attempt":2,"max_attempts":4,"event_id":"5b8ca89d-f577-435c-999d-fe45faa74723","order_id":7,"to":"user@system.com","email_message_id":"5b8ca89d-f577-435c-999d-fe45faa74723@order-events.dukkan","sm

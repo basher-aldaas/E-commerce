@@ -21,17 +21,17 @@ class UserSeeder extends Seeder
         $admin->assignRole(
             \Spatie\Permission\Models\Role::findByName('admin', 'api')
         );
-        // 2. Create regular User account
+        // 2. Create a regular customer account
         $user = User::firstOrCreate(
             ['email' => 'user@system.com'],
             [
-                'name' => 'Test User',
+                'name' => 'Test Customer',
                 'password' => bcrypt('password123'),
             ]
         );
 
         $user->assignRole(
-            \Spatie\Permission\Models\Role::findByName('user', 'api')
+            \Spatie\Permission\Models\Role::findByName('customer', 'api')
         );
         // 3. Create 20 test users
         for ($i = 1; $i <= 20; $i++) {
@@ -44,7 +44,7 @@ class UserSeeder extends Seeder
             );
 
             $testUser->assignRole(
-                \Spatie\Permission\Models\Role::findByName('user', 'api')
+                \Spatie\Permission\Models\Role::findByName('customer', 'api')
             );        }
     }
 }

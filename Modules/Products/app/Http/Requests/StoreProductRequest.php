@@ -2,7 +2,6 @@
 
 namespace Modules\Products\Http\Requests;
 
-use App\Services\Warehouse\WarehouseGateway;
 use Illuminate\Validation\Rule;
 use App\Http\Requests\ApiFormRequest;
 
@@ -24,7 +23,6 @@ class StoreProductRequest extends ApiFormRequest
                 'integer',
                 Rule::exists('categories', 'id'),
             ],
-            'stock' => ['required', 'integer', 'min:0', 'max:'.WarehouseGateway::MAX_QUANTITY],
             'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
         ];
     }

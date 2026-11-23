@@ -5,149 +5,168 @@ namespace Modules\Orders\Services;
 use App\Exceptions\Warehouse\WarehouseException;
 use App\Exceptions\Warehouse\WarehouseRequestException;
 use App\Services\Warehouse\Data\WarehouseResult;
-use App\Services\Warehouse\Data\WarehouseResultCode;
 use App\Services\Warehouse\WarehouseGateway;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\Orders\Models\Order;
 use Modules\Orders\Models\OrderReservation;
 
-/**
- * Moves a reservation through its life in the Warehouse. Every step can be
- * repeated safely, so anything interrupted is finished later by reconcile().
- *
- * Never call this inside a database transaction: a local rollback can't undo what
- * the Warehouse has done.
- */
 class OrderStockService
 {
+    private const RELEASABLE = [OrderReservation::PENDING, OrderReservation::RELEASE_PENDING];
+
     public function __construct(
         private readonly WarehouseGateway $warehouse,
         private readonly OrderNotifier $notifier,
     ) {}
 
-    /** Gives back stock for an order that won't exist. Never throws on Warehouse failure. */
-    public function release(OrderReservation $reservation): void
+    //تابع يتحق اذا تم الانتهاء من المدة المسوحة للاتصال بالمستنودع
+    public function budgeted(): WarehouseGateway
+    {
+        return $this->warehouse->withDeadline((int) config('warehouse.request_budget_ms'));
+    }
+
+    //تابع تحرير الكمية يلي بالحجز
+    public function release(OrderReservation $reservation, ?WarehouseGateway $warehouse = null): void
     {
         try {
-            $result = $this->warehouse->release($reservation->reservation_key);
-        } catch (WarehouseException) {
-            $reservation->update(['status' => OrderReservation::RELEASE_PENDING]);
+            $result = ($warehouse ?? $this->warehouse)->release($reservation->reservation_key);
+        } catch (WarehouseException $e) {
+            Log::warning('Release could not reach the Warehouse; left for warehouse:reconcile', [
+                'reservation_id' => $reservation->id,
+                'error' => $e::class,
+            ]);
+            $this->transition($reservation, self::RELEASABLE, OrderReservation::RELEASE_PENDING);
 
             return;
         }
 
-        $this->settle($reservation, $result, OrderReservation::RELEASED, 'release');
+        $this->settle($reservation, $result, self::RELEASABLE, OrderReservation::RELEASED, 'release');
     }
 
-    /** Confirms a saved order's reservation. Never throws on Warehouse failure. */
-    public function confirm(OrderReservation $reservation): void
+    //تابع تحرير الكمية يلي بالحجز  ويلغي الحجز
+    public function releaseAndCancel(OrderReservation $reservation, ?WarehouseGateway $warehouse = null): Order
     {
-        try {
-            $result = $this->warehouse->confirm($reservation->reservation_key);
-        } catch (WarehouseException) {
-            return; // Stays SAVED, and reconcile() confirms it later.
-        }
-
-        $this->settle($reservation, $result, OrderReservation::CONFIRMED, 'confirm');
-    }
-
-    /**
-     * Returns the stock of an order being cancelled, then marks the order cancelled.
-     *
-     * @throws WarehouseException The order stays as it was and can be retried.
-     */
-    public function returnAndCancel(OrderReservation $reservation): Order
-    {
-        $result = $this->warehouse->returnStock($reservation->reservation_key);
-
-        // The earlier confirmation may never have reached the Warehouse.
-        if ($result->code === WarehouseResultCode::InvalidState) {
-            $this->warehouse->confirm($reservation->reservation_key);
-            $result = $this->warehouse->returnStock($reservation->reservation_key);
-        }
+        $result = ($warehouse ?? $this->warehouse)->release($reservation->reservation_key);
 
         if (! $result->success) {
-            $this->settle($reservation, $result, OrderReservation::RETURNED, 'return');
+            $this->settle($reservation, $result, [OrderReservation::CANCEL_PENDING], OrderReservation::CANCELLED, 'release a cancelled order');
 
             throw new WarehouseRequestException();
         }
 
-        return DB::transaction(function () use ($reservation) {
-            $reservation->update(['status' => OrderReservation::RETURNED]);
-
+        [$order, $cancelledNow] = DB::transaction(function () use ($reservation) {
             $order = Order::query()->lockForUpdate()->findOrFail($reservation->order_id);
+
+            if (! $this->transition($reservation, [OrderReservation::CANCEL_PENDING], OrderReservation::CANCELLED)) {
+                return [$order, false];
+            }
+
             $order->update(['status' => 'cancelled']);
 
-            return $order->refresh();
+            return [$order->refresh(), true];
         });
+
+        if (! $cancelledNow && $reservation->status !== OrderReservation::CANCELLED) {
+            throw new WarehouseRequestException();
+        }
+
+        if ($cancelledNow) {
+            $this->notifier->statusChanged($order);
+        }
+
+        return $order;
     }
 
-    /**
-     * Finishes reservations left unsettled by a failure or crash.
-     *
-     * @return array{settled: int, failed: int}
-     */
+    //بجيب عدد الحجز يلي تم تسويتها وعدد يلي فشلوا وعدد يلي تم تخطيها
     public function reconcile(int $olderThanMinutes): array
     {
-        $counts = ['settled' => 0, 'failed' => 0];
+        $counts = ['settled' => 0, 'failed' => 0, 'skipped' => 0];
+        $cutoff = now()->subMinutes($olderThanMinutes);
 
         OrderReservation::query()
-            ->whereIn('status', [
-                OrderReservation::PENDING,
-                OrderReservation::RELEASE_PENDING,
-                OrderReservation::SAVED,
-                OrderReservation::RETURN_PENDING,
-            ])
-            ->where('updated_at', '<=', now()->subMinutes($olderThanMinutes))
+            ->where(fn ($query) => $query
+                ->whereIn('status', [OrderReservation::RELEASE_PENDING, OrderReservation::CANCEL_PENDING])//جيب الحجوزات يلي بدي الغيها ولسا ما لتغت ويلي بدي رجعها ولسا ما رجعت
+                ->orWhere(fn ($pending) => $pending //وكمان الحجوزات يلي بيندينغ بس الها وقت طويل
+                    ->where('status', OrderReservation::PENDING)
+                    ->where('updated_at', '<=', $cutoff)))
             ->orderBy('id')
-            ->each(function (OrderReservation $reservation) use (&$counts) {
-                $counts[$this->reconcileOne($reservation) ? 'settled' : 'failed']++;
+            ->each(function (OrderReservation $reservation) use (&$counts, $cutoff) {
+                $counts[$this->reconcileOne($reservation, $cutoff)]++;
             });
 
         return $counts;
     }
 
-    private function reconcileOne(OrderReservation $reservation): bool
+    //اذا كانت الحالاة ارجاع رجع الكميات للمستودع وال ا اذا كانت الحالة بيندغ وماصرلها زمان مأنشها عمللها سكيب
+    private function reconcileOne(OrderReservation $reservation, Carbon $cutoff): string
     {
-        if ($reservation->status === OrderReservation::RETURN_PENDING) {
+        if ($reservation->status === OrderReservation::CANCEL_PENDING) {
             try {
-                $this->notifier->statusChanged($this->returnAndCancel($reservation));
+                $this->releaseAndCancel($reservation);
             } catch (WarehouseException) {
-                return false;
+                return 'failed';
             }
 
-            return true;
+            return 'settled';
         }
 
-        if ($reservation->status === OrderReservation::SAVED) {
-            $this->confirm($reservation);
-        } else {
-            $this->release($reservation);
+        if ($reservation->status === OrderReservation::PENDING && ! $this->claimStalled($reservation, $cutoff)) {
+            return 'skipped';
         }
 
-        return ! in_array($reservation->status, [
-            OrderReservation::PENDING,
-            OrderReservation::RELEASE_PENDING,
-            OrderReservation::SAVED,
-        ], true);
+        $this->release($reservation);
+
+        return $reservation->status === OrderReservation::RELEASE_PENDING ? 'failed' : 'settled';
     }
 
-    private function settle(OrderReservation $reservation, WarehouseResult $result, string $status, string $step): void
+    //اذا كان الحجز قديم بما يكفي يتم عمل ريليز له
+    private function claimStalled(OrderReservation $reservation, Carbon $cutoff): bool
+    {
+        $claimed = OrderReservation::query()
+            ->whereKey($reservation->getKey())
+            ->where('reservation_key', $reservation->reservation_key)
+            ->where('status', OrderReservation::PENDING)
+            ->where('updated_at', '<=', $cutoff)
+            ->update(['status' => OrderReservation::RELEASE_PENDING]);
+
+        $reservation->refresh();
+
+        return $claimed === 1;
+    }
+
+    //تغيير حالة الحجز للريزرفيشن وليس الطلب
+    private function transition(OrderReservation $reservation, array $from, string $to): bool
+    {
+        $changed = OrderReservation::query()
+            ->whereKey($reservation->getKey())
+            ->where('reservation_key', $reservation->reservation_key)
+            ->whereIn('status', $from)
+            ->update(['status' => $to]);
+
+        $reservation->refresh();
+
+        return $changed === 1;
+    }
+
+
+   //تحديدي الحالة النهائية للحجز بناءا على نتيجة عملية المستودع
+    private function settle(OrderReservation $reservation, WarehouseResult $result, array $from, string $status, string $step): void
     {
         if ($result->success) {
-            $reservation->update(['status' => $status]);
+            $this->transition($reservation, $from, $status);
 
             return;
         }
 
-        Log::error("Warehouse refused to {$step} a reservation", [
+        Log::error("Warehouse refused to {$step}", [
             'reservation_id' => $reservation->id,
             'order_id' => $reservation->order_id,
             'code' => $result->code->name,
             'reason' => $result->reason,
         ]);
 
-        $reservation->update(['status' => OrderReservation::ATTENTION]);
+        $this->transition($reservation, $from, OrderReservation::ATTENTION);
     }
 }

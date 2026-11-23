@@ -65,6 +65,16 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Requirement 4: one line per email delivery attempt of the worker
+        // (sent / failed + error / dead-lettered), keyed by event id, so a
+        // message found in the DLQ can be matched with why it failed.
+        'order_email_worker' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/order-email-worker.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
