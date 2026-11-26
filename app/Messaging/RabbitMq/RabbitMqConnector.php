@@ -4,7 +4,6 @@ namespace App\Messaging\RabbitMq;
 
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
-/** Opens AMQP connections from config('messaging.rabbitmq'). */
 class RabbitMqConnector
 {
     public function connect(): AMQPStreamConnection

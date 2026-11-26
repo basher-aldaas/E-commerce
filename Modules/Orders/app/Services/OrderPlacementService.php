@@ -32,6 +32,7 @@ class OrderPlacementService
         private readonly WarehouseGateway $warehouse,
         private readonly OrderStockService $stock,
         private readonly Outbox $outbox,
+        private readonly OrderNotifier $notifier,
     ) {}
 
 
@@ -64,6 +65,9 @@ class OrderPlacementService
 
             throw $e;
         }
+
+        // Committed: tell the admin screens over the WebSocket (best effort).
+        $this->notifier->placed($order);
 
         return $order;
     }
@@ -240,9 +244,6 @@ class OrderPlacementService
 
             $order->load('items');
 
-            // Same transaction as the order: the event exists if and only if the
-            // order was committed, so it can neither be lost nor describe an
-            // order that was rolled back.
             $this->outbox->record(
                 OrderCreatedEvent::TYPE,
                 'order',

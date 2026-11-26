@@ -10,15 +10,6 @@ use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use Throwable;
 
-/**
- * Publishes outbox rows to RabbitMQ with the guarantees the outbox relies on:
- *
- * - delivery_mode 2 (persistent): the broker writes the message to disk;
- * - mandatory: a message no queue is bound for comes back (basic.return)
- *   instead of being silently dropped;
- * - publisher confirms: a message counts as published only when the broker
- *   sent basic.ack for it, i.e. after it is safely stored in the queue.
- */
 class RabbitMqOutboxPublisher implements OutboxPublisher
 {
     private ?AbstractConnection $connection = null;
@@ -40,6 +31,7 @@ class RabbitMqOutboxPublisher implements OutboxPublisher
         }
 
         try {
+            //جيب القناة الموجودة او انشأ وحدة
             $channel = $this->channel();
             $this->results = [];
             $exchange = config('messaging.topology.exchange');
@@ -52,8 +44,6 @@ class RabbitMqOutboxPublisher implements OutboxPublisher
 
             $channel->wait_for_pending_acks_returns((float) config('messaging.outbox.confirm_timeout_seconds'));
         } catch (Throwable $e) {
-            // Broker unreachable, connection lost or no confirm in time: the
-            // caller keeps every row unpublished and tries again later.
             $this->disconnect();
 
             throw $e;
@@ -62,6 +52,7 @@ class RabbitMqOutboxPublisher implements OutboxPublisher
         return $this->results;
     }
 
+    //مسؤول عن مراقبة الاتصال مع ال RabbitMQ
     public function keepAlive(): void
     {
         if ($this->connection === null) {
@@ -69,8 +60,6 @@ class RabbitMqOutboxPublisher implements OutboxPublisher
         }
 
         try {
-            // Sends a heartbeat when half the interval passed without a write,
-            // and notices a broker that went silent.
             $this->connection->checkHeartBeat();
         } catch (Throwable) {
             // Dead connection: drop it; the next publish() reconnects.
@@ -78,6 +67,7 @@ class RabbitMqOutboxPublisher implements OutboxPublisher
         }
     }
 
+    //مسؤول عن اغلاق الاتصال والقناة
     public function disconnect(): void
     {
         try {
@@ -91,6 +81,7 @@ class RabbitMqOutboxPublisher implements OutboxPublisher
         $this->connection = null;
     }
 
+    //وظيفته تحويل كائن Laravel OutboxMessage إلى كائن يفهمه RabbitMQ، وهو AMQPMessage.
     private function toAmqp(OutboxMessage $message): AMQPMessage
     {
         return new AMQPMessage($message->body(), [
@@ -120,10 +111,12 @@ class RabbitMqOutboxPublisher implements OutboxPublisher
         $this->topology->declare($channel);
         $channel->confirm_select();
 
-        // A returned message is acked afterwards too, so a return must win.
+        // مستمع داخل القناة في حال الرسالة لم تجد اي queue لتدخل اليهافيعيد الرسالة للناشر
         $channel->set_return_listener(function ($replyCode, $replyText, $exchange, $routingKey, AMQPMessage $message) {
             $this->results[$message->get('message_id')] = "returned by the broker: {$replyCode} {$replyText}";
         });
+
+        //مستمع داخل القناة يعمل عندما يرسل الrabbit رسالة ack
         $channel->set_ack_handler(function (AMQPMessage $message) {
             $id = $message->get('message_id');
             if (! str_starts_with((string) ($this->results[$id] ?? ''), 'returned')) {

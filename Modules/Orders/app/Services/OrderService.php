@@ -97,9 +97,11 @@ class OrderService
         });
 
         if ($reservationToRelease !== null) {
+            // releaseAndCancel() notifies (email + WebSocket) once the order is cancelled.
             return $this->stock->releaseAndCancel($reservationToRelease, $this->stock->budgeted());
         }
 
+        // After the commit: email + WebSocket (OrderStatusUpdated) to the customer and admins.
         $this->notifier->statusChanged($order);
 
         return $order;

@@ -1,5 +1,7 @@
 // One order: status timeline, lines and total. Admins can change the status;
 // cancelling asks first, because it returns the reserved stock to the Warehouse.
+// A status change made anywhere else arrives over the WebSocket and redraws the
+// page, so the customer watches the timeline move without reloading.
 
 import { h, mount } from '../core/dom.js';
 import { api } from '../core/api.js';
@@ -11,6 +13,7 @@ import { confirmDialog } from '../ui/overlay.js';
 import { emptyState, productImage, skeletonBlock } from '../ui/parts.js';
 import { pageTitle } from '../ui/chrome.js';
 import { statusChip } from './orders.js';
+import { STATUS_UPDATED, onOrderEvent } from '../core/realtime.js';
 
 const STEPS = ['pending', 'confirmed', 'processing', 'completed'];
 const STEP_LABEL = { pending: 'Placed', confirmed: 'Confirmed', processing: 'Processing', completed: 'Completed' };
@@ -58,6 +61,7 @@ export async function orderView(main, ctx) {
   const count = order.items.reduce((n, item) => n + item.quantity, 0);
 
   let adminBox = null;
+  let saving = false; // our own change: the page redraws after the response
   if (session.isAdmin) {
     const select = h('select', { class: 'select', id: 'order-status' },
       [...STEPS, 'cancelled'].map((s) => h('option', { value: s, selected: s === order.status, text: s[0].toUpperCase() + s.slice(1) })));
@@ -69,11 +73,13 @@ export async function orderView(main, ctx) {
       if (status === 'cancelled' && !(await confirmDialog({ title: `Cancel order #${order.id}?`, body: 'Its reserved stock goes back to the warehouse. This can’t be undone.', confirmLabel: 'Cancel order', cancelLabel: 'Keep order', danger: true }))) return;
       save.disabled = true;
       save.textContent = 'Updating…';
+      saving = true;
       try {
         await api('POST', `/api/v1/orders/${order.id}/status`, { body: { status } });
         toast(`Order #${order.id} is now ${status}.`);
         navigate(location.hash.split('?')[0]);
       } catch (error) {
+        saving = false;
         save.disabled = false;
         save.textContent = 'Update status';
         mount(notice, statusError(error));
@@ -109,4 +115,10 @@ export async function orderView(main, ctx) {
           h('div', { class: 'summary__row summary__row--total' }, h('span', { text: 'Total' }), h('span', { text: money(order.total_amount) }))),
         adminBox)),
     h('a', { href: session.isAdmin ? '#/admin/orders' : '#/orders', text: session.isAdmin ? '← All orders' : '← My orders' })));
+
+  onOrderEvent(STATUS_UPDATED, ({ order_id: id, status }) => {
+    if (Number(id) !== order.id || status === order.status || saving) return;
+    if (session.isAdmin) toast(`Order #${order.id} was changed to ${status} elsewhere.`);
+    navigate(location.hash.split('?')[0]);
+  }, ctx);
 }

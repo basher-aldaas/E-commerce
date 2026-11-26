@@ -7,19 +7,11 @@ use Modules\Orders\Models\Order;
 use Modules\Products\Models\Product;
 use Modules\Users\Models\User;
 
-/**
- * The `order.created` event (Requirement 4): everything a consumer needs, so
- * the email worker never reads this service's database. Amounts are strings
- * with two decimals, exactly as stored.
- */
 final class OrderCreatedEvent
 {
     public const TYPE = 'order.created';
 
-    /**
-     * @param  Collection<int, Product>  $products  keyed by id
-     * @return array<string, mixed>
-     */
+    //معلومات الطلب وممنتجاته ومعلومات المستخدم
     public static function data(Order $order, User $user, Collection $products): array
     {
         return [

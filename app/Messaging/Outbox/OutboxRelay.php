@@ -7,26 +7,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
 
-/**
- * Moves outbox rows to the broker, one batch per call.
- *
- * The rows are claimed with SELECT ... FOR UPDATE SKIP LOCKED inside a
- * transaction, so two relays never publish the same row at the same time.
- * published_at is set only for rows the broker confirmed. Anything else (broker
- * down, no confirm, message returned) keeps the row unpublished with its error
- * and an exponential backoff, and a later round tries again. A crash between
- * the broker's confirm and the commit re-publishes the row: delivery is
- * at-least-once, never at-most-once.
- */
 class OutboxRelay
 {
     public function __construct(private readonly OutboxPublisher $publisher) {}
 
-    /**
-     * @return array{published: int, failed: int, error?: string} error is set
-     *                                                              when the broker
-     *                                                              could not be used at all
-     */
     public function relayBatch(): array
     {
         return DB::transaction(function () {
@@ -49,8 +33,6 @@ class OutboxRelay
                 foreach ($messages as $message) {
                     $this->markFailed($message, $error);
                 }
-
-                // The failures are committed; the caller backs off before the next round.
                 return ['published' => 0, 'failed' => $messages->count(), 'error' => $error];
             }
 
@@ -72,6 +54,8 @@ class OutboxRelay
         });
     }
 
+
+    //تابع لمعالجة خطأ الرسالة وارجاعها للداتا مع عداد جديد
     private function markFailed(OutboxMessage $message, string $error): void
     {
         $attempts = $message->attempts + 1;
