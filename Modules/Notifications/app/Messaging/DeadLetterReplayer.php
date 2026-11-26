@@ -7,15 +7,6 @@ use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use RuntimeException;
 use Throwable;
-
-/**
- * Sends dead letters back for another try once the cause is fixed (e.g. the
- * SMTP credentials). Never loses one: each message is republished to the main
- * exchange with publisher confirms, and only after the broker confirmed the
- * copy is the dead letter ACKed (removed from the DLQ). A failure leaves it in
- * the DLQ. The copy starts with a fresh delivery count; the original death
- * history stays readable in the x-replayed-* headers.
- */
 class DeadLetterReplayer
 {
     /**
@@ -28,10 +19,9 @@ class DeadLetterReplayer
         $routingKey = $config['order_created_email']['routing_key'];
 
         $channel->confirm_select();
-        $returned = null;
+        $returned = null;//في حال ما لقا queue
         $nacked = false;
-        // A returned (unroutable) message is still confirmed with basic.ack
-        // afterwards, so a return must count as a failure.
+        //هذا المستمع يعمل عندما يعيد RabbitMQ الرسالة بسبب عدم إمكانية توجيهها إلى Queue.
         $channel->set_return_listener(function ($code, $text) use (&$returned) {
             $returned = "returned by the broker: {$code} {$text}";
         });

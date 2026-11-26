@@ -53,6 +53,8 @@ tags:
     description: Customer orders and their stock reservations
   - name: System
     description: Admin-only, read-only diagnostics (never cached)
+  - name: Realtime
+    description: Live order updates over a WebSocket (Pusher)
   - name: Performance demo
     description: Admin-only endpoints for the Requirement 3 demonstrations. Not used by the store.
 security:
@@ -660,6 +662,39 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+
+  /api/v1/broadcasting/config:
+    get:
+      tags: [Realtime]
+      summary: Pusher settings for live order updates
+      description: |
+        The public Pusher app key and cluster the web interface needs to open its
+        WebSocket (the secret never leaves the server). `enabled` is false when
+        BROADCAST_CONNECTION is not `pusher`; the interface then works without
+        live updates. Subscriptions to the private channels are authorized at
+        `POST /broadcasting/auth` with the same JWT: a customer may join
+        `private-orders.{userId}` (their own id only), an admin
+        `private-admin.orders`. Events: `order.placed` (admins) and
+        `order.status.updated` (owner + admins). `Cache-Control: no-store`.
+      responses:
+        '200':
+          description: Broadcasting configuration
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          enabled: { type: boolean, example: true }
+                          driver: { type: string, example: pusher }
+                          key: { type: string, nullable: true, example: e1dff86f8a08b98b7bcc }
+                          cluster: { type: string, nullable: true, example: eu }
+                          auth_endpoint: { type: string, example: /broadcasting/auth }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
 
   /api/v1/perf/orders:
     get:

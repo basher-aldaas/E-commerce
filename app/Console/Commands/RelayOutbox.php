@@ -7,12 +7,6 @@ use App\Messaging\Outbox\OutboxRelay;
 use Illuminate\Console\Command;
 use Throwable;
 
-/**
- * Transactional outbox relay (Requirement 4): publishes the events the API
- * stored in outbox_messages to RabbitMQ. Runs in its own container
- * (outbox-relay). Stopping it loses nothing: unpublished rows wait in MySQL
- * and are sent when it starts again.
- */
 class RelayOutbox extends Command
 {
     protected $signature = 'outbox:relay
@@ -55,7 +49,7 @@ class RelayOutbox extends Command
             if ($this->option('once')) {
                 break;
             }
-
+            //التعامل مع توقف RabbitMQ أو قاعدة البيانات
             if (isset($result['error'])) {
                 $this->warn("Broker/database unavailable, retrying in {$brokerDownSeconds}s: {$result['error']}");
                 $this->pause($brokerDownSeconds * 1000);
@@ -81,11 +75,7 @@ class RelayOutbox extends Command
         return isset($result['error']) ? self::FAILURE : self::SUCCESS;
     }
 
-    /**
-     * Sleeps in small steps so a stop signal is handled quickly, and keeps the
-     * idle broker connection alive meanwhile (otherwise RabbitMQ drops it after
-     * two missed heartbeats and the next publish fails once).
-     */
+
     private function pause(int $milliseconds): void
     {
         $until = microtime(true) + $milliseconds / 1000;

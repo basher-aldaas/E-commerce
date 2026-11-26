@@ -8,10 +8,12 @@
 | Every API endpoint is registered by its own module, in routes/api.php inside each module,
 | under the /api/v1 and /api/v2 prefixes. Authentication is JWT (auth:api).
 |
-| The one exception is system diagnostics, which belong to no module.
+| The exceptions are system diagnostics and the WebSocket (Pusher) settings,
+| which belong to no module.
 |
 */
 
+use App\Http\Controllers\Realtime\BroadcastingConfigController;
 use App\Http\Controllers\System\WarehouseHealthController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,3 +22,6 @@ Route::prefix('v1/system')
     ->group(function () {
         Route::get('/warehouse', WarehouseHealthController::class);
     });
+
+// Public Pusher key + cluster for the web interface's live order updates.
+Route::middleware('auth:api')->get('v1/broadcasting/config', BroadcastingConfigController::class);

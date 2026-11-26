@@ -14,6 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        [
+            'middleware' => ['api', 'auth:api'],
+        ]
+    )
     ->withMiddleware(function (Middleware $middleware): void {
         // This is an API-only app with no `login` web route. Laravel's default
         // guest redirect (ApplicationBuilder sets redirectGuestsTo(route('login')))

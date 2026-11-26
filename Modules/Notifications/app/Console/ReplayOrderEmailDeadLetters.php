@@ -7,12 +7,6 @@ use App\Messaging\RabbitMq\Topology;
 use Illuminate\Console\Command;
 use Modules\Notifications\Messaging\DeadLetterReplayer;
 
-/**
- * Operator command (Requirement 4): after fixing why emails failed, move the
- * dead letters back to the email queue so the worker tries them again.
- *
- *   docker compose exec email-worker php artisan notifications:replay-dead-letters --limit=10
- */
 class ReplayOrderEmailDeadLetters extends Command
 {
     protected $signature = 'notifications:replay-dead-letters
@@ -28,6 +22,7 @@ class ReplayOrderEmailDeadLetters extends Command
             $channel = $connection->channel();
             $topology->declare($channel);
 
+            //بعيد ارسال الرسائل يلي بالطابور الثاني
             $report = $replayer->replay($channel, max(1, (int) $this->option('limit')));
         } finally {
             $connection->close();

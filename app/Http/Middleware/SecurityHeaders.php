@@ -16,13 +16,15 @@ class SecurityHeaders
      * styles or handlers: everything is built with DOM APIs from same-origin
      * files, so no 'unsafe-inline' is needed. Product images may be absolute https
      * URLs; blob: is the local preview of an image chosen for upload.
+     * connect-src also allows the Pusher WebSocket host when broadcasting is on
+     * (%s is filled by appPolicy()).
      */
     private const APP_POLICY = "default-src 'self'; "
         ."script-src 'self'; "
         ."style-src 'self'; "
         ."img-src 'self' data: blob: https:; "
         ."font-src 'self'; "
-        ."connect-src 'self'; "
+        ."connect-src 'self'%s; "
         ."object-src 'none'; "
         ."frame-ancestors 'none'; "
         ."base-uri 'self'; "
@@ -56,7 +58,7 @@ class SecurityHeaders
         $headers->set('Content-Security-Policy', match (true) {
             ! $isHtml => self::API_POLICY,
             $request->is('api/documentation*') => self::SWAGGER_POLICY,
-            default => self::APP_POLICY,
+            default => $this->appPolicy(),
         });
 
         // HSTS is ignored over plain HTTP, and must not affect local development.
@@ -65,5 +67,15 @@ class SecurityHeaders
         }
 
         return $response;
+    }
+
+    /** Live order updates open wss://ws-{cluster}.pusher.com from the browser. */
+    private function appPolicy(): string
+    {
+        $pusher = config('broadcasting.default') === 'pusher'
+            ? ' wss://ws-'.config('broadcasting.connections.pusher.options.cluster', 'mt1').'.pusher.com'
+            : '';
+
+        return sprintf(self::APP_POLICY, $pusher);
     }
 }

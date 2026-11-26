@@ -16,21 +16,17 @@ return new class extends Migration
     {
         Schema::create('outbox_messages', function (Blueprint $table) {
             $table->id();
-            // Event id; sent as the AMQP message_id so consumers can recognise it.
             $table->uuid('message_id')->unique();
-            // Event name, also the routing key (e.g. order.created).
             $table->string('type', 100);
             $table->string('aggregate_type', 50);
             $table->string('aggregate_id', 64);
             $table->json('payload');
             $table->unsignedInteger('attempts')->default(0);
             $table->text('last_error')->nullable();
-            // A row that failed to publish is retried after this moment (backoff).
             $table->timestamp('available_at')->useCurrent();
             $table->timestamp('published_at')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            // The relay's query: unpublished rows that are due, oldest first.
             $table->index(['published_at', 'available_at', 'id']);
             $table->index(['aggregate_type', 'aggregate_id']);
         });

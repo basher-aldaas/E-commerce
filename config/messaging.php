@@ -1,21 +1,5 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Asynchronous messaging (Requirement 4)
-|--------------------------------------------------------------------------
-|
-| Flow: the API writes an event into the outbox_messages table in the same
-| database transaction as the order (transactional outbox). The outbox relay
-| (`php artisan outbox:relay`, container outbox-relay) publishes those rows to
-| RabbitMQ. The email worker (`php artisan notifications:consume-order-created`,
-| container email-worker) consumes them and sends the emails.
-|
-| Every value that differs between environments comes from the environment;
-| credentials are never written here.
-|
-*/
-
 return [
 
     'rabbitmq' => [
@@ -30,12 +14,7 @@ return [
         'heartbeat' => (int) env('RABBITMQ_HEARTBEAT', 30),
     ],
 
-    /*
-    | Topology. Declared idempotently by both the relay and the worker
-    | (App\Messaging\RabbitMq\Topology), so start order does not matter.
-    | Queue arguments cannot change once a queue exists: after changing
-    | max_retries, delete the queue in the management UI (or use a policy).
-    */
+
     'topology' => [
         // Durable topic exchange every domain event is published to.
         'exchange' => env('RABBITMQ_EXCHANGE', 'ecommerce.events'),
@@ -46,14 +25,8 @@ return [
             'queue' => 'notifications.order-created.email',
             'dead_letter_queue' => 'notifications.order-created.email.dlq',
             'routing_key' => 'order.created',
-            // Failed sends retried this many times; the broker counts the
-            // deliveries (quorum queue x-delivery-limit) and dead-letters the
-            // message after the last one.
             'max_retries' => (int) env('ORDER_EMAIL_MAX_RETRIES', 3),
-            // Worker waits backoff_ms x attempt before returning a failed message.
             'retry_backoff_ms' => (int) env('ORDER_EMAIL_RETRY_BACKOFF_MS', 2000),
-            // Minimum gap between two send attempts (provider rate limits).
-            // 0 = no limit. Mailtrap's free sandbox: ~15000 (10000 was still refused).
             'min_interval_ms' => (int) env('ORDER_EMAIL_MIN_INTERVAL_MS', 0),
         ],
     ],

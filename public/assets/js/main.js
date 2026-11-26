@@ -3,7 +3,8 @@
 
 import { h } from './core/dom.js';
 import { navigate, resolve, route } from './core/router.js';
-import { onChange } from './core/store.js';
+import { onChange, session } from './core/store.js';
+import { ORDER_PLACED, STATUS_UPDATED, onOrderEvent, startRealtime } from './core/realtime.js';
 import { main, renderChrome, refreshCartBadges } from './ui/chrome.js';
 import { toast } from './ui/feedback.js';
 
@@ -44,6 +45,8 @@ document.body.append(
 );
 
 let lastLayout = null;
+// Clean-up of the screen being left (e.g. its live-update listeners).
+let leaving = [];
 
 async function render() {
   const result = resolve();
@@ -51,6 +54,8 @@ async function render() {
     navigate(result.redirect);
     return;
   }
+  leaving.splice(0).forEach((fn) => { try { fn(); } catch { /* ignore */ } });
+  result.ctx.onLeave = (fn) => { leaving.push(fn); };
   renderChrome(content, result.layout);
   lastLayout = result.layout;
   main.replaceChildren();
@@ -75,6 +80,17 @@ onChange(() => {
 });
 window.addEventListener('hashchange', render);
 render();
+
+// ---------- live order updates (WebSocket, see core/realtime.js) ----------
+// Screens that show orders update themselves; these toasts tell the user
+// wherever they are.
+startRealtime();
+onOrderEvent(STATUS_UPDATED, ({ order_id: id, status }) => {
+  if (!session.isAdmin) toast(`Order #${id} is now ${status}.`, { link: ['View order', `#/orders/${id}`] });
+});
+onOrderEvent(ORDER_PLACED, ({ order }) => {
+  toast(`New order #${order.id}.`, { link: ['View order', `#/orders/${order.id}`] });
+});
 
 // ---------- demo mode ----------
 // Off by default. On with /?demo=1 or Ctrl+Alt+D, kept for this tab only. The
