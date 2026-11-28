@@ -1,0 +1,20 @@
+# 300 POST /api/v1/orders (20 users); app2 killed (docker kill) while they run
+# 2026-11-27 22:31:25 UTC
+
+== timeline
+22:31:33 +8s  docker kill ecommerce-app2
+22:31:51 +26s  k6 finished
+
+== k6
+     checks.........................: 98.00% 295 out of 301
+     http_req_duration..............: avg=1.56s   min=386.38ms med=1.35s    max=6.92s  p(90)=2.12s    p(95)=3.14s   
+     http_req_failed................: 1.99%  6 out of 301
+
+== HTTP status of POST /api/v1/orders (nginx access log)
+    294 201
+      6 502
+
+== database after the run
+orders created:        298
+reservations by state: placed=298
+duplicate idempotency keys: 0

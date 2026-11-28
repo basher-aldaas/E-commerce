@@ -1,0 +1,34 @@
+# One slow instance: app3 limited to half a CPU core (docker update --cpus 0.5 ecommerce-app3)
+# 500 GET /api/v2/products, 50 users, once per Nginx method
+# 2026-11-27 22:26:22 UTC
+
+app3 NanoCpus=500000000
+################ LB_METHOD=round_robin
+     http_req_duration..............: avg=2.16s    min=224.41ms med=678ms    max=6.88s  p(90)=6.07s    p(95)=6.37s   
+     http_req_failed................: 0.00%   0 out of 501
+     instance_app1..................: 166     6.472543/s
+     instance_app2..................: 167     6.511534/s
+     instance_app3..................: 167     6.511534/s
+
+################ LB_METHOD=least_conn
+     http_req_duration..............: avg=1.35s   min=436.47ms med=1.21s    max=4.6s    p(90)=2.46s    p(95)=2.87s   
+     http_req_failed................: 0.00%   0 out of 501
+     instance_app1..................: 202     13.274156/s
+     instance_app2..................: 198     13.011301/s
+     instance_app3..................: 100     6.571364/s
+
+################ LB_METHOD=round_robin
+     http_req_duration..............: avg=2.05s    min=280.37ms med=663.76ms max=7.47s   p(90)=5.88s    p(95)=6.34s   
+     http_req_failed................: 0.00%   0 out of 501
+     instance_app1..................: 166     6.665038/s
+     instance_app2..................: 167     6.705188/s
+     instance_app3..................: 167     6.705188/s
+
+################ LB_METHOD=least_conn
+     http_req_duration..............: avg=1.4s     min=429.19ms med=1.26s   max=4.59s    p(90)=2.51s    p(95)=2.86s   
+     http_req_failed................: 0.00%   0 out of 501
+     instance_app1..................: 202     12.607576/s
+     instance_app2..................: 198     12.357921/s
+     instance_app3..................: 100     6.241374/s
+
+restored: `docker update --cpus 0` does not clear the limit on Docker Desktop; app3 was recreated (docker compose up -d --force-recreate --no-deps app3) -> NanoCpus=0

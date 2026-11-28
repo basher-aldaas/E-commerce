@@ -1,0 +1,37 @@
+# BEFORE: the three instances run 'php artisan migrate' at the same moment on an empty database
+# (what happened when every instance migrated on startup). Scratch database race_demo.
+# 2026-11-27 22:36:14 UTC
+
+== app
+      1 exit=1
+      1   SQLSTATE[42S01]: Base table or view already exists: 1050 Table 'migrations' already exists 
+      1   Creating migration table ...................................... 93.64ms FAIL
+== app2
+      1 exit=0
+      1   Creating migration table ...................................... 77.23ms DONE
+      1   2026_11_17_000000_create_outbox_messages_table ............... 121.00ms DONE
+      1   2026_11_14_000000_add_order_listing_indexes ................... 68.01ms DONE
+      1   2026_11_08_000000_create_order_reservations_table ............ 387.57ms DONE
+      1   2026_10_28_162059_create_permission_tables ................... 814.13ms DONE
+== app3
+      1   INFO  Nothing to migrate.   (it arrived after app2 had finished)
+      1 exit=0
+
+tables created: 21
+
+# AFTER: app-init is the only container that migrates; the instances wait for it
+# (depends_on: app-init: service_completed_successfully) and start with 'serve'.
+  Modules\Products\Database\Seeders\CategorySeeder ............... 105 ms DONE  
+  Modules\Products\Database\Seeders\ProductSeeder .................... RUNNING  
+  Modules\Products\Database\Seeders\ProductSeeder ................ 366 ms DONE  
+  Modules\Products\Database\Seeders\ProductsDatabaseSeeder ....... 487 ms DONE  
+(app-init finished; the instances only start after it exits with 0)
+tables created: 21
+
+== notes
+- The race is timing dependent: in this run app failed (exit=1, 'migrations'
+  already exists), app2 migrated everything, app3 came late and found nothing
+  to do. With `set -eu` in docker/entrypoint.sh a failed migrate ends the
+  container before `serve`, so on an empty database an instance could die at
+  startup. The seed (app:seed-if-empty) has the same check-then-insert race.
+- After: one migrate + one seed, 21 tables, then app, app2, app3 start.

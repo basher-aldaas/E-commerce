@@ -135,4 +135,12 @@ return [
 
     'api_rate_limit_per_minute' => env('API_RATE_LIMIT_PER_MINUTE', 60),
 
+    /*
+    | Name of this app instance (Requirement 5: app1, app2, app3 behind Nginx),
+    | sent as the X-Instance response header. Falls back to the container
+    | hostname when APP_INSTANCE is not set.
+    */
+
+    'instance' => env('APP_INSTANCE', gethostname() ?: 'unknown'),
+
 ];

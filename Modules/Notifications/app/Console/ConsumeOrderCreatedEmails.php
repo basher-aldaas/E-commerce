@@ -50,7 +50,7 @@ class ConsumeOrderCreatedEmails extends Command
                     ));
                 });
 
-                $this->info("Email worker consuming {$queue} (prefetch 1, manual ACK).");
+                $this->info(sprintf("Worker %s consuming %s (action: %s, prefetch 1, manual ACK).", gethostname(), $queue, config("messaging.topology.order_created_email.worker_action")));
                 $retryInSeconds = 1;
 
                 //الجزء يلي بخلي العامل يبقى مستيقظا

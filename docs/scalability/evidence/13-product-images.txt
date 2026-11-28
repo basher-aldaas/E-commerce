@@ -1,0 +1,24 @@
+# Product image uploaded through Nginx, then requested 9 times (3 per instance).
+# Static files skip Laravel, so the instance is read from Nginx's X-Upstream.
+# 2026-11-27 22:37:32 UTC
+
+######## BEFORE: PRODUCT_IMAGES_PER_INSTANCE=1 (one volume per instance, like separate servers)
+app 172.18.0.15 volume=e-commerce_product-images-app1
+app2 172.18.0.14 volume=e-commerce_product-images-app2
+app3 172.18.0.13 volume=e-commerce_product-images-app3
+upload: HTTP/1.1 201 Created, handled by X-Instance: app2
+GET /storage/products/SB9zsdYZ8MpkiBxq8EWBqYqJlCwlnXD5uUMgianw.png x9:
+      3 X-Upstream: 172.18.0.13:8000 HTTP 403
+      3 X-Upstream: 172.18.0.14:8000 HTTP 200
+      3 X-Upstream: 172.18.0.15:8000 HTTP 403
+
+######## AFTER: shared product-images volume (default)
+app 172.18.0.13 volume=e-commerce_product-images
+app2 172.18.0.14 volume=e-commerce_product-images
+app3 172.18.0.15 volume=e-commerce_product-images
+upload: HTTP/1.1 201 Created, handled by X-Instance: app1
+GET /storage/products/ZMguEPLLP2ExxaRAlKTe4ExbxAddZhvcRxmapwvU.png x9:
+      3 X-Upstream: 172.18.0.13:8000 HTTP 200
+      3 X-Upstream: 172.18.0.14:8000 HTTP 200
+      3 X-Upstream: 172.18.0.15:8000 HTTP 200
+test products removed: 2

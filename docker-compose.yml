@@ -1,66 +1,64 @@
+x-app-instance: &app-instance
+  image: ecommerce-app
+  command: ["sh", "docker/entrypoint.sh", "serve"]
+  restart: unless-stopped
+  volumes:
+    - .:/var/www/html
+
+
+  environment: &app-environment
+    DB_CONNECTION: mysql
+    DB_HOST: mysql
+    DB_PORT: 3306
+    DB_DATABASE: E-commerce
+    DB_USERNAME: root
+    DB_PASSWORD: ""
+    DB_READ_HOST: ${DB_READ_HOST:-}
+    WAREHOUSE_GRPC_ENABLED: "true"
+    WAREHOUSE_GRPC_TARGET: warehouse:50051
+    QUEUE_CONNECTION: sync
+    MAIL_MAILER: log
+    PHP_CLI_SERVER_WORKERS: 8
+    PHP_OPCACHE_VALIDATE_TIMESTAMPS: 0
+    PRODUCT_CACHE_ENABLED: ${PRODUCT_CACHE_ENABLED:-true}
+    PRODUCT_CACHE_TTL: 300
+    API_RATE_LIMIT_PER_MINUTE: ${API_RATE_LIMIT_PER_MINUTE:-60}
+    CACHE_STORE: redis
+    REDIS_CLIENT: phpredis
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    RABBITMQ_HOST: rabbitmq
+    RABBITMQ_PORT: 5672
+    RABBITMQ_USER: ${RABBITMQ_USER:-ecommerce}
+    RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-}
+    RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+  healthcheck:
+    test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8000/up') === false ? 1 : 0);"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 20s
+  depends_on:
+    app-init:
+      condition: service_completed_successfully
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    warehouse:
+      condition: service_healthy
+
+
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  app-init:
     image: ecommerce-app
-    container_name: ecommerce-app
-    ports:
-      - "8000:8000"
+    container_name: ecommerce-app-init
+    command: ["sh", "docker/entrypoint.sh", "init"]
+    restart: "no"
     volumes:
       - .:/var/www/html
-    environment: &app-environment
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_DATABASE: E-commerce
-      DB_USERNAME: root
-      DB_PASSWORD: ""
-      # MySQL read replica (Requirement 3). Empty = no replica, every read on the
-      # primary. With the replica running (`docker compose --profile replica up -d`),
-      # start the app with `DB_READ_HOST=mysql-replica docker compose up -d app`:
-      # catalog cache misses and bypasses then read the replica, everything else
-      # (writes, auth, orders) stays on the primary
-      # (Modules\Products\Services\CatalogCache). Setup: docs/performance/DEMO.md.
-      DB_READ_HOST: ${DB_READ_HOST:-}
-      WAREHOUSE_GRPC_ENABLED: "true"
-      WAREHOUSE_GRPC_TARGET: warehouse:50051
-      # The order confirmation email does NOT go through Laravel's queue: it is an
-      # order.created event in the transactional outbox, published by
-      # outbox-relay and sent by email-worker (Requirement 4). The API never
-      # sends that email itself. The remaining mails (welcome, status change)
-      # still run in the request and are only written to storage/logs/laravel.log.
-      QUEUE_CONNECTION: sync
-      MAIL_MAILER: log
-      # `php artisan serve` handles one request at a time unless PHP's built-in
-      # server runs several workers; 8 lets concurrent orders really overlap.
-      PHP_CLI_SERVER_WORKERS: 8
-      # 0 = OPcache never re-checks files: stable timings for demos and the cache
-      # benchmark, but run `docker compose restart app` after editing PHP code.
-      # Set to 1 to pick up code edits immediately (each request then gets
-      # ~1-2 s slower on a Windows bind mount). See the Dockerfile.
-      PHP_OPCACHE_VALIDATE_TIMESTAMPS: 0
-      # Catalog cache for the v1/v2 product endpoints (Requirement 3). Set to
-      # false (`PRODUCT_CACHE_ENABLED=false docker compose up -d app`) to measure the uncached
-      # baseline with the same requests; responses then carry X-Cache: OFF.
-      PRODUCT_CACHE_ENABLED: ${PRODUCT_CACHE_ENABLED:-true}
-      PRODUCT_CACHE_TTL: 300
-      # Per-user API rate limit (requests/minute). Keep 60 normally; for a load
-      # test or the Postman cache comparison start the app with e.g.
-      # `API_RATE_LIMIT_PER_MINUTE=100000 docker compose up -d app`.
-      API_RATE_LIMIT_PER_MINUTE: ${API_RATE_LIMIT_PER_MINUTE:-60}
-      # Shared application cache (catalog cache, rate limiter, scheduler locks).
-      CACHE_STORE: redis
-      REDIS_CLIENT: phpredis
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      # RabbitMQ (Requirement 4). The API never talks to RabbitMQ: placing an
-      # order only writes an outbox row in MySQL. outbox-relay publishes it.
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_USER:-ecommerce}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-}
-      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      - product-images:/var/www/html/storage/app/public
+    environment: *app-environment
     depends_on:
       mysql:
         condition: service_healthy
@@ -69,11 +67,52 @@ services:
       warehouse:
         condition: service_healthy
 
-  # Runs Laravel's scheduler: `warehouse:reconcile` every minute, which releases
-  # reservations whose compensation or cancellation could not reach the
-  # Warehouse at the time. Exactly one scheduler container; the task also uses
-  # withoutOverlapping() + onOneServer(), backed by the shared Redis cache
-  # lock, so a run never starts while another is still going.
+  app:
+    <<: *app-instance
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecommerce-app
+    hostname: app1
+    volumes:
+      - .:/var/www/html
+      - product-images${PRODUCT_IMAGES_PER_INSTANCE:+-app1}:/var/www/html/storage/app/public
+
+  app2:
+    <<: *app-instance
+    container_name: ecommerce-app2
+    hostname: app2
+    volumes:
+      - .:/var/www/html
+      - product-images${PRODUCT_IMAGES_PER_INSTANCE:+-app2}:/var/www/html/storage/app/public
+
+  app3:
+    <<: *app-instance
+    container_name: ecommerce-app3
+    hostname: app3
+    volumes:
+      - .:/var/www/html
+      - product-images${PRODUCT_IMAGES_PER_INSTANCE:+-app3}:/var/www/html/storage/app/public
+
+  nginx:
+    image: nginx:1.28-alpine
+    container_name: ecommerce-nginx
+    ports:
+      - "8000:80"
+    environment:
+      LB_METHOD: ${LB_METHOD:-least_conn}
+    volumes:
+      - ./docker/nginx/templates:/etc/nginx/templates:ro
+      - ./docker/nginx/lb:/etc/nginx/lb:ro
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+      app2:
+        condition: service_started
+      app3:
+        condition: service_started
+
   scheduler:
     image: ecommerce-app
     container_name: ecommerce-scheduler
@@ -83,15 +122,13 @@ services:
       - .:/var/www/html
     environment: *app-environment
     depends_on:
-      app:
-        condition: service_started
+      app-init:
+        condition: service_completed_successfully
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
 
-  # Application cache (Requirement 3). No published port: only the Laravel
-  # containers use it. Data is a cache, so no volume: losing it is harmless.
   redis:
     image: redis:7.4-alpine
     container_name: ecommerce-redis
@@ -102,12 +139,6 @@ services:
       timeout: 3s
       retries: 10
 
-  # Message broker (Requirement 4). Official image with the management plugin:
-  # UI at http://localhost:15672 (bound to 127.0.0.1 only). AMQP (5672) is not
-  # published; only the containers on this network use it.
-  # hostname is fixed on purpose: RabbitMQ stores its data under the node name
-  # rabbit@<hostname>, so a recreated container with a random hostname would
-  # start empty even though the volume is still there.
   rabbitmq:
     image: rabbitmq:4.1-management
     container_name: ecommerce-rabbitmq
@@ -115,28 +146,18 @@ services:
     ports:
       - "127.0.0.1:15672:15672"
     environment:
-      # Credentials come from .env (never committed). Compose refuses to start
-      # without a password, so no default password can end up in use.
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-ecommerce}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
     volumes:
-      # Durable queues, persistent messages, users and vhosts live here, so they
-      # survive `docker compose down` / container recreation (not `down -v`).
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
-      # Healthy only once the node is running and accepts AMQP connections.
       test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
       interval: 10s
       timeout: 10s
       retries: 12
       start_period: 30s
 
-  # Transactional outbox relay (Requirement 4). Reads unpublished rows from
-  # outbox_messages (written in the same transaction as the order) and
-  # publishes them to RabbitMQ as persistent messages with publisher confirms.
-  # A row is marked published only after the broker confirmed it, so stopping
-  # this container, RabbitMQ or the app never loses an event: rows just wait.
   outbox-relay:
     image: ecommerce-app
     container_name: ecommerce-outbox-relay
@@ -146,25 +167,19 @@ services:
       - .:/var/www/html
     environment: *app-environment
     depends_on:
-      app:
-        condition: service_started
+      app-init:
+        condition: service_completed_successfully
       mysql:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
-  # Order confirmation email worker (Requirement 4). Separate from the API: it
-  # only needs RabbitMQ and SMTP, no database. It consumes order.created with
-  # manual ACKs and sends the email through the SMTP server configured by the
-  # MAIL_* variables in .env (e.g. Mailtrap). Stop/start it freely:
-  #   docker compose stop email-worker    /    docker compose start email-worker
-  email-worker:
+  worker1: &worker
     image: ecommerce-app
-    container_name: ecommerce-email-worker
+    container_name: ecommerce-worker1
+    hostname: worker1
     command: ["php", "artisan", "notifications:consume-order-created"]
     restart: unless-stopped
-    # Give an in-flight email time to finish on `docker compose stop`; the
-    # worker stops after the current message (SIGTERM handler).
     stop_grace_period: 30s
     volumes:
       - .:/var/www/html
@@ -175,19 +190,39 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-}
       RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
       PHP_OPCACHE_VALIDATE_TIMESTAMPS: 0
-      # The worker never needs the cache; keep it off Redis and the database.
-      CACHE_STORE: array
-      # MAIL_MAILER, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD,
-      # MAIL_FROM_ADDRESS and MAIL_FROM_NAME are read from .env.
+      ORDER_WORKER_ACTION: ${ORDER_WORKER_ACTION:-db}   # db (default) | email
+      ORDER_WORKER_DB_TASK_MS: ${ORDER_WORKER_DB_TASK_MS:-1000}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: E-commerce
+      DB_USERNAME: root
+      DB_PASSWORD: ""
+      CACHE_STORE: ${ORDER_EMAIL_WORKER_CACHE:-redis}
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+
+  worker2:
+    <<: *worker
+    container_name: ecommerce-worker2
+    hostname: worker2
+
+  worker3:
+    <<: *worker
+    container_name: ecommerce-worker3
+    hostname: worker3
 
   mysql:
     image: mysql:8.0
     container_name: ecommerce-mysql
-    # GTID replication source for the optional read replica below. Binary
-    # logging is already on by default in MySQL 8; server-id 1 is explicit.
     command: ["--server-id=1", "--gtid-mode=ON", "--enforce-gtid-consistency=ON"]
     ports:
       - "3307:3306"
@@ -202,10 +237,6 @@ services:
       timeout: 5s
       retries: 10
 
-  # Optional MySQL read replica (Requirement 3). Not started by default; only
-  # with `docker compose --profile replica up -d mysql-replica`. It copies the
-  # primary through GTID replication and is read-only. One-time setup (copy the
-  # data, point it at the primary) is in docs/performance/DEMO.md.
   mysql-replica:
     image: mysql:8.0
     container_name: ecommerce-mysql-replica
@@ -224,8 +255,6 @@ services:
       timeout: 5s
       retries: 10
 
-  # The Warehouse gRPC service (separate repo). No "ports:" on purpose:
-  # only containers on this network can reach it, users go through Laravel.
   warehouse:
     build:
       context: ${WAREHOUSE_SERVICE_PATH:-../../warehouse-service}
@@ -245,14 +274,9 @@ services:
       timeout: 5s
       retries: 10
 
-  # Warehouse data lives in its own MySQL server and volume, never in
-  # Laravel's database. The "warehouse" user can only see this database.
   warehouse-mysql:
     image: mysql:8.0
     container_name: ecommerce-warehouse-mysql
-    # Bound to 127.0.0.1 only, for the Laravel integration tests run from the
-    # host (tests/Integration). Users still reach stock only through Laravel; the
-    # gRPC service itself publishes no port.
     ports:
       - "127.0.0.1:3308:3306"
     environment:
@@ -268,9 +292,6 @@ services:
       timeout: 5s
       retries: 10
 
-  # phpMyAdmin at http://localhost:8080. Choose the server on the login page:
-  #   mysql           -> Laravel DB    (user root, empty password)
-  #   warehouse-mysql -> Warehouse DB  (user warehouse, password warehouse)
   phpmyadmin:
     image: phpmyadmin:5.2
     container_name: ecommerce-phpmyadmin
@@ -286,6 +307,10 @@ services:
       - warehouse-mysql
 
 volumes:
+  product-images:
+  product-images-app1:
+  product-images-app2:
+  product-images-app3:
   mysql-data:
   mysql-replica-data:
   warehouse-mysql-data:

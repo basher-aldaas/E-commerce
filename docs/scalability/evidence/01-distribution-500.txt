@@ -1,0 +1,26 @@
+# 500 GET /api/v2/products through Nginx (least_conn), 50 concurrent users
+# 2026-11-27 22:17:54 UTC
+# docker run --rm -i --network e-commerce_default grafana/k6:0.54.0 run - < tests/load/distribution.js
+     ✓ status 200
+     █ setup
+       ✓ logged in
+     checks.........................: 100.00% 501 out of 501
+     data_received..................: 1.2 MB  57 kB/s
+     data_sent......................: 235 kB  11 kB/s
+     http_req_blocked...............: avg=111.01µs min=2.28µs   med=7.11µs   max=2.66ms p(90)=140.9µs  p(95)=1ms     
+     http_req_connecting............: avg=87.7µs   min=0s       med=0s       max=2.63ms p(90)=84.21µs  p(95)=629.79µs
+     http_req_duration..............: avg=1.72s    min=578.91ms med=1.59s    max=6.83s  p(90)=2.38s    p(95)=4.24s   
+       { expected_response:true }...: avg=1.72s    min=578.91ms med=1.59s    max=6.83s  p(90)=2.38s    p(95)=4.24s   
+     http_req_failed................: 0.00%   0 out of 501
+     http_req_receiving.............: avg=535.61µs min=41.75µs  med=197.04µs max=6.59ms p(90)=1.34ms   p(95)=1.9ms   
+     http_req_sending...............: avg=190.76µs min=8.38µs   med=25.54µs  max=3.67ms p(90)=137.84µs p(95)=1.7ms   
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s     p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=1.72s    min=578.27ms med=1.59s    max=6.82s  p(90)=2.37s    p(95)=4.24s   
+     http_reqs......................: 501     24.121971/s
+     instance_app1..................: 160     7.703623/s
+     instance_app2..................: 160     7.703623/s
+     instance_app3..................: 180     8.666576/s
+     iteration_duration.............: avg=1.71s    min=579.38ms med=1.59s    max=6.83s  p(90)=2.38s    p(95)=4.24s   
+     iterations.....................: 500     24.073823/s
+     vus............................: 28      min=0          max=50
+     vus_max........................: 50      min=50         max=50

@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\Handler;
+use App\Http\Middleware\InstanceHeader;
 use App\Http\Middleware\RejectMalformedJson;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => null);
 
         $middleware->append(SecurityHeaders::class);
+        $middleware->append(InstanceHeader::class);
         $middleware->throttleApi();
         $middleware->prependToGroup('api', RejectMalformedJson::class);
     })

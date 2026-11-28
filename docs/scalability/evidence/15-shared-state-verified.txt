@@ -1,0 +1,17 @@
+# Verified without a fix: state that lives in MySQL / Redis, shared by all instances
+# 2026-11-27 22:40:55 UTC
+
+######## 1) Same Idempotency-Key, 10 concurrent POST /api/v1/orders through Nginx
+      1 X-Instance: app1 HTTP 201
+      2 X-Instance: app1 HTTP 409
+      4 X-Instance: app2 HTTP 409
+      3 X-Instance: app3 HTTP 409
+rows for that key in order_reservations: 1 reservation(s), 1 order(s)
+(unique (user_id, idempotency_key) in MySQL: whichever instance inserts first wins)
+
+######## 2) Logout on one instance, then the same JWT on all three
+logout: X-Instance: app2 HTTP 200
+      2 X-Instance: app1 HTTP 401
+      2 X-Instance: app2 HTTP 401
+      2 X-Instance: app3 HTTP 401
+(JWT blacklist is kept in the cache store = shared Redis)

@@ -1,0 +1,38 @@
+# دوكير عنده DNS داخلي وظيفته تحويل أسماء الحاويات إلى IP والعكس
+resolver 127.0.0.11 valid=5s ipv6=off;
+
+# تعريف مجموعة السيرفرات يلي لح يتم توزيع الطلبات عليها
+upstream ecommerce_app {
+    zone ecommerce_app 64k;
+    include /etc/nginx/lb/${LB_METHOD}.conf; # اختيار طريقة توزيع الأحمال
+
+    server app:8000  resolve max_fails=1 fail_timeout=10s;
+    server app2:8000 resolve max_fails=1 fail_timeout=10s;
+    server app3:8000 resolve max_fails=1 fail_timeout=10s;
+}
+
+# إعدادات السيرفر الرئيسي تبع Nginx
+server {
+    listen 80;
+
+    client_max_body_size 10m;
+
+    location / {
+        proxy_pass http://ecommerce_app; # تمرير الطلب إلى مجموعة السيرفرات يلي عرفناها سابقاً
+        proxy_http_version 1.1;
+
+        # وقت المستخدم يبعت طلب للارافيل فالموزع لح يوديلو ياه وبس يصل النتيجة للموزع لازم يكون في شي يدلو عالمستخدم يلي طلبه
+        proxy_set_header Host              $http_host; # اسم المضيف الأصلي مثل لوكال هوست أو الاستضافة
+        proxy_set_header X-Real-IP         $remote_addr; # عنوان الـ IP الحقيقي للمستخدم
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for; # سلسلة عناوين الـ IP يلي مر فيها الطلب
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 2s; # وقت يدل على أن Nginx لديه ثانيتين لإنشاء اتصال مع نسخة Laravel
+        proxy_read_timeout    60s; # بعد إنشاء الاتصال بنسخة Laravel، إذا لم تصل بيانات خلال 60 ثانية تنتهي المهلة
+
+        proxy_next_upstream       error timeout http_502 http_503; # إذا نسخة معينة فشلت، يحاول إرسال الطلب لنسخة أخرى
+        proxy_next_upstream_tries 3;
+
+        add_header X-Upstream $upstream_addr always; # إضافة Header لمعرفة أي نسخة استلمت الطلب
+    }
+}

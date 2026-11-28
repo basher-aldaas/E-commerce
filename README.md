@@ -198,7 +198,7 @@ docker compose exec app php artisan jwt:secret
 بعد ذلك أعد تشغيل Laravel:
 
 ```powershell
-docker compose restart app
+docker compose restart app app2 app3
 ```
 
 ---
@@ -450,22 +450,30 @@ docker compose unpause warehouse
 المقارنة ترسل نحو 300 طلب، أكثر من حد 60 طلباً في الدقيقة، فشغّلها هكذا:
 
 ```powershell
-$env:API_RATE_LIMIT_PER_MINUTE="100000"; docker compose up -d app        # الكاش مفعّل
-$env:PRODUCT_CACHE_ENABLED="false"; docker compose up -d app             # بدون كاش (X-Cache: OFF)
-Remove-Item Env:PRODUCT_CACHE_ENABLED, Env:API_RATE_LIMIT_PER_MINUTE; docker compose up -d app   # الإعدادات الافتراضية
+$env:API_RATE_LIMIT_PER_MINUTE="100000"; docker compose up -d app app2 app3        # الكاش مفعّل
+$env:PRODUCT_CACHE_ENABLED="false"; docker compose up -d app app2 app3             # بدون كاش (X-Cache: OFF)
+Remove-Item Env:PRODUCT_CACHE_ENABLED, Env:API_RATE_LIMIT_PER_MINUTE; docker compose up -d app app2 app3   # الإعدادات الافتراضية
 ```
 
 ### OPcache وزمن الاستجابة
 
-`PHP_OPCACHE_VALIDATE_TIMESTAMPS=0` في `docker-compose.yml`: زمن طلب ثابت (~0.25 ثانية)، لكن بعد تعديل كود PHP نفّذ `docker compose restart app`. القيمة 1 تطبّق التعديلات فوراً، لكن كل طلب يصبح أبطأ بـ 1-2 ثانية على Windows bind mount.
+`PHP_OPCACHE_VALIDATE_TIMESTAMPS=0` في `docker-compose.yml`: زمن طلب ثابت (~0.25 ثانية)، لكن بعد تعديل كود PHP نفّذ `docker compose restart app app2 app3`. القيمة 1 تطبّق التعديلات فوراً، لكن كل طلب يصبح أبطأ بـ 1-2 ثانية على Windows bind mount.
 
 ## 10.7 RabbitMQ والبريد غير المتزامن (Requirement 4)
 
-إنشاء الطلب يحفظ الطلب وحدث `order.created` في نفس transaction (Transactional Outbox) ويرجع 201 فوراً. حاوية `outbox-relay` تنشر الحدث إلى RabbitMQ، وحاوية `email-worker` المستقلة ترسل بريد التأكيد عبر SMTP (Mailtrap) وتعمل ACK بعد نجاح الإرسال فقط، مع 3 إعادات ثم DLQ.
+إنشاء الطلب يحفظ الطلب وحدث `order.created` في نفس transaction (Transactional Outbox) ويرجع 201 فوراً. حاوية `outbox-relay` تنشر الحدث إلى RabbitMQ، وحاويات العمّال المستقلة `worker1` و`worker2` و`worker3` ترسل بريد التأكيد عبر SMTP (Mailtrap) وتعمل ACK بعد نجاح الإرسال فقط، مع 3 إعادات ثم DLQ.
 
 - واجهة RabbitMQ: http://localhost:15672 (بيانات الدخول `RABBITMQ_USER` / `RABBITMQ_PASSWORD` من `.env`).
-- `docker compose stop email-worker` / `docker compose start email-worker` لا يؤثران على الـ API.
+- `docker compose stop worker1 worker2 worker3` / `docker compose start worker1 worker2 worker3` لا يؤثران على الـ API.
 - الإعداد الكامل (SMTP، المراقبة، DLQ، اختبارات القبول ونتائجها): [`docs/messaging/README.md`](docs/messaging/README.md).
+
+## 10.8 التوسع وتوزيع الأحمال (Requirement 5)
+
+ثلاث نسخ من الـ API (`app`, `app2`, `app3`) خلف Nginx بطريقة `least_conn`، والمنفذ نفسه `http://localhost:8000`. كل استجابة تحمل `X-Instance` باسم النسخة. ثلاثة عمّال (`worker1`-`worker3`) على نفس الطابور. `app-init` يشغّل الـ migrations والـ seed مرة واحدة قبل النسخ.
+
+- 500 طلب: 0% فشل، موزّعة 160 / 160 / 180. إيقاف نسختين أثناء 1500 طلب: 0% فشل.
+- العمّال يعملون افتراضياً على `ORDER_WORKER_ACTION=db` (مهمة قاعدة بيانات بدل البريد، بلا Mailtrap). لإرسال بريد التأكيد: `$env:ORDER_WORKER_ACTION='email'; docker compose up -d worker1 worker2 worker3; Remove-Item Env:ORDER_WORKER_ACTION`.
+- الاستراتيجية، الإثبات تحت الضغط، وكل مشكلة قبل الإصلاح وبعده: [`docs/scalability/README.md`](docs/scalability/README.md).
 
 ---
 
@@ -512,7 +520,7 @@ docker compose logs -f
 ### Restart Laravel
 
 ```powershell
-docker compose restart app
+docker compose restart app app2 app3
 ```
 
 ### Enter Laravel Container

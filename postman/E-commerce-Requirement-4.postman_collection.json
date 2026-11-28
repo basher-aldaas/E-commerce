@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "E-commerce - Requirement 4 (Async email via RabbitMQ)",
-    "description": "Logs in as a customer and places an order. The API must answer 201 at once: it only stores the order and an order.created outbox row. The email is sent later by the email-worker container. Run it N times (Postman Runner iterations, or newman -n 5) to create several orders. baseUrl: http://localhost:8000 from the host, http://app:8000 from a container on the compose network.",
+    "description": "Logs in as a customer and places an order. The API must answer 201 at once: it only stores the order and an order.created outbox row. The email is sent later by the worker containers (worker1, worker2, worker3). Run it N times (Postman Runner iterations, or newman -n 5) to create several orders. baseUrl: http://localhost:8000 from the host, http://app:8000 from a container on the compose network.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

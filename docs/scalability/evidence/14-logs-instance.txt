@@ -1,0 +1,18 @@
+# Shared storage/logs/laravel.log: which instance wrote each entry?
+
+######## BEFORE (2026-11-27 22:01, registration handled by X-Instance: app3): no instance in the entry
+[2026-11-27 22:01:34] local.DEBUG: From: E-commerce <orders@dukkan.test>
+   ...
+</html>  
+
+######## AFTER (Log::shareContext in App\Http\Middleware\InstanceHeader): every entry ends with the instance
+[2026-11-27 22:02:38] local.DEBUG: From: E-commerce <orders@dukkan.test>
+   ...
+</html> {"instance":"app2"} 
+
+Every HTTP (local.*) entry from 22:02:38 to the end of the load tests, by instance:
+    116 "instance":"app1"
+    114 "instance":"app2"
+    118 "instance":"app3"
+local.* entries: 349   (testing.* entries come from PHPUnit, not from an instance)
+The 1 local.* entry without an instance is the 22:36:20 'migrations already exists' error from the migrate-race demo (12-migrate-race.txt): an artisan command, not an HTTP request, so the middleware never ran.

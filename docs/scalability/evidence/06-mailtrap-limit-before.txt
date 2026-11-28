@@ -1,0 +1,16 @@
+== worker1
+[2026-11-27 20:21:47] message 787c425e-e4c6-4858-b439-323f667f6e60 attempt 1 -> retried
+== worker2
+[2026-11-27 20:21:35] message 451278d3-c852-457d-8a93-bee4bb5b9842 attempt 1 -> acked
+[2026-11-27 20:21:44] message 959d2def-c783-459e-9485-63fbe0ab450a attempt 2 -> acked
+[2026-11-27 20:21:59] message 787c425e-e4c6-4858-b439-323f667f6e60 attempt 3 -> acked
+== worker3
+[2026-11-27 20:21:43] message 959d2def-c783-459e-9485-63fbe0ab450a attempt 1 -> retried
+[2026-11-27 20:21:56] message 787c425e-e4c6-4858-b439-323f667f6e60 attempt 2 -> retried
+== storage/logs/order-email-worker.log
+[2026-11-27 20:21:35] local.INFO: Order confirmation email sent and acknowledged {"message_id":"451278d3-c852-457d-8a93-bee4bb5b9842","attempt":1,"max_attempts":4,"event_id":"451278d3-c852-457d-8a93-bee4bb5b9842","order_id":1,"to":"user@system.com","email_message_id":"451278d3-c852-457d-8a93-bee4bb5b9842@order-events.dukkan","smtp_reply":"250 2.0.0 Ok: queued"} 
+[2026-11-27 20:21:41] local.ERROR: Order confirmation email failed; returning the message for a retry {"message_id":"959d2def-c783-459e-9485-63fbe0ab450a","attempt":1,"max_attempts":4,"event_id":"959d2def-c783-459e-9485-63fbe0ab450a","order_id":2,"error_class":"Symfony\\Component\\Mailer\\Exception\\UnexpectedResponseException","error":"Expected response code \"354\" but got code \"550\", with message \"550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing\"."} 
+[2026-11-27 20:21:44] local.INFO: Order confirmation email sent and acknowledged {"message_id":"959d2def-c783-459e-9485-63fbe0ab450a","attempt":2,"max_attempts":4,"event_id":"959d2def-c783-459e-9485-63fbe0ab450a","order_id":2,"to":"user@system.com","email_message_id":"959d2def-c783-459e-9485-63fbe0ab450a@order-events.dukkan","smtp_reply":"250 2.0.0 Ok: queued"} 
+[2026-11-27 20:21:45] local.ERROR: Order confirmation email failed; returning the message for a retry {"message_id":"787c425e-e4c6-4858-b439-323f667f6e60","attempt":1,"max_attempts":4,"event_id":"787c425e-e4c6-4858-b439-323f667f6e60","order_id":3,"error_class":"Symfony\\Component\\Mailer\\Exception\\UnexpectedResponseException","error":"Expected response code \"354\" but got code \"550\", with message \"550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing\"."} 
+[2026-11-27 20:21:52] local.ERROR: Order confirmation email failed; returning the message for a retry {"message_id":"787c425e-e4c6-4858-b439-323f667f6e60","attempt":2,"max_attempts":4,"event_id":"787c425e-e4c6-4858-b439-323f667f6e60","order_id":3,"error_class":"Symfony\\Component\\Mailer\\Exception\\UnexpectedResponseException","error":"Expected response code \"354\" but got code \"550\", with message \"550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing\"."} 
+[2026-11-27 20:21:59] local.INFO: Order confirmation email sent and acknowledged {"message_id":"787c425e-e4c6-4858-b439-323f667f6e60","attempt":3,"max_attempts":4,"event_id":"787c425e-e4c6-4858-b439-323f667f6e60","order_id":3,"to":"user@system.com","email_message_id":"787c425e-e4c6-4858-b439-323f667f6e60@order-events.dukkan","smtp_reply":"250 2.0.0 Ok: queued"} 

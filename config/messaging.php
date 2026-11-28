@@ -28,6 +28,12 @@ return [
             'max_retries' => (int) env('ORDER_EMAIL_MAX_RETRIES', 3),
             'retry_backoff_ms' => (int) env('ORDER_EMAIL_RETRY_BACKOFF_MS', 2000),
             'min_interval_ms' => (int) env('ORDER_EMAIL_MIN_INTERVAL_MS', 0),
+            // Requirement 5: what the workers do with each order.created message.
+            // email = send the confirmation email (Requirement 4, the default).
+            // db    = a slow database task instead (OrderStatsDbTask), to load
+            //         test the three workers without Mailtrap's sending limit.
+            'worker_action' => env('ORDER_WORKER_ACTION', 'email'),
+            'db_task_ms' => (int) env('ORDER_WORKER_DB_TASK_MS', 1000),
         ],
     ],
 

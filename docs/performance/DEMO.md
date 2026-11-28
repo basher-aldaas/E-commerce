@@ -21,7 +21,7 @@ three patterns are different:
 
 | Git Bash | PowerShell |
 |---|---|
-| `X=value docker compose up -d app` | `$env:X='value'; docker compose up -d app; Remove-Item Env:X` (remove it, or it stays set for every later command in that window) |
+| `X=value docker compose up -d app app2 app3` | `$env:X='value'; docker compose up -d app app2 app3; Remove-Item Env:X` (remove it, or it stays set for every later command in that window) |
 | `docker run … run - < tests/load/orders.js` | `Get-Content tests/load/orders.js -Raw \| docker run --rm -i … run -` |
 | the `mysqldump … \| mysql` copy and SQL with \` quotes (replica setup) | run those in Git Bash: PowerShell re-encodes piped data and uses \` as its escape character |
 
@@ -62,8 +62,8 @@ For the load tests, raise the API rate limit (normally 60/min per user), and
 put it back afterwards:
 
 ```bash
-API_RATE_LIMIT_PER_MINUTE=100000 docker compose up -d app   # before k6
-docker compose up -d app                                    # afterwards (back to 60)
+API_RATE_LIMIT_PER_MINUTE=100000 docker compose up -d app app2 app3   # before k6
+docker compose up -d app app2 app3                                    # afterwards (back to 60)
 ```
 
 ---
@@ -169,7 +169,7 @@ File: `Modules/Orders/app/Http/Controllers/PerfOrdersController.php`
    $implementation = 'B: lazy loading (N+1)';
    ```
 3. **Restart the app** — OPcache does not re-read PHP files:
-   `docker compose restart app`  (~5 s)
+   `docker compose restart app app2 app3`  (~5 s)
 4. Call the endpoint again (Postman, or the browser's DevTools with an admin token).
 
 To go back, do the reverse and restart again. Exactly one of the two blocks may
@@ -205,8 +205,8 @@ and `Server-Timing: catalog;dur=…` (database or Redis time) and
 
 - In the web UI: admin → **System** → **Compare HIT vs bypass**; or open the
   demo panel (`http://localhost:8000/?demo=1`) and watch the requests.
-- Whole-app switch: `PRODUCT_CACHE_ENABLED=false docker compose up -d app`
-  (responses say `X-Cache: OFF`), then `docker compose up -d app` to restore.
+- Whole-app switch: `PRODUCT_CACHE_ENABLED=false docker compose up -d app app2 app3`
+  (responses say `X-Cache: OFF`), then `docker compose up -d app app2 app3` to restore.
 - Load test, same URLs in both modes:
   ```bash
   docker run --rm -i --network e-commerce_default -e MODE=bypass grafana/k6:0.54.0 run - < tests/load/catalog.js
@@ -358,10 +358,10 @@ still waiting.
 
 | State | Command |
 |---|---|
-| Before: no replica, all reads on one server | `docker compose up -d app` (DB_READ_HOST empty) |
-| After: catalog misses and bypasses read the replica | `DB_READ_HOST=mysql-replica docker compose up -d app` |
+| Before: no replica, all reads on one server | `docker compose up -d app app2 app3` (DB_READ_HOST empty) |
+| After: catalog misses and bypasses read the replica | `DB_READ_HOST=mysql-replica docker compose up -d app app2 app3` |
 
-PowerShell: `$env:DB_READ_HOST='mysql-replica'; docker compose up -d app; Remove-Item Env:DB_READ_HOST`.
+PowerShell: `$env:DB_READ_HOST='mysql-replica'; docker compose up -d app app2 app3; Remove-Item Env:DB_READ_HOST`.
 
 ### What to show
 
@@ -403,7 +403,7 @@ with this design yet. Expected: while the replica lags, catalog reads show
 they show `replica` again. The earlier runs in `replica/read-your-writes.txt` and
 `repro-2026-11-14/replica.txt` used the previous design (per-user read-your-writes window).
 
-To stop: `docker compose up -d app` (back to one server), then
+To stop: `docker compose up -d app app2 app3` (back to one server), then
 `docker compose --profile replica stop mysql-replica` (data kept).
 
 ---

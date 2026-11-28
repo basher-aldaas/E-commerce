@@ -22,7 +22,7 @@
    │
 [RabbitMQ]       يحفظ الرسالة على القرص في queue دائم
    │
-[email-worker]   يستلم الرسالة → يرسل البريد → ACK  (أو يعيدها عند الفشل، وبعد 4 مرات → DLQ)
+[worker1..3]     يستلم الرسالة → يرسل البريد → ACK  (أو يعيدها عند الفشل، وبعد 4 مرات → DLQ)
 ```
 
 | الطبقة | الكلاسات |
@@ -392,7 +392,7 @@ ecommerce.events.dlx (topic, durable)
 ### 3.1 `ConsumeOrderCreatedEmails` (أمر Artisan)
 
 **المكان:** `Modules/Notifications/app/Console/ConsumeOrderCreatedEmails.php`
-**الأمر:** `php artisan notifications:consume-order-created` (حاوية `email-worker`)
+**الأمر:** `php artisan notifications:consume-order-created` (حاويات `worker1` و`worker2` و`worker3`)
 
 ```php
 while (! $this->stopping) {

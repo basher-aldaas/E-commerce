@@ -1,0 +1,42 @@
+# 1500 GET /api/v2/products through Nginx (least_conn), 50 users; instances stopped while the load runs
+# 2026-11-27 22:29:23 UTC
+
+== timeline
+22:29:39 +16s  docker compose stop app2      (graceful)
+22:29:49 +26s  app2 stopped
+22:30:04 +42s  docker kill ecommerce-app3      (abrupt, only app1 left)
+22:30:20 +57s  docker compose start app2 app3
+22:30:40 +77s  app2 app3 started
+22:30:40 +77s  k6 finished
+
+== k6 summary
+     ✓ status 200
+     █ setup
+       ✓ logged in
+     checks.........................: 100.00% 1501 out of 1501
+     data_received..................: 3.4 MB  66 kB/s
+     data_sent......................: 705 kB  14 kB/s
+     http_req_blocked...............: avg=57.44µs  min=2.3µs    med=6.97µs   max=4.07ms p(90)=14.94µs p(95)=44.3µs  
+     http_req_connecting............: avg=39.2µs   min=0s       med=0s       max=4ms    p(90)=0s      p(95)=0s      
+     http_req_duration..............: avg=1.59s    min=482.85ms med=1.52s    max=4.64s  p(90)=2.34s   p(95)=2.58s   
+       { expected_response:true }...: avg=1.59s    min=482.85ms med=1.52s    max=4.64s  p(90)=2.34s   p(95)=2.58s   
+     http_req_failed................: 0.00%   0 out of 1501
+     http_req_receiving.............: avg=454.16µs min=41.73µs  med=171.69µs max=7.71ms p(90)=1.12ms  p(95)=1.59ms  
+     http_req_sending...............: avg=63.04µs  min=7.78µs   med=24.33µs  max=3.36ms p(90)=63.41µs p(95)=127.07µs
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s     p(90)=0s      p(95)=0s      
+     http_req_waiting...............: avg=1.59s    min=482.68ms med=1.52s    max=4.64s  p(90)=2.34s   p(95)=2.58s   
+     http_reqs......................: 1501    29.008739/s
+     instance_app1..................: 741     14.32077/s
+     instance_app2..................: 275     5.314726/s
+     instance_app3..................: 484     9.353917/s
+     iteration_duration.............: avg=1.59s    min=483.08ms med=1.52s    max=4.64s  p(90)=2.33s   p(95)=2.53s   
+     iterations.....................: 1500    28.989413/s
+     vus............................: 15      min=0            max=50
+     vus_max........................: 50      min=50           max=50
+
+== nginx error log between 22:29:23 and 22:30:41, grouped by kind
+     42 upstream server temporarily disabled while reading response header from upstream
+     24 recv() failed (104: Connection reset by peer) while reading response header from upstream
+     18 upstream prematurely closed connection while reading response header from upstream
+      7 app2 could not be resolved (container stopped, DNS gone)
+      4 app3 could not be resolved (container stopped, DNS gone)

@@ -22,7 +22,7 @@
                      notifications.order-created.email  (quorum, durable, x-delivery-limit=3)
                                        │ prefetch 1, manual ACK
                                        ▼
-                       email-worker (php artisan notifications:consume-order-created) ──SMTP──► Mailtrap
+                       worker1-3 (php artisan notifications:consume-order-created) ──SMTP──► Mailtrap
                                        │ بعد آخر محاولة فاشلة (الوسيط نفسه)
                                        ▼
                      ecommerce.events.dlx (topic) ──► notifications.order-created.email.dlq (classic, durable)
@@ -32,7 +32,7 @@
 |---|---|---|---|
 | `app` | `php artisan serve` | MySQL, Warehouse | يحفظ الطلب وحدث `order.created` في نفس الـ transaction. لا يرسل بريداً ولا يتصل بـ RabbitMQ |
 | `outbox-relay` | `php artisan outbox:relay` | MySQL, RabbitMQ | ينشر صفوف الـ outbox غير المنشورة، ويعلّمها منشورة بعد تأكيد الوسيط فقط |
-| `email-worker` | `php artisan notifications:consume-order-created` | RabbitMQ, SMTP (بلا قاعدة بيانات) | يستهلك الحدث، يرسل البريد، ثم ACK |
+| `worker1`-`worker3` | `php artisan notifications:consume-order-created` | RabbitMQ, SMTP, Redis (وMySQL لمهمة `ORDER_WORKER_ACTION=db` فقط) | يستهلك الحدث، يرسل البريد، ثم ACK |
 | `rabbitmq` | `rabbitmq:4.1-management` | Volume `rabbitmq-data` | الوسيط + واجهة الإدارة |
 
 ### الملفات
@@ -117,7 +117,7 @@ ORDER_EMAIL_RETRY_BACKOFF_MS=2000    # انتظار 2s × رقم المحاول�
 ORDER_EMAIL_MIN_INTERVAL_MS=15000    # Mailtrap المجاني يرفض الإرسال المتقارب (550 Too many emails per second)
 ```
 
-قيم Mailtrap: **Email Testing → Inboxes → (inbox) → SMTP Settings**. بعد تغيير `.env`: `docker compose up -d --force-recreate email-worker`.
+قيم Mailtrap: **Email Testing → Inboxes → (inbox) → SMTP Settings**. بعد تغيير `.env`: `docker compose up -d --force-recreate worker1 worker2 worker3`.
 
 > تغيير `ORDER_EMAIL_MAX_RETRIES` بعد إنشاء الـ queue يحتاج حذف `notifications.order-created.email` من الواجهة (وسائط الـ queue لا تتغير). الـ Worker أو الـ relay يعيد تعريفه.
 
@@ -125,18 +125,25 @@ ORDER_EMAIL_MIN_INTERVAL_MS=15000    # Mailtrap المجاني يرفض الإر
 
 ```powershell
 docker compose build app          # يضيف ext-sockets (مرة واحدة)
-docker compose up -d              # rabbitmq + outbox-relay + email-worker مع باقي الخدمات
+docker compose up -d              # rabbitmq + outbox-relay + worker1-3 مع باقي الخدمات
 docker compose ps                 # rabbitmq يجب أن يكون (healthy)
 ```
+
+> **العمّال يعملون افتراضياً على مهمة قاعدة بيانات (`ORDER_WORKER_ACTION=db`، Requirement 5) ولا يرسلون بريداً.** قبل اختبارات هذا الملف شغّلهم على البريد، وبعدها أرجعهم:
+>
+> ```powershell
+> $env:ORDER_WORKER_ACTION='email'; docker compose up -d worker1 worker2 worker3; Remove-Item Env:ORDER_WORKER_ACTION
+> docker compose up -d worker1 worker2 worker3      # الرجوع إلى db
+> ```
 
 ## 5. تشغيل وإيقاف الـ Worker
 
 ```powershell
-docker compose stop email-worker       # إيقاف نظيف: يكمل الرسالة الحالية ثم يخرج ("Email worker stopped.")
-docker compose start email-worker
-docker compose restart email-worker    # بعد تعديل كود PHP (OPcache)
-docker compose logs -f email-worker    # سطر لكل رسالة: attempt N -> acked / retried / rejected
-docker kill -s KILL ecommerce-email-worker   # موت مفاجئ (للاختبار): الرسالة غير المؤكدة تعود للـ queue
+docker compose stop worker1 worker2 worker3       # إيقاف نظيف: يكمل الرسالة الحالية ثم يخرج ("Email worker stopped.")
+docker compose start worker1 worker2 worker3
+docker compose restart worker1 worker2 worker3    # بعد تعديل كود PHP (OPcache)
+docker compose logs -f worker1 worker2 worker3    # سطر لكل رسالة: attempt N -> acked / retried / rejected
+docker kill -s KILL ecommerce-worker1   # موت مفاجئ (للاختبار): الرسالة غير المؤكدة تعود للـ queue
 ```
 
 الـ relay بنفس الطريقة (`outbox-relay`). إيقاف أي منهما لا يؤثر على الـ API.
@@ -164,7 +171,7 @@ docker compose exec mysql mysql -uroot E-commerce -e "SELECT id,type,aggregate_i
 ### إعادة رسائل الـ DLQ بعد إصلاح السبب
 
 ```powershell
-docker compose exec email-worker php artisan notifications:replay-dead-letters --limit=10
+docker compose exec worker1 php artisan notifications:replay-dead-letters --limit=10
 ```
 
 كل رسالة تُنشر من جديد إلى `ecommerce.events` (persistent، مع confirm)، ولا تُحذف من الـ DLQ إلا بعد تأكيد الوسيط. النسخة تبدأ بعدّاد محاولات جديد، وتحمل `x-replay-count` و `x-replayed-death-reason`.
@@ -181,10 +188,10 @@ docker run --rm --network e-commerce_default -v "${PWD}/postman:/etc/newman" pos
 
 | # | السيناريو | الأوامر | المتوقع |
 |---|---|---|---|
-| 1 | طلب عادي | newman `-n 1` ثم `docker compose logs email-worker` | 201، صف outbox `published_at` مملوء، `attempt 1 -> acked`، البريد في Mailtrap |
-| 2 | Worker متوقف + 5 طلبات | `docker compose stop email-worker`، newman `-n 5`، `rabbitmqctl list_queues`، `docker compose start email-worker` | 5 طلبات 201، Ready=5 Consumers=0، ثم 5 `acked` و Ready=0 |
-| 3 | موت قبل ACK | أوقف الـ Worker، طلبان، شغّله، عندما `unacked=1` نفّذ `docker kill -s KILL ecommerce-email-worker`، ثم `start` | بعد القتل Ready=1، بعد التشغيل نفس `message_id` بـ `attempt 2 -> acked` |
-| 4 | فشل SMTP | `docker compose stop email-worker` ثم `docker compose run -d --no-deps --name ecommerce-email-worker-broken -e MAIL_HOST=smtp.invalid -e ORDER_EMAIL_MIN_INTERVAL_MS=0 email-worker`، طلب واحد | 4 محاولات (`retried`)، ثم DLQ Ready=1 مع `x-first-death-reason=delivery_limit`، والخطأ في `order-email-worker.log`. بعدها `docker rm -f ecommerce-email-worker-broken` |
+| 1 | طلب عادي | newman `-n 1` ثم `docker compose logs worker1 worker2 worker3` | 201، صف outbox `published_at` مملوء، `attempt 1 -> acked`، البريد في Mailtrap |
+| 2 | Worker متوقف + 5 طلبات | `docker compose stop worker1 worker2 worker3`، newman `-n 5`، `rabbitmqctl list_queues`، `docker compose start worker1 worker2 worker3` | 5 طلبات 201، Ready=5 Consumers=0، ثم 5 `acked` و Ready=0 |
+| 3 | موت قبل ACK | أوقف الـ Worker، طلبان، شغّله، عندما `unacked=1` نفّذ `docker kill -s KILL ecommerce-worker1`، ثم `start` | بعد القتل Ready=1، بعد التشغيل نفس `message_id` بـ `attempt 2 -> acked` |
+| 4 | فشل SMTP | `docker compose stop worker1 worker2 worker3` ثم `docker compose run -d --no-deps --name ecommerce-email-worker-broken -e MAIL_HOST=smtp.invalid -e ORDER_EMAIL_MIN_INTERVAL_MS=0 worker1`، طلب واحد | 4 محاولات (`retried`)، ثم DLQ Ready=1 مع `x-first-death-reason=delivery_limit`، والخطأ في `order-email-worker.log`. بعدها `docker rm -f ecommerce-email-worker-broken` |
 | 5 | إعادة إنشاء RabbitMQ | Worker متوقف، 3 طلبات، `docker compose stop rabbitmq; docker compose rm -f rabbitmq; docker compose up -d rabbitmq` | container id جديد، نفس الـ queues ونفس الرسائل (و الـ DLQ)، ثم المعالجة عند تشغيل الـ Worker |
 
 > **لا تحقن فشل SMTP بكلمة مرور خاطئة.** محاولات الدخول الفاشلة المتكررة تقفل حساب Mailtrap مؤقتاً (`535 5.7.0 Too many failed login attempts`)، فيفشل حتى الـ Worker الصحيح. استخدم `MAIL_HOST=smtp.invalid` (نطاق محجوز لا يوجد، فشل DNS بدون أي محاولة دخول).

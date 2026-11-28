@@ -1,0 +1,53 @@
+# Mixed load: 200 orders (POST, Warehouse gRPC, slow) + 500 catalog reads (GET, fast) at the same time
+# Nginx switched with: LB_METHOD=<method> docker compose up -d --no-deps nginx
+# 2026-11-27 22:21:54 UTC
+
+################ LB_METHOD=round_robin  (nginx include: include /etc/nginx/lb/round_robin.conf; # اختيار طريقة توزيع الأحمال)
+== catalog (500 GET, 50 users) while 200 orders run
+     checks.........................: 100.00% 501 out of 501
+     http_req_duration..............: avg=2.12s    min=523.87ms med=1.97s    max=4.46s   p(90)=3.05s    p(95)=3.51s   
+     http_req_failed................: 0.00%   0 out of 501
+     instance_app1..................: 161     6.305327/s
+     instance_app2..................: 170     6.657798/s
+     instance_app3..................: 169     6.618635/s
+== orders (200 POST, 20 users)
+     checks.........................: 100.00% 201 out of 201
+     http_req_duration..............: avg=2.88s    min=1.06s   med=2.88s    max=6.4s     p(90)=4.44s    p(95)=4.87s   
+     http_req_failed................: 0.00%   0 out of 201
+
+################ LB_METHOD=least_conn  (nginx include: include /etc/nginx/lb/least_conn.conf; # اختيار طريقة توزيع الأحمال)
+== catalog (500 GET, 50 users) while 200 orders run
+     checks.........................: 100.00% 501 out of 501
+     http_req_duration..............: avg=2.03s    min=646.75ms med=1.91s   max=5.39s  p(90)=2.77s    p(95)=2.97s   
+     http_req_failed................: 0.00%   0 out of 501
+     instance_app1..................: 165     7.210284/s
+     instance_app2..................: 162     7.079188/s
+     instance_app3..................: 173     7.559873/s
+== orders (200 POST, 20 users)
+     checks.........................: 100.00% 201 out of 201
+     http_req_duration..............: avg=2.74s    min=515.81ms med=2.71s    max=6.58s  p(90)=3.83s    p(95)=5.03s   
+     http_req_failed................: 0.00%   0 out of 201
+
+======== second run of each method (stock reset to 1000 first) ========
+################ LB_METHOD=round_robin (run 2)
+== catalog
+     http_req_duration..............: avg=2s       min=448.98ms med=1.96s    max=3.03s   p(90)=2.56s    p(95)=2.74s   
+     http_req_failed................: 0.00%   0 out of 501
+     instance_app1..................: 164     7.325452/s
+     instance_app2..................: 165     7.370119/s
+     instance_app3..................: 171     7.638123/s
+== orders
+     http_req_duration..............: avg=2.47s   min=696.04ms med=2.52s    max=5.51s    p(90)=3.08s    p(95)=3.38s   
+     http_req_failed................: 0.00%   0 out of 201
+
+################ LB_METHOD=least_conn (run 2)
+== catalog
+     http_req_duration..............: avg=2.19s    min=600.82ms med=2.21s    max=3.34s   p(90)=2.78s    p(95)=2.93s   
+     http_req_failed................: 0.00%   0 out of 501
+     instance_app1..................: 163     6.824407/s
+     instance_app2..................: 178     7.45242/s
+     instance_app3..................: 159     6.656937/s
+== orders
+     http_req_duration..............: avg=2.62s    min=541.55ms med=2.65s    max=5.57s  p(90)=3.32s    p(95)=3.59s   
+     http_req_failed................: 0.00%   0 out of 201
+

@@ -2,17 +2,20 @@
 
 namespace Modules\Notifications\Messaging;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Modules\Notifications\Services\OrderConfirmationSender;
+use Modules\Notifications\Services\OrderStatsDbTask;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use Throwable;
 
 class OrderCreatedEmailConsumer
 {
-    private float $lastSendAt = 0.0;
-
-    public function __construct(private readonly OrderConfirmationSender $sender) {}
+    public function __construct(
+        private readonly OrderConfirmationSender $sender,
+        private readonly OrderStatsDbTask $dbTask,
+    ) {}
 
     public function handle(AMQPMessage $message): DeliveryOutcome
     {
@@ -22,6 +25,7 @@ class OrderCreatedEmailConsumer
             'message_id' => $message->has('message_id') ? $message->get('message_id') : null,
             'attempt' => $attempt,
             'max_attempts' => $maxAttempts,
+            'worker' => gethostname(),//اسم العامل يلي عالج الرسالة (worker1 / worker2 / worker3)
         ];
 
         try {
@@ -37,13 +41,14 @@ class OrderCreatedEmailConsumer
 
         $context += ['event_id' => $event->eventId, 'order_id' => $event->orderId];
 
-        //تحديد سرعه ارسال الرساىل لل mailtrap  من شان ما ينحظر
-        $this->respectRateLimit();
-
         //ارسال الايميلات ومعالجة الفشل
         //هون المنطق يلي بعيد الارسال
         try {
-            $receipt = $this->sender->send($event);
+            // ORDER_WORKER_ACTION=db: مهمة قاعدة بيانات بدل الإيميل لاختبار العمال
+            //تحديد سرعه ارسال الرساىل لل mailtrap  من شان ما ينحظر
+            $receipt = self::usesDbTask()
+                ? $this->dbTask->run($event)
+                : $this->sendInTurn(fn () => $this->sender->send($event));
         } catch (Throwable $e) {
             $final = $attempt >= $maxAttempts;
 
@@ -67,7 +72,9 @@ class OrderCreatedEmailConsumer
 
         $message->ack();
 
-        Log::channel('order_email_worker')->info('Order confirmation email sent and acknowledged', $context + [
+        Log::channel('order_email_worker')->info(self::usesDbTask()
+            ? 'Order event processed by the database task and acknowledged'
+            : 'Order confirmation email sent and acknowledged', $context + [
             'to' => $event->customerEmail,
         ] + $receipt);
 
@@ -82,16 +89,36 @@ class OrderCreatedEmailConsumer
         return (int) ($data['x-delivery-count'] ?? 0) + 1;
     }
 
-    private function respectRateLimit(): void
+    // وقت آخر إرسال محفوظ في Redis مش بذاكرة العامل، لأنو في 3 عمال (المتطلب 5)
+    // العامل بيمسك القفل وهو عم يبعت، وبيسجل الوقت بعد ما يخلص الإرسال،
+    // فبين نهاية كل ايميل وبداية يلي بعدو في مهلة كاملة مهما كان عدد العمال
+    private function sendInTurn(callable $send): mixed
     {
-        $interval = max(0, (int) config('messaging.topology.order_created_email.min_interval_ms')) / 1000;
-        $wait = $this->lastSendAt + $interval - microtime(true);
+        $interval = max(0, (int) config('messaging.topology.order_created_email.min_interval_ms'));
 
-        if ($wait > 0) {
-            usleep((int) ($wait * 1_000_000));
+        if ($interval === 0) {
+            return $send();
         }
 
-        $this->lastSendAt = microtime(true);
+        // عمر القفل = المهلة + 30 ثانية للإرسال: إذا مات العامل وهو ماسكه بيتحرر لحالو
+        return Cache::lock('order-email:send-slot', intdiv($interval, 1000) + 30)->block(120, function () use ($interval, $send) {
+            $wait = (int) Cache::get('order-email:last-send-ms', 0) + $interval - (int) (microtime(true) * 1000);
+
+            if ($wait > 0) {
+                usleep($wait * 1000);
+            }
+
+            try {
+                return $send();
+            } finally {
+                Cache::forever('order-email:last-send-ms', (int) (microtime(true) * 1000));
+            }
+        });
+    }
+
+    private static function usesDbTask(): bool
+    {
+        return config('messaging.topology.order_created_email.worker_action') === 'db';
     }
 
     private static function maxRetries(): int

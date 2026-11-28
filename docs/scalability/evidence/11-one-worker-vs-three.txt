@@ -1,0 +1,23 @@
+# 90 orders -> 90 order.created messages, db task 1000 ms each (ORDER_WORKER_ACTION=db)
+# processing time = first to last 'processed by the database task' log line
+# 2026-11-27 22:33:00 UTC
+
+== one worker(s): consumers=3, all 90 orders 201=yes
+messages processed: 105   errors: 0
+    105 "worker":"worker1"
+first 2026-11-27 22:33:04  last 2026-11-27 22:34:49  => 105 s
+
+== three worker(s): consumers=3, all 90 orders 201=yes
+messages processed: 90   errors: 0
+     30 "worker":"worker1"
+     30 "worker":"worker2"
+     30 "worker":"worker3"
+first 2026-11-27 22:35:08  last 2026-11-27 22:35:37  => 29 s
+
+== notes
+- one worker: worker2 and worker3 were stopped first; consumers=3 was read right
+  after `docker compose stop`, before RabbitMQ dropped their consumers. All 105
+  messages were processed by worker1, which is the real proof.
+- one worker processed 105, not 90: 15 messages were still queued from the
+  previous test (05-orders-instance-killed). Rate: 105 msg / 105 s = 1.0 msg/s.
+- three workers: 90 msg / 29 s = 3.1 msg/s, 30 each.
